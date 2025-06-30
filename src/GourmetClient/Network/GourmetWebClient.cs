@@ -14,9 +14,9 @@ namespace GourmetClient.Network
     using GourmetClient.Utils;
     using HtmlAgilityPack;
 
-    public class GourmetWebClient : WebClientBase
+    public partial class GourmetWebClient : WebClientBase
     {
-        private const string WebUrl = "https://alaclick.gourmet.at/frontend4/default.aspx";
+        private const string WebUrl = "https://alaclickneu.gourmet.at/";
 
         private const string PageNameLogin = "Login";
 
@@ -36,6 +36,9 @@ namespace GourmetClient.Network
 
         private const string ActionNameCancelMealOrder = "CancelItem";
 
+        [GeneratedRegex("<meta\\s+http-equiv=\"refresh\"\\s+content=\"\\d+;\\s*URL=https://alaclickneu\\.gourmet\\.at/en/external-login/\\?id=[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}&token=[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\">")]
+        private static partial Regex LoginSuccessfulRedirectRegex();
+
         protected override async Task<bool> LoginImpl(string userName, SecureString password)
         {
             var parameters = new Dictionary<string, string>
@@ -49,7 +52,7 @@ namespace GourmetClient.Network
             var httpContent = await GetResponseContent(response);
 
             // Login is successful if redirect to menu calendar is received
-            return Regex.IsMatch(httpContent, "<meta\\s+http-equiv=\"refresh\"\\s+content=\"\\d+;\\s*URL=default\\.aspx\\?c=MenuCalendar\">");
+            return LoginSuccessfulRedirectRegex().IsMatch(httpContent);
         }
 
         protected override async Task LogoutImpl()
