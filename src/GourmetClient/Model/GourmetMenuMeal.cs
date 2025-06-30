@@ -4,9 +4,9 @@
 
 	public class GourmetMenuMeal
 	{
-		public GourmetMenuMeal(string productId, string name, string description)
+		public GourmetMenuMeal(string positionId, string name, string description)
 		{
-			ProductId = productId ?? throw new ArgumentNullException(nameof(productId));
+            ProductId = positionId ?? throw new ArgumentNullException(nameof(positionId));
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 			Description = description ?? throw new ArgumentNullException(nameof(description));
 		}

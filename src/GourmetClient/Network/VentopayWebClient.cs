@@ -41,7 +41,7 @@ namespace GourmetClient.Network
             parameters.Add("BtnLogin", "Login");
             parameters.Add("languageRadio", "DE");
 
-            using var loginResponse = await ExecutePostRequest(requestUrl, null, parameters);
+            using var loginResponse = await ExecutePostRequest(requestUrl, parameters);
             var loginContent = await GetResponseContent(loginResponse);
 
             return Regex.IsMatch(loginContent, "<a\\s+href=\"Ausloggen.aspx\">");

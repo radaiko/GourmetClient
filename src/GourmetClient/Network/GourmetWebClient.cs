@@ -3,6 +3,9 @@ using System.Net.Http;
 
 namespace GourmetClient.Network
 {
+    using GourmetClient.Model;
+    using GourmetClient.Utils;
+    using HtmlAgilityPack;
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -10,21 +13,20 @@ namespace GourmetClient.Network
     using System.Security;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using GourmetClient.Model;
-    using GourmetClient.Utils;
-    using HtmlAgilityPack;
 
     public partial class GourmetWebClient : WebClientBase
     {
         private const string WebUrl = "https://alaclickneu.gourmet.at/";
 
-        private const string PageNameLogin = "Login";
+        private const string UfprtNodeName = "ufprt";
 
-        private const string PageNameLogout = "Logout";
+        private const string PageNameLogin = "start";
 
-        private const string PageNameUserSettings = "UserSettings";
+        private const string PageNameLogout = "start";
 
-        private const string PageNameMenu = "MenuCalendar";
+        private const string PageNameUserSettings = "einstellungen";
+
+        private const string PageNameMenu = "menus";
 
         private const string PageNameOrderedMenu = "ShoppingCart";
 
@@ -36,28 +38,44 @@ namespace GourmetClient.Network
 
         private const string ActionNameCancelMealOrder = "CancelItem";
 
-        [GeneratedRegex("<meta\\s+http-equiv=\"refresh\"\\s+content=\"\\d+;\\s*URL=https://alaclickneu\\.gourmet\\.at/en/external-login/\\?id=[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}&token=[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}\">")]
-        private static partial Regex LoginSuccessfulRedirectRegex();
+        [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]
+        private static partial Regex LoginSuccessfulRegex();
+
+        [GeneratedRegex(@"<div\s+class=""settings gform"">")]
+        private static partial Regex IsUserSettingsPageRegex();
+
+        [GeneratedRegex(@"(MENÜ\s+[I]{1,3})")]
+        private static partial Regex MenuTitleRegex();
 
         protected override async Task<bool> LoginImpl(string userName, SecureString password)
         {
+            var ufprtValue = await GetUfprtValueFromPage(PageNameLogin);
+
             var parameters = new Dictionary<string, string>
             {
-                {"login", userName},
-                {"password", password.ToPlainPassword()},
-                {"btnSubmit", "1"}
+                {"Username", userName},
+                {"Password", password.ToPlainPassword()},
+                {"RememberMe", "false"},
+                {"ufprt", ufprtValue}
             };
 
-            using var response = await ExecutePostRequest(WebUrl, GetUrlParametersForPage(PageNameLogin), parameters);
+            using var response = await ExecutePostRequest(WebUrl, parameters);
             var httpContent = await GetResponseContent(response);
 
-            // Login is successful if redirect to menu calendar is received
-            return LoginSuccessfulRedirectRegex().IsMatch(httpContent);
+            // Login is successful if link to user settings is received
+            return LoginSuccessfulRegex().IsMatch(httpContent);
         }
 
         protected override async Task LogoutImpl()
         {
-            using var response = await ExecuteGetRequestForPage(PageNameLogout);
+            var ufprtValue = await GetUfprtValueFromPage(PageNameLogout);
+
+            var parameters = new Dictionary<string, string>
+            {
+                {"ufprt", ufprtValue}
+            };
+
+            using var response = await ExecutePostRequestForPage(PageNameLogout, parameters);
         }
 
         public async Task<GourmetUserData> GetUserData()
@@ -65,7 +83,7 @@ namespace GourmetClient.Network
             using var response = await ExecuteGetRequestForPage(PageNameUserSettings);
             var httpContent = await GetResponseContent(response);
 
-            if (!Regex.IsMatch(httpContent, "<div\\s+class=\"settings.*\">"))
+            if (!IsUserSettingsPageRegex().IsMatch(httpContent))
             {
                 return null;
             }
@@ -82,22 +100,46 @@ namespace GourmetClient.Network
 
         public async Task<GourmetMenu> GetMenu()
         {
-            using var response = await ExecuteGetRequestForPage(PageNameMenu);
-            var httpContent = await GetResponseContent(response);
+            var currentPage = 0;
+            var parsedDays = new List<GourmetMenuDay>();
 
-            try
+            // Set 10 pages as limit (equals 10 weeks)
+            while (currentPage < 10)
             {
-                return ParseGourmetMenuHtml(httpContent);
+                var pageParameter = new Dictionary<string, string>
+                {
+                    {"page", currentPage.ToString()}
+                };
+
+                using var response = await ExecuteGetRequestForPage(PageNameMenu, pageParameter);
+                var httpContent = await GetResponseContent(response);
+
+                IReadOnlyCollection<GourmetMenuDay> foundDays;
+
+                try
+                {
+                    foundDays = ParseGourmetMenuHtml(httpContent);
+                }
+                catch (Exception exception)
+                {
+                    throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response), httpContent, exception);
+                }
+
+                if (foundDays.Count == 0)
+                {
+                    break;
+                }
+
+                parsedDays.AddRange(foundDays);
+                currentPage++;
             }
-            catch (Exception exception)
-            {
-                throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response), httpContent, exception);
-            }
+
+            return new GourmetMenu(parsedDays);
         }
 
         public async Task<OrderedGourmetMenu> GetOrderedMenu()
         {
-            using var response = await ExecuteGetRequestForPage(PageNameOrderedMenu);
+            using var response = await ExecuteGetRequestForPage__Old(PageNameOrderedMenu);
             var httpContent = await GetResponseContent(response);
 
             try
@@ -125,7 +167,7 @@ namespace GourmetClient.Network
                 { "IsMenu", "1" }
             };
 
-            using var response = await ExecuteGetRequest(WebUrl, GetUrlParametersForPage(PageNameAddMealToOrderedMenu, ActionNameAddMealToOrderedMenu, parameters));
+            using var response = await ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(PageNameAddMealToOrderedMenu, ActionNameAddMealToOrderedMenu, parameters));
         }
 
         public async Task CancelOrder(OrderedGourmetMenuMeal orderedMeal)
@@ -143,16 +185,16 @@ namespace GourmetClient.Network
                 { "ismenu", "1" }
             };
 
-            using var response = await ExecuteGetRequest(WebUrl, GetUrlParametersForPage(PageNameOrderedMenu, ActionNameCancelMealOrder, parameters));
+            using var response = await ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(PageNameOrderedMenu, ActionNameCancelMealOrder, parameters));
         }
 
         public async Task ConfirmOrder()
         {
-            using var responseOrderedMenu = await ExecuteGetRequestForPage(PageNameOrderedMenu);
+            using var responseOrderedMenu = await ExecuteGetRequestForPage__Old(PageNameOrderedMenu);
             var httpContentOrderedMenu = await GetResponseContent(responseOrderedMenu);
             var confirmParameters = ParseConfirmParametersFromOrderedGourmetMenuHtml(httpContentOrderedMenu);
 
-            using var response = await ExecutePostRequest(WebUrl, null, confirmParameters);
+            using var response = await ExecutePostRequest(WebUrl, confirmParameters);
         }
 
         public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
@@ -163,7 +205,8 @@ namespace GourmetClient.Network
                 {"inputAbrechnung", $"{month}-{year}"}
             };
 
-            using var response = await ExecutePostRequest(WebUrl, GetUrlParametersForPage(PageNameBilling), parameters);
+            //using var response = await ExecutePostRequest(WebUrl, GetUrlParametersForPage__Old(PageNameBilling), parameters);
+            using var response = await ExecutePostRequest(WebUrl, parameters);
             var httpContent = await GetResponseContent(response);
 
             try
@@ -180,9 +223,36 @@ namespace GourmetClient.Network
             }
         }
 
-        private Task<HttpResponseMessage> ExecuteGetRequestForPage(string pageName)
+        private async Task<string> GetUfprtValueFromPage(string pageName)
         {
-            return ExecuteGetRequest(WebUrl, GetUrlParametersForPage(pageName));
+            var response = await ExecuteGetRequestForPage(pageName);
+            var httpContent = await GetResponseContent(response);
+            var document = new HtmlDocument();
+
+            document.LoadHtml(httpContent);
+            var ufprtNode = document.DocumentNode.GetSingleNode($"//input[@name='{UfprtNodeName}']");
+
+            if (ufprtNode == null)
+            {
+                throw new GourmetParseException($"Node with name '{UfprtNodeName}' not found", GetRequestUriString(response), httpContent);
+            }
+
+            return ufprtNode.Attributes["value"].Value;
+        }
+
+        private Task<HttpResponseMessage> ExecuteGetRequestForPage(string pageName, IReadOnlyDictionary<string, string> urlParameters = null)
+        {
+            return ExecuteGetRequest($"{WebUrl}{pageName}/", urlParameters);
+        }
+
+        private Task<HttpResponseMessage> ExecutePostRequestForPage(string pageName, IReadOnlyDictionary<string, string> formParameters)
+        {
+            return ExecutePostRequest($"{WebUrl}{pageName}/", formParameters);
+        }
+
+        private Task<HttpResponseMessage> ExecuteGetRequestForPage__Old(string pageName)
+        {
+            return ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(pageName));
         }
 
         private static string ParseHtmlForNameOfUser(string html)
@@ -199,79 +269,77 @@ namespace GourmetClient.Network
             return loginNameNode.GetInnerText();
         }
 
-        private static GourmetMenu ParseGourmetMenuHtml(string html)
+        private static IReadOnlyCollection<GourmetMenuDay> ParseGourmetMenuHtml(string html)
         {
             var document = new HtmlDocument();
             document.LoadHtml(html);
 
-            var days = new List<GourmetMenuDay>();
-            var today = DateTimeHelper.GetToday();
+            var parsedMeals = new Dictionary<DateTime, List<GourmetMenuMeal>>();
 
-            foreach (var dayNode in document.DocumentNode.GetNodes("//div[contains(@class, 'menuitem')]"))
+            foreach (var mealNode in document.DocumentNode.GetNodes("//div[@class='meal']"))
             {
-                var headerNode = dayNode.SelectSingleNode(".//div[contains(@class, 'header')]");
-                if (headerNode == null)
+                var detailNode = mealNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
+                var positionId = detailNode.Attributes["data-id"].Value;
+                var dateString = detailNode.Attributes["data-date"].Value;
+                var day = ParseMealDateString(dateString);
+
+                if (!parsedMeals.ContainsKey(day))
                 {
-                    throw new InvalidOperationException("No header node found in HTML");
+                    parsedMeals.Add(day, new List<GourmetMenuMeal>());
                 }
 
-                var dateNode = headerNode.SelectSingleNode(".//span[@class='date']");
-                if (dateNode == null)
+                var mealsForDay = parsedMeals[day];
+
+                if (mealsForDay.Any(meal => meal.ProductId == positionId))
                 {
-                    throw new InvalidOperationException("No date node found in HTML");
+                    // Meal has already been parsed
+                    // The page contains the meal elements twice (desktop UI and mobile UI)
+                    continue;
                 }
 
-                var dateNodeValue = dateNode.GetInnerText();
-                var date = GetDateFromMenuDayNodeValue(dateNodeValue);
+                var title = mealNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText().Trim();
+                var subTitle = mealNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
 
-                if (date < today)
+                var titleMatch = MenuTitleRegex().Match(title);
+                if (titleMatch.Success)
                 {
-                    // Happens on new year
-                    date = date.AddYears(1);
+                    title = titleMatch.Groups[1].Value;
                 }
 
-                var meals = ParseGourmetMeals(dayNode);
-
-                days.Add(new GourmetMenuDay(date, meals));
+                mealsForDay.Add(new GourmetMenuMeal(positionId, title, subTitle));
             }
 
-            return new GourmetMenu(days);
+            return parsedMeals.Select(entry => new GourmetMenuDay(entry.Key, entry.Value)).ToList();
         }
 
-        private static IReadOnlyList<GourmetMenuMeal> ParseGourmetMeals(HtmlNode dayNode)
+        private static DateTime ParseMealDateString(string dateString)
         {
-            var meals = new List<GourmetMenuMeal>();
-
-            foreach (var mealNode in dayNode.GetNodes(".//div[contains(@class, 'meal')]"))
+            var splitValue = dateString.Split('-');
+            if (splitValue.Length != 3)
             {
-                var titleNode = mealNode.GetSingleNode(".//span[@class='title']");
-                var subTitleNode = mealNode.GetSingleNode(".//span[@class='subtitle']");
-                var orderNode = mealNode.GetSingleNode(".//div[@class='order']");
-
-                if (!orderNode.Attributes.Contains("data-remoteurl"))
-                {
-                    throw new InvalidOperationException("No remote url attribute found in HTML");
-                }
-
-                var title = titleNode.GetInnerText();
-                var subTitle = subTitleNode.GetInnerText();
-                var remoteUrl = orderNode.Attributes["data-remoteurl"].Value;
-                var decodedRemoteUrl = WebUtility.HtmlDecode(remoteUrl) ?? throw new InvalidOperationException($"Remote url '{remoteUrl}' could not be decoded");
-
-                var match = Regex.Match(decodedRemoteUrl, "&ProductID=([0-9]+)&");
-                if (!match.Success)
-                {
-                    throw new InvalidOperationException($"Remote url '{decodedRemoteUrl}' has an invalid format");
-                }
-
-                var productId = match.Groups[1].Value;
-                var name = title;
-                var description = subTitle;
-
-                meals.Add(new GourmetMenuMeal(productId, name, description));
+                throw new InvalidOperationException($"Expected three values after splitting the date string '{dateString}' but there are {splitValue.Length} value(s)");
             }
 
-            return meals;
+            var monthString = splitValue[0];
+            var dayString = splitValue[1];
+            var yearString = splitValue[2];
+
+            if (!int.TryParse(dayString, out var day))
+            {
+                throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
+            }
+
+            if (!int.TryParse(monthString, out var month))
+            {
+                throw new InvalidOperationException($"Could not parse value '{monthString}' for month as integer");
+            }
+
+            if (!int.TryParse(yearString, out var year))
+            {
+                throw new InvalidOperationException($"Could not parse value '{yearString}' for year as integer");
+            }
+
+            return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
         }
 
         private static OrderedGourmetMenu ParseOrderedGourmetMenuHtml(string html)
@@ -496,7 +564,7 @@ namespace GourmetClient.Network
             return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
         }
 
-        private static IReadOnlyDictionary<string, string> GetUrlParametersForPage(string pageName, string actionName = null, IReadOnlyDictionary<string, string> parameters = null)
+        private static IReadOnlyDictionary<string, string> GetUrlParametersForPage__Old(string pageName, string actionName = null, IReadOnlyDictionary<string, string> parameters = null)
         {
             var pageParameters = new Dictionary<string, string>
             {

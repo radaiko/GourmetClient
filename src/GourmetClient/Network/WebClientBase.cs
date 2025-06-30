@@ -133,20 +133,19 @@ namespace GourmetClient.Network
             return response;
         }
 
-        protected async Task<HttpResponseMessage> ExecutePostRequest(string url, IReadOnlyDictionary<string, string> urlParameters, IReadOnlyDictionary<string, string> formParameters)
+        protected async Task<HttpResponseMessage> ExecutePostRequest(string url, IReadOnlyDictionary<string, string> formParameters)
         {
-            var requestUrl = AppendParametersToUrl(url, urlParameters);
             var content = new FormUrlEncodedContent(formParameters);
 
             HttpResponseMessage response;
 
             try
             {
-                response = await ExecuteRequest(requestUrl, client => client.PostAsync(requestUrl, content));
+                response = await ExecuteRequest(url, client => client.PostAsync(url, content));
             }
             catch (Exception exception)
             {
-                throw new GourmetRequestException("Error executing POST request", requestUrl, exception);
+                throw new GourmetRequestException("Error executing POST request", url, exception);
             }
 
             EnsureSuccessStatusCode(response);
