@@ -1,29 +1,21 @@
-﻿namespace GourmetClient.Model
-{
-	using System;
+﻿namespace GourmetClient.Model;
 
-	public class GourmetCache
-	{
-		public GourmetCache()
-			: this(DateTime.MinValue, null, new GourmetMenu(), new OrderedGourmetMenu())
-		{
-		}
+using System;
+using System.Collections.Generic;
 
-		public GourmetCache(DateTime timestamp, GourmetUserData userData, GourmetMenu menu, OrderedGourmetMenu orderedMenu)
-		{
-			Menu = menu ?? throw new ArgumentNullException(nameof(menu));
-			OrderedMenu = orderedMenu ?? throw new ArgumentNullException(nameof(orderedMenu));
-			
-			UserData = userData;
-			Timestamp = timestamp;
-		}
+public record GourmetCache(
+    DateTime Timestamp,
+    GourmetUserInformation UserInformation,
+    IReadOnlyCollection<GourmetMeal> Menus,
+    IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);
 
-		public DateTime Timestamp { get; }
-
-		public GourmetUserData UserData { get; }
-
-		public GourmetMenu Menu { get; }
-
-		public OrderedGourmetMenu OrderedMenu { get; }
-	}
-}
+public record InvalidatedGourmetCache()
+    : GourmetCache(
+        DateTime.MinValue,
+        new GourmetUserInformation(
+            NameOfUser: string.Empty,
+            ShopModelId: string.Empty,
+            EaterId: string.Empty,
+            StaffGroupId: string.Empty),
+        [],
+        []);

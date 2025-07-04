@@ -1,16 +1,18 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using GourmetClient.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
-using GourmetClient.Utils;
+using System.Threading.Tasks;
 
 namespace GourmetClient.Network
 {
     using System.Security;
+    using System.Text.Json;
 
     public abstract class WebClientBase
     {
@@ -153,6 +155,24 @@ namespace GourmetClient.Network
             return response;
         }
 
+        protected async Task<HttpResponseMessage> ExecuteJsonPostRequest(string url, object parameters)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                response = await ExecuteRequest(url, client => client.PostAsJsonAsync(url, parameters));
+            }
+            catch (Exception exception)
+            {
+                throw new GourmetRequestException("Error executing POST request", url, exception);
+            }
+
+            EnsureSuccessStatusCode(response);
+
+            return response;
+        }
+
         protected static async Task<string> GetResponseContent(HttpResponseMessage response)
         {
             try
@@ -162,6 +182,21 @@ namespace GourmetClient.Network
             catch (Exception exception)
             {
                 throw new GourmetRequestException("Error reading response content", GetRequestUriString(response), exception);
+            }
+        }
+
+        protected static async Task<T> GetJsonResponseObject<T>(HttpResponseMessage response, Func<JsonElement, T> parseFunc)
+        {
+            string jsonResponseContent = await GetResponseContent(response);
+
+            try
+            {
+                var jsonElement = (JsonElement)JsonSerializer.Deserialize<object>(jsonResponseContent);
+                return parseFunc(jsonElement);
+            }
+            catch (Exception exception)
+            {
+                throw new GourmetParseException("Error parsing response content as JSON", GetRequestUriString(response), jsonResponseContent, exception);
             }
         }
 

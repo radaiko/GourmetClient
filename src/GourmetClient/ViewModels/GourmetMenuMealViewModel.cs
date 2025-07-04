@@ -6,7 +6,7 @@
 
 	public class GourmetMenuMealViewModel : ObservableObject
 	{
-		private readonly GourmetMenuMeal _menuMeal;
+		private readonly GourmetMeal _menu;
 
 		private bool _isMealOrdered;
 
@@ -14,18 +14,14 @@
 
 		private bool _isMealOrderApproved;
 
-		private bool _isOrderCancelable;
-
-		public GourmetMenuMealViewModel(GourmetMenuMeal meal)
+		public GourmetMenuMealViewModel(GourmetMeal meal)
 		{
-			_menuMeal = meal ?? throw new ArgumentNullException(nameof(meal));
+			_menu = meal ?? throw new ArgumentNullException(nameof(meal));
 		}
 
-		public string ProductId => _menuMeal.ProductId;
+		public string MealName => _menu.MenuName;
 
-		public string MealName => _menuMeal.Name;
-
-		public string MealDescription => _menuMeal.Description;
+		public string MealDescription => _menu.Description;
 
 		public bool IsMealOrdered
 		{
@@ -55,20 +51,6 @@
 			}
 		}
 
-		public bool IsOrderCancelable
-		{
-			get => _isOrderCancelable;
-
-			set
-			{
-				if (_isOrderCancelable != value)
-				{
-					_isOrderCancelable = value;
-					OnPropertyChanged();
-				}
-			}
-		}
-
 		public GourmetMenuMealState MealState
 		{
 			get => _mealState;
@@ -83,9 +65,9 @@
 			}
 		}
 
-		public GourmetMenuMeal GetModel()
+		public GourmetMeal GetModel()
 		{
-			return _menuMeal;
+			return _menu;
 		}
 	}
 }

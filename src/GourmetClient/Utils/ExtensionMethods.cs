@@ -14,6 +14,11 @@ namespace GourmetClient.Utils
             return node.SelectSingleNode(xpath) ?? throw new InvalidOperationException($"No node found for XPath '{xpath}'");
         }
 
+        public static bool ContainsNode(this HtmlNode node, string xpath)
+        {
+            return node.SelectSingleNode(xpath) != null;
+        }
+
         public static IEnumerable<HtmlNode> GetNodes(this HtmlNode node, string xpath)
         {
             var nodes = node.SelectNodes(xpath);

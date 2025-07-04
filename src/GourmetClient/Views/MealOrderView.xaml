@@ -16,6 +16,7 @@
 	<views:InitializableView.Resources>
 		<behaviors:BoolInvertConverter x:Key="BoolInvertConverter" />
 		<behaviors:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+		<behaviors:MenuNameAbbreviationConverter x:Key="MenuNameAbbreviationConverter" />
 
 		<Brush x:Key="ActionBarBackgroundBrush">#F2F2F2</Brush>
 		<Brush x:Key="DayBackgroundBrush">#F2F2F2</Brush>
@@ -65,19 +66,8 @@
 							<TextBlock Grid.Column="0"
 							           DockPanel.Dock="Left"
 							           FontSize="14"
-							           FontWeight="SemiBold">
-								<TextBlock.Style>
-									<Style TargetType="{x:Type TextBlock}">
-										<Setter Property="Text" Value="{Binding MealName}" />
-										<Style.Triggers>
-											<DataTrigger Binding="{Binding MealDescription}"
-											             Value="">
-												<Setter Property="Text" Value="Menü" />
-											</DataTrigger>
-										</Style.Triggers>
-									</Style>
-								</TextBlock.Style>
-							</TextBlock>
+							           FontWeight="SemiBold"
+							           Text="{Binding MealName, Converter={StaticResource MenuNameAbbreviationConverter}}" />
 							<Image Grid.Column="1"
 							       Width="16"
 							       Height="16"
@@ -419,7 +409,7 @@
 					              ScrollChanged="MenuScrollViewerOnScrollChanged"
 					              VerticalScrollBarVisibility="Auto">
 						<ItemsControl ItemTemplate="{StaticResource MenuDayTemplate}"
-						              ItemsSource="{Binding Menu.Days}" />
+						              ItemsSource="{Binding MenuDays}" />
 					</ScrollViewer>
 					<Border Margin="0,0,25,0"
 					        HorizontalAlignment="Right"

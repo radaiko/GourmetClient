@@ -6,7 +6,6 @@ namespace GourmetClient.Network
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using System.Threading.Tasks;
     using Model;
     using Serialization;
@@ -38,7 +37,7 @@ namespace GourmetClient.Network
 
         public void InvalidateCache()
         {
-            _cache = new GourmetCache();
+            _cache = new InvalidatedGourmetCache();
         }
 
         public async Task<GourmetCache> GetCache()
@@ -70,120 +69,46 @@ namespace GourmetClient.Network
                 return;
             }
 
-            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
+            //await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
 
-            if (!loginHandle.LoginSuccessful)
-            {
-                return;
-            }
+            //if (!loginHandle.LoginSuccessful)
+            //{
+            //    return;
+            //}
 
-            try
-            {
-                foreach (var orderedMeal in mealsToCancel)
-                {
-                    await _webClient.CancelOrder(orderedMeal);
-                }
+            //try
+            //{
+            //    foreach (var orderedMeal in mealsToCancel)
+            //    {
+            //        await _webClient.CancelOrder(orderedMeal);
+            //    }
 
-                foreach (var meal in mealsToOrder)
-                {
-                    await _webClient.AddMealToOrderedMenu(meal);
-                }
+            //    foreach (var meal in mealsToOrder)
+            //    {
+            //        await _webClient.AddMealToOrderedMenu(meal);
+            //    }
 
-                await _webClient.ConfirmOrder();
-            }
-            finally
-            {
-                InvalidateCache();
-            }
+            //    await _webClient.ConfirmOrder();
+            //}
+            //finally
+            //{
+            //    InvalidateCache();
+            //}
         }
 
         private async Task UpdateCache()
         {
-            var serverData = await GetDataFromServer();
-            var cachedMenu = await GetCacheFromFile();
-
-            var updatedMenu = MergeMenus(serverData.Menu, cachedMenu.Menu);
-
-            _cache = new GourmetCache(DateTime.Now, serverData.UserData, updatedMenu, serverData.OrderedMenu);
-
+            _cache = await CreateCacheFromServerData();
             await SaveMenuCache(_cache);
         }
 
-        private GourmetMenu MergeMenus(GourmetMenu serverMenu, GourmetMenu cachedMenu)
-        {
-            var today = DateTimeHelper.GetToday();
-            var mergedDays = new List<GourmetMenuDay>();
-
-            if (cachedMenu != null)
-            {
-                foreach (var cachedDay in cachedMenu.Days)
-                {
-                    if (cachedDay.Date < today)
-                    {
-                        // Ignore past days
-                        continue;
-                    }
-
-                    var meals = new List<GourmetMenuMeal>();
-                    var serverDay = serverMenu.Days.SingleOrDefault(day => day.Date == cachedDay.Date);
-
-                    if (serverDay != null)
-                    {
-                        foreach (var serverMeal in serverDay.Meals)
-                        {
-                            var description = serverMeal.Description;
-
-                            if (string.IsNullOrEmpty(description))
-                            {
-                                // Used the cached description if available
-                                var cachedMeal = cachedDay.Meals.FirstOrDefault(meal => meal.Name == serverMeal.Name);
-                                if (cachedMeal != null)
-                                {
-                                    description = cachedMeal.Description;
-                                }
-                            }
-
-                            meals.Add(new GourmetMenuMeal(serverMeal.ProductId, serverMeal.Name, description));
-                        }
-                    }
-
-                    foreach (var cachedMeal in cachedDay.Meals)
-                    {
-                        if (meals.All(meal => meal.Name != cachedMeal.Name))
-                        {
-                            // Set ProductID to empty string if the cached meal is no longer provided from the server
-                            meals.Add(new GourmetMenuMeal(string.Empty, cachedMeal.Name, cachedMeal.Description));
-                        }
-                    }
-
-                    mergedDays.Add(new GourmetMenuDay(cachedDay.Date, meals));
-                }
-            }
-
-            foreach (var serverDay in serverMenu.Days)
-            {
-                if (serverDay.Date < today)
-                {
-                    // Ignore past days
-                    continue;
-                }
-
-                if (mergedDays.All(day => day.Date != serverDay.Date))
-                {
-                    mergedDays.Add(new GourmetMenuDay(serverDay.Date, serverDay.Meals.ToArray()));
-                }
-            }
-
-            return new GourmetMenu(mergedDays);
-        }
-
-        private async Task<(GourmetUserData UserData, GourmetMenu Menu, OrderedGourmetMenu OrderedMenu)> GetDataFromServer()
+        private async Task<GourmetCache> CreateCacheFromServerData()
         {
             var userSettings = _settingsService.GetCurrentUserSettings();
 
             if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
             {
-                return (null, new GourmetMenu(), new OrderedGourmetMenu());
+                return new InvalidatedGourmetCache();
             }
 
             try
@@ -193,19 +118,18 @@ namespace GourmetClient.Network
                 if (!loginHandle.LoginSuccessful)
                 {
                     _notificationService.Send(new Notification(NotificationType.Error, "Daten konnten nicht aktualisiert werden. Ursache: Login fehlgeschlagen"));
-                    return (null, new GourmetMenu(), new OrderedGourmetMenu());
+                    return new InvalidatedGourmetCache();
                 }
 
-                var userData = await _webClient.GetUserData();
-                var menu = await _webClient.GetMenu();
-                var orderedMenu = await _webClient.GetOrderedMenu();
+                var menuResult = await _webClient.GetMenus();
+                var orderedMenus = await _webClient.GetOrderedMenus();
 
-                return (userData, menu, orderedMenu);
+                return new GourmetCache(DateTime.Now, menuResult.UserInformation, menuResult.Menus, orderedMenus);
             }
             catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
             {
                 _notificationService.Send(new ExceptionNotification("Daten konnten nicht aktualisiert werden", exception));
-                return (null, new GourmetMenu(), new OrderedGourmetMenu());
+                return new InvalidatedGourmetCache();
             }
         }
 
@@ -213,19 +137,25 @@ namespace GourmetClient.Network
         {
             if (!File.Exists(_cacheFileName))
             {
-                return new GourmetCache();
+                return new InvalidatedGourmetCache();
             }
 
             try
             {
                 await using var fileStream = new FileStream(_cacheFileName, FileMode.Open, FileAccess.Read, FileShare.None);
                 var serializedCache = await JsonSerializer.DeserializeAsync<SerializableGourmetCache>(fileStream);
+
+                if (serializedCache.Version != 2)
+                {
+                    // Unsupported version
+                    return new InvalidatedGourmetCache();
+                }
                 
                 return serializedCache.ToGourmetMenuCache();
             }
             catch
             {
-                return new GourmetCache();
+                return new InvalidatedGourmetCache();
             }
         }
 

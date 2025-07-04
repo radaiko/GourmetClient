@@ -1,34 +1,17 @@
-﻿namespace GourmetClient.ViewModels
+﻿namespace GourmetClient.ViewModels;
+
+using System;
+using System.Collections.Generic;
+
+public class GourmetMenuDayViewModel
 {
-	using System;
-	using System.Collections.Generic;
-	using System.Collections.ObjectModel;
-	using System.Linq;
-	using GourmetClient.Model;
+    public GourmetMenuDayViewModel(DateTime day, IReadOnlyList<GourmetMenuMealViewModel> menuViewModels)
+    {
+        Date = day;
+        Meals = menuViewModels;
+    }
 
-	public class GourmetMenuDayViewModel
-	{
-		private readonly GourmetMenuDay _menuDay;
+    public DateTime Date { get; }
 
-		private readonly ObservableCollection<GourmetMenuMealViewModel> _meals;
-
-		public GourmetMenuDayViewModel(GourmetMenuDay menuDay)
-		{
-			_menuDay = menuDay ?? throw new ArgumentNullException(nameof(menuDay));
-
-			_meals = new ObservableCollection<GourmetMenuMealViewModel>(_menuDay.Meals.Select(meal => new GourmetMenuMealViewModel(meal)));
-		}
-
-		public DateTime Date => _menuDay.Date;
-
-		public IReadOnlyList<GourmetMenuMealViewModel> Meals => _meals;
-
-		public GourmetMenuMealViewModel AddMeal(GourmetMenuMeal meal)
-		{
-			var viewModel = new GourmetMenuMealViewModel(meal);
-			_meals.Add(viewModel);
-
-			return viewModel;
-		}
-	}
+    public IReadOnlyList<GourmetMenuMealViewModel> Meals { get; }
 }

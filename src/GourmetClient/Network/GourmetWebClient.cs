@@ -24,11 +24,9 @@ namespace GourmetClient.Network
 
         private const string PageNameLogout = "start";
 
-        private const string PageNameUserSettings = "einstellungen";
-
         private const string PageNameMenu = "menus";
 
-        private const string PageNameOrderedMenu = "ShoppingCart";
+        private const string PageNameOrderedMenu = "bestellungen";
 
         private const string PageNameAddMealToOrderedMenu = "AddItem";
 
@@ -40,12 +38,6 @@ namespace GourmetClient.Network
 
         [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]
         private static partial Regex LoginSuccessfulRegex();
-
-        [GeneratedRegex(@"<div\s+class=""settings gform"">")]
-        private static partial Regex IsUserSettingsPageRegex();
-
-        [GeneratedRegex(@"(MENÜ\s+[I]{1,3})")]
-        private static partial Regex MenuTitleRegex();
 
         protected override async Task<bool> LoginImpl(string userName, SecureString password)
         {
@@ -78,32 +70,16 @@ namespace GourmetClient.Network
             using var response = await ExecutePostRequestForPage(PageNameLogout, parameters);
         }
 
-        public async Task<GourmetUserData> GetUserData()
+        public async Task<GourmetMenuResult> GetMenus()
         {
-            using var response = await ExecuteGetRequestForPage(PageNameUserSettings);
-            var httpContent = await GetResponseContent(response);
+            // The page contains the menu elements twice (once for the desktop UI and once for the mobile UI).
+            // By using a HashSet with a custom comparer, it is ensured that the same menu is only added once.
+            var parsedMenus = new HashSet<GourmetMeal>(new GourmetMenuComparer());
 
-            if (!IsUserSettingsPageRegex().IsMatch(httpContent))
-            {
-                return null;
-            }
-
-            var nameOfUser = ParseHtmlForNameOfUser(httpContent);
-
-            if (nameOfUser == null)
-            {
-                return null;
-            }
-
-            return new GourmetUserData(nameOfUser);
-        }
-
-        public async Task<GourmetMenu> GetMenu()
-        {
+            GourmetUserInformation userInformation = null;
             var currentPage = 0;
-            var parsedDays = new List<GourmetMenuDay>();
 
-            // Set 10 pages as limit (equals 10 weeks)
+            // Set 10 pages as upper limit
             while (currentPage < 10)
             {
                 var pageParameter = new Dictionary<string, string>
@@ -114,37 +90,83 @@ namespace GourmetClient.Network
                 using var response = await ExecuteGetRequestForPage(PageNameMenu, pageParameter);
                 var httpContent = await GetResponseContent(response);
 
-                IReadOnlyCollection<GourmetMenuDay> foundDays;
-
                 try
                 {
-                    foundDays = ParseGourmetMenuHtml(httpContent);
+                    var document = new HtmlDocument();
+                    document.LoadHtml(httpContent);
+
+                    userInformation ??= ParseHtmlForUserInformation(document);
+
+                    foreach (GourmetMeal parsedMenu in ParseGourmetMenuHtml(document))
+                    {
+                        parsedMenus.Add(parsedMenu);
+                    }
+
+                    if (!HasNextPageButton(document))
+                    {
+                        break;
+                    }
                 }
                 catch (Exception exception)
                 {
                     throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response), httpContent, exception);
                 }
 
-                if (foundDays.Count == 0)
-                {
-                    break;
-                }
-
-                parsedDays.AddRange(foundDays);
                 currentPage++;
             }
 
-            return new GourmetMenu(parsedDays);
+            return new GourmetMenuResult(userInformation, parsedMenus);
         }
 
-        public async Task<OrderedGourmetMenu> GetOrderedMenu()
+        //public async Task<GourmetMeal> GetFullMenu(GourmetUserInformation userInformation, ParsedGourmetMenu parsedMenu)
+        //{
+        //    var parameter = new
+        //    {
+        //        shopModelId = userInformation.ShopModelId,
+        //        eaterId = userInformation.EaterId,
+        //        staffgroupId = userInformation.StaffGroupId,
+        //        date = parsedMenu.DateString,
+        //        menuId = parsedMenu.PositionId
+        //    };
+
+        //    char[] ParseAllergens(string value)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(value))
+        //        {
+        //            return [];
+        //        }
+
+        //        return value.Split('|', StringSplitOptions.RemoveEmptyEntries).Select(part => part[0]).ToArray();
+        //    }
+
+        //    using var response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaArticleApi/GetMenuInfo", parameter);
+        //    return await GetJsonResponseObject(
+        //        response,
+        //        json => new GourmetMeal(
+        //            ParseMealDateString(json.GetProperty("dateString").GetString()),
+        //            json.GetProperty("id").GetString(),
+        //            json.GetProperty("menuName").GetString(),
+        //            json.GetProperty("description").GetString(),
+        //            json.GetProperty("menuNumber").GetString(),
+        //            ParseAllergens(json.GetProperty("allergens").GetString()),
+        //            json.GetProperty("grossPrice").GetDouble(),
+        //            json.GetProperty("amount").GetInt32(),
+        //            json.GetProperty("ordered").GetInt32())
+        //        );
+
+        //}
+
+        public async Task<IReadOnlyCollection<GourmetOrderedMenu>> GetOrderedMenus()
         {
-            using var response = await ExecuteGetRequestForPage__Old(PageNameOrderedMenu);
+            using var response = await ExecuteGetRequestForPage(PageNameOrderedMenu);
             var httpContent = await GetResponseContent(response);
 
             try
             {
-                return ParseOrderedGourmetMenuHtml(httpContent);
+                var document = new HtmlDocument();
+                document.LoadHtml(httpContent);
+
+                return ParseOrderedGourmetMenuHtml(document).ToArray();
             }
             catch (Exception exception)
             {
@@ -152,7 +174,7 @@ namespace GourmetClient.Network
             }
         }
 
-        public async Task AddMealToOrderedMenu(GourmetMenuMeal meal)
+      /*  public async Task AddMealToOrderedMenu(GourmetMenuMeal meal)
         {
             meal = meal ?? throw new ArgumentNullException(nameof(meal));
 
@@ -196,7 +218,7 @@ namespace GourmetClient.Network
 
             using var response = await ExecutePostRequest(WebUrl, confirmParameters);
         }
-
+      */
         public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
         {
             var parameters = new Dictionary<string, string>
@@ -255,65 +277,40 @@ namespace GourmetClient.Network
             return ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(pageName));
         }
 
-        private static string ParseHtmlForNameOfUser(string html)
+        private static GourmetUserInformation ParseHtmlForUserInformation(HtmlDocument document)
         {
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
-
             var loginNameNode = document.DocumentNode.SelectSingleNode("//div[@class='userfield']//span[@class='loginname']");
-            if (loginNameNode == null)
-            {
-                return null;
-            }
+            var shopModelNode = document.DocumentNode.SelectSingleNode("//input[@id='shopModel']");
+            var eaterNode = document.DocumentNode.SelectSingleNode("//input[@id='eater']");
+            var staffGroupNode = document.DocumentNode.SelectSingleNode("//input[@id='staffGroup']");
 
-            return loginNameNode.GetInnerText();
+            var nameOfUser = loginNameNode.GetInnerText();
+            var shopModelId = shopModelNode.Attributes["value"].Value;
+            var eaterId = eaterNode.Attributes["value"].Value;
+            var staffGroupId = staffGroupNode.Attributes["value"].Value;
+
+            return new GourmetUserInformation(nameOfUser, shopModelId, eaterId, staffGroupId);
         }
 
-        private static IReadOnlyCollection<GourmetMenuDay> ParseGourmetMenuHtml(string html)
+        private static IEnumerable<GourmetMeal> ParseGourmetMenuHtml(HtmlDocument document)
         {
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
-
-            var parsedMeals = new Dictionary<DateTime, List<GourmetMenuMeal>>();
-
             foreach (var mealNode in document.DocumentNode.GetNodes("//div[@class='meal']"))
             {
                 var detailNode = mealNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
                 var positionId = detailNode.Attributes["data-id"].Value;
-                var dateString = detailNode.Attributes["data-date"].Value;
-                var day = ParseMealDateString(dateString);
-
-                if (!parsedMeals.ContainsKey(day))
-                {
-                    parsedMeals.Add(day, new List<GourmetMenuMeal>());
-                }
-
-                var mealsForDay = parsedMeals[day];
-
-                if (mealsForDay.Any(meal => meal.ProductId == positionId))
-                {
-                    // Meal has already been parsed
-                    // The page contains the meal elements twice (desktop UI and mobile UI)
-                    continue;
-                }
-
+                var day = ParseMenuDateString(detailNode.Attributes["data-date"].Value);
                 var title = mealNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText().Trim();
                 var subTitle = mealNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
+                var allergens = ParseAllergens(mealNode.GetSingleNode(".//li[@class='allergen']").GetInnerText());
+                var isAvailable = mealNode.ContainsNode(".//input[@type='checkbox' and @class='menu-clicked']");
 
-                var titleMatch = MenuTitleRegex().Match(title);
-                if (titleMatch.Success)
-                {
-                    title = titleMatch.Groups[1].Value;
-                }
-
-                mealsForDay.Add(new GourmetMenuMeal(positionId, title, subTitle));
+                yield return new GourmetMeal(day, positionId, title, subTitle, allergens, isAvailable);
             }
-
-            return parsedMeals.Select(entry => new GourmetMenuDay(entry.Key, entry.Value)).ToList();
         }
 
-        private static DateTime ParseMealDateString(string dateString)
+        private static DateTime ParseMenuDateString(string dateString)
         {
+            // Sample value: "06-30-2025"
             var splitValue = dateString.Split('-');
             if (splitValue.Length != 3)
             {
@@ -342,49 +339,88 @@ namespace GourmetClient.Network
             return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
         }
 
-        private static OrderedGourmetMenu ParseOrderedGourmetMenuHtml(string html)
+        private static char[] ParseAllergens(string allergensString)
         {
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
+            // Sample value: "A, C, G"
+            return allergensString
+                .Split(',')
+                .Select(part => part.Trim())
+                .Where(part => !string.IsNullOrWhiteSpace(part))
+                .Select(part => part[0])
+                .ToArray();
+        }
 
-            var days = new List<OrderedGourmetMenuDay>();
+        private static bool HasNextPageButton(HtmlDocument document)
+        {
+            return document.DocumentNode.ContainsNode("//a[contains(@class, 'menues-next')]");
+        }
 
+        private static IEnumerable<GourmetOrderedMenu> ParseOrderedGourmetMenuHtml(HtmlDocument document)
+        {
             foreach (var orderItemNode in document.DocumentNode.GetNodes("//div[contains(@class, 'order-item')]"))
             {
-                var dateInputNode = orderItemNode.GetSingleNode(".//input[contains(@name, 'order_') and @type='hidden']");
-                var titleNode = orderItemNode.GetSingleNode(".//div[@class='title']");
+                var formNode = orderItemNode.GetSingleNode(".//form[contains(@class, 'form-info-orders')]");
+                var positionId = formNode.GetSingleNode(".//input[@name='cp_PositionId']").Attributes["value"].Value;
 
-                var dateInputNameValue = dateInputNode.Attributes["name"].Value;
+                var eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='cp_EatingCycleId_{positionId}') and @type='hidden']");
+                var dateInputNode = formNode.GetSingleNode($".//input[(@name='cp_Date_{positionId}') and @type='hidden']");
 
-                var orderIdMatch = Regex.Match(dateInputNameValue, "^order_([0-9]+)$");
-                if (!orderIdMatch.Success)
-                {
-                    throw new InvalidOperationException($"Order id '{dateInputNameValue}' has an invalid format");
-                }
-
-                var orderId = orderIdMatch.Groups[1].Value;
-                var date = GetDateFromOrderedMenuDayAttribute(dateInputNode.Attributes["value"].Value);
-                var mealName = titleNode.GetInnerText();
-                var isOrderCancelable = orderItemNode.GetNodes(".//div[@class='cancel']").Any();
+                var eatingCycleId = eatingCycleIdInputNode.Attributes["value"].Value;
+                var day = ParseOrderedMenuDateString(dateInputNode.Attributes["value"].Value);
+                var title = formNode.GetSingleNode(".//div[@class='title']").GetInnerText();
                 bool isOrderApproved;
 
-                var orderApprovedInputNode = orderItemNode.SelectSingleNode($".//input[@name='ITM_SelectedRotationId_{orderId}' and @type='radio']");
+                // This <input> node is only available if the web page is currently in edit mode.
+                var orderApprovedInputNode = orderItemNode.SelectSingleNode($".//input[@name='cec_NewEatingCycleId_{positionId}' and @type='radio']");
                 if (orderApprovedInputNode != null)
                 {
-                    isOrderApproved = orderApprovedInputNode.Attributes["class"].Value == "greentext";
+                    isOrderApproved = orderApprovedInputNode.Attributes["class"].Value.Contains("confirmed");
                 }
                 else
                 {
-                    var checkMarkIconNode = orderItemNode.SelectSingleNode(".//span[@class='checkmark']//i[@class='fa fa-check']");
-                    isOrderApproved = checkMarkIconNode != null;
+                    // If the web page is not in edit mode, then this <i> node indicates whether the order is approved.
+                    isOrderApproved = orderItemNode.ContainsNode(".//span[@class='checkmark']//i[@class='fa fa-check']");
                 }
 
-                var orderedMeal = new OrderedGourmetMenuMeal(orderId, mealName, isOrderApproved, isOrderCancelable);
+                yield return new GourmetOrderedMenu(day, positionId, eatingCycleId, title, isOrderApproved);
+            }
+        }
 
-                days.Add(new OrderedGourmetMenuDay(date, orderedMeal));
+        private static DateTime ParseOrderedMenuDateString(string dateString)
+        {
+            // Sample value: "30.06.2025 00:00:00"
+            var spaceSplitValue = dateString.Split(' ');
+            if (spaceSplitValue.Length != 2)
+            {
+                throw new InvalidOperationException($"Expected two values after splitting the date node value '{dateString}' but there are {spaceSplitValue.Length} value(s)");
             }
 
-            return new OrderedGourmetMenu(days);
+            var dateSplitValue = spaceSplitValue[0].Split('.');
+            if (dateSplitValue.Length != 3)
+            {
+                throw new InvalidOperationException($"Expected three values after splitting the date node value '{dateString}' but there are {spaceSplitValue.Length} value(s)");
+            }
+
+            var dayString = dateSplitValue[0];
+            var monthString = dateSplitValue[1];
+            var yearString = dateSplitValue[2];
+
+            if (!int.TryParse(dayString, out var day))
+            {
+                throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
+            }
+
+            if (!int.TryParse(monthString, out var month))
+            {
+                throw new InvalidOperationException($"Could not parse value '{monthString}' for month as integer");
+            }
+
+            if (!int.TryParse(yearString, out var year))
+            {
+                throw new InvalidOperationException($"Could not parse value '{year}' for year as integer");
+            }
+
+            return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
         }
 
         private static IReadOnlyDictionary<string, string> ParseConfirmParametersFromOrderedGourmetMenuHtml(string html)
@@ -474,66 +510,6 @@ namespace GourmetClient.Network
             return billingPositions;
         }
 
-        private static DateTime GetDateFromMenuDayNodeValue(string nodeValue)
-        {
-            var splitValue = nodeValue.Split('.');
-            if (splitValue.Length != 2)
-            {
-                throw new InvalidOperationException($"Expected two values after splitting the date node value '{nodeValue}' but there are {splitValue.Length} value(s)");
-            }
-
-            var dayString = splitValue[0];
-            var monthString = splitValue[1];
-
-            if (!int.TryParse(dayString, out var day))
-            {
-                throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
-            }
-
-            if (!int.TryParse(monthString, out var month))
-            {
-                throw new InvalidOperationException($"Could not parse value '{monthString}' for month as integer");
-            }
-
-            return new DateTime(DateTime.Now.Year, month, day, 0, 0, 0, DateTimeKind.Utc);
-        }
-
-        private static DateTime GetDateFromOrderedMenuDayAttribute(string attributeValue)
-        {
-            var spaceSplitValue = attributeValue.Split(' ');
-            if (spaceSplitValue.Length != 2)
-            {
-                throw new InvalidOperationException($"Expected two values after splitting the date node value '{attributeValue}' but there are {spaceSplitValue.Length} value(s)");
-            }
-
-            var dateSplitValue = spaceSplitValue[0].Split('.');
-            if (dateSplitValue.Length != 3)
-            {
-                throw new InvalidOperationException($"Expected three values after splitting the date node value '{attributeValue}' but there are {spaceSplitValue.Length} value(s)");
-            }
-
-            var dayString = dateSplitValue[0];
-            var monthString = dateSplitValue[1];
-            var yearString = dateSplitValue[2];
-
-            if (!int.TryParse(dayString, out var day))
-            {
-                throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
-            }
-
-            if (!int.TryParse(monthString, out var month))
-            {
-                throw new InvalidOperationException($"Could not parse value '{monthString}' for month as integer");
-            }
-
-            if (!int.TryParse(yearString, out var year))
-            {
-                throw new InvalidOperationException($"Could not parse value '{year}' for year as integer");
-            }
-
-            return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
-        }
-
         private static DateTime GetDateFromBillingEntryDateString(string dateString)
         {
             var dateSplitValue = dateString.Split('.');
@@ -585,6 +561,43 @@ namespace GourmetClient.Network
             }
 
             return pageParameters;
+        }
+
+        private class GourmetMenuComparer : IEqualityComparer<GourmetMeal>
+        {
+            /// <summary>
+            /// Compares whether two <see cref="GourmetMeal"/> instances are equal.
+            /// Two meals are considered equal if their <see cref="GourmetMeal.MenuId"/> and <see cref="GourmetMeal.Day"/>
+            /// properties are equal. This is because the menu id is only unique within one day, but menus on different
+            /// days can have the same menu id.
+            /// </summary>
+            /// <param name="x">The first instance.</param>
+            /// <param name="y">The second instance.</param>
+            /// <returns>A value indicating whether the two instances are equal.</returns>
+            public bool Equals(GourmetMeal x, GourmetMeal y)
+            {
+                if (ReferenceEquals(x, y))
+                {
+                    return true;
+                }
+
+                if (x is null || y is null)
+                {
+                    return false;
+                }
+
+                if (x.GetType() != y.GetType())
+                {
+                    return false;
+                }
+
+                return x.Day == y.Day && x.MenuId == y.MenuId;
+            }
+
+            public int GetHashCode(GourmetMeal obj)
+            {
+                return HashCode.Combine(obj.Day, obj.MenuId);
+            }
         }
     }
 }

@@ -1,28 +1,36 @@
 ﻿namespace GourmetClient.Serialization
 {
-	using System;
-	using Model;
+    using System;
+    using Model;
 
-    internal class SerializableGourmetUserData
-	{
-		public SerializableGourmetUserData()
-		{
-			// Used for deserialization
-			NameOfUser = string.Empty;
-		}
+    internal class SerializableUserInformation
+    {
+        public SerializableUserInformation()
+        {
+            // Used for deserialization
+        }
 
-		public SerializableGourmetUserData(GourmetUserData userData)
-		{
-			userData = userData ?? throw new ArgumentNullException(nameof(userData));
+        public SerializableUserInformation(GourmetUserInformation userInformation)
+        {
+            userInformation = userInformation ?? throw new ArgumentNullException(nameof(userInformation));
 
-			NameOfUser = userData.NameOfUser;
-		}
+            NameOfUser = userInformation.NameOfUser;
+            ShopModelId = userInformation.ShopModelId;
+            EaterId = userInformation.EaterId;
+            StaffGroupId = userInformation.StaffGroupId;
+        }
 
-		public string NameOfUser { get; set; }
+        public string NameOfUser { get; set; }
 
-		public GourmetUserData ToGourmetUserData()
-		{
-			return new GourmetUserData(NameOfUser);
-		}
-	}
+        public string ShopModelId { get; set; }
+
+        public string EaterId { get; set; }
+
+        public string StaffGroupId { get; set; }
+
+        public GourmetUserInformation ToGourmetUserInformation()
+        {
+            return new GourmetUserInformation(NameOfUser, ShopModelId, EaterId, StaffGroupId);
+        }
+    }
 }

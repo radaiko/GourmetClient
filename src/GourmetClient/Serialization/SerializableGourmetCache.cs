@@ -1,49 +1,46 @@
-﻿namespace GourmetClient.Serialization
+﻿namespace GourmetClient.Serialization;
+
+using System;
+using System.Linq;
+using Model;
+
+internal class SerializableGourmetCache
 {
-    using System;
-    using Model;
-
-    internal class SerializableGourmetCache
+    public SerializableGourmetCache()
     {
-        public SerializableGourmetCache()
-        {
-            // Used for deserialization
-            Timestamp = DateTime.MinValue;
-        }
+        // Used for deserialization
+        Timestamp = DateTime.MinValue;
+        Menus = [];
+        OrderedMenus = [];
+    }
 
-        public SerializableGourmetCache(GourmetCache menuCache)
-        {
-            menuCache = menuCache ?? throw new ArgumentNullException(nameof(menuCache));
+    public SerializableGourmetCache(GourmetCache menuCache)
+    {
+        menuCache = menuCache ?? throw new ArgumentNullException(nameof(menuCache));
 
-            Version = 1;
-            Timestamp = menuCache.Timestamp;
-            Menu = new SerializableGourmetMenu(menuCache.Menu);
-            OrderedMenu = new SerializableOrderedGourmetMenu(menuCache.OrderedMenu);
+        Version = 2;
+        Timestamp = menuCache.Timestamp;
+        UserInformation = new SerializableUserInformation(menuCache.UserInformation);
+        Menus = menuCache.Menus.Select(menu => new SerializableGourmetMenu(menu)).ToArray();
+        OrderedMenus = menuCache.OrderedMenus.Select(orderedMenu => new SerializableGourmetOrderedMenu(orderedMenu)).ToArray();
+    }
 
-            if (menuCache.UserData != null)
-            {
-                UserData = new SerializableGourmetUserData(menuCache.UserData);
-            }
-        }
+    public int? Version { get; set; }
 
-        public int? Version { get; set; }
+    public DateTime Timestamp { get; set; }
 
-        public DateTime Timestamp { get; set; }
+    public SerializableUserInformation UserInformation { get; set; }
 
-        public SerializableGourmetUserData UserData { get; set; }
+    public SerializableGourmetMenu[] Menus { get; set; }
 
-        public SerializableGourmetMenu Menu { get; set; }
+    public SerializableGourmetOrderedMenu[] OrderedMenus { get; set; }
 
-        public SerializableOrderedGourmetMenu OrderedMenu { get; set; }
-
-        public GourmetCache ToGourmetMenuCache()
-        {
-            if (Version is not 1)
-            {
-                throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
-            }
-
-            return new GourmetCache(Timestamp, UserData?.ToGourmetUserData(), Menu?.ToGourmetMenu(), OrderedMenu?.ToOrderedGourmetMenu());
-        }
+    public GourmetCache ToGourmetMenuCache()
+    {
+        return new GourmetCache(
+            Timestamp,
+            UserInformation.ToGourmetUserInformation(),
+            Menus.Select(serializedMenu => serializedMenu.ToGourmetMenu()).ToArray(),
+            OrderedMenus.Select(serializedOrderedMenu => serializedOrderedMenu.ToOrderedGourmetMenu()).ToArray());
     }
 }
