@@ -1,19 +1,17 @@
 ﻿namespace GourmetClient.ViewModels
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using System.Windows.Input;
-
     using Behaviors;
-
     using GourmetClient.Model;
     using GourmetClient.Network;
     using GourmetClient.Settings;
     using GourmetClient.Utils;
-
     using Notifications;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection.Metadata;
+    using System.Threading.Tasks;
+    using System.Windows.Input;
 
     public class MealOrderViewModel : ViewModelBase
     {
@@ -42,6 +40,8 @@
             _cacheService = InstanceProvider.GourmetCacheService;
             _settingsService = InstanceProvider.SettingsService;
             _notificationService = InstanceProvider.NotificationService;
+
+            _menuDays = [];
 
             UpdateMenuCommand = new AsyncDelegateCommand(ForceUpdateMenu, () => !IsMenuUpdating);
             ExecuteSelectedOrderCommand = new AsyncDelegateCommand(ExecuteSelectedOrder, () => !IsMenuUpdating);
@@ -193,13 +193,16 @@
                 foreach (var menu in dayGroup.OrderBy(menu => menu.MenuName))
                 {
                     var menuViewModel = new GourmetMenuMealViewModel(menu);
-                    var orderedMenu = _cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.Day == menu.Day && orderedMenu.MenuName == menu.MenuName);
+                    var orderedMenu = _cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
 
                     if (orderedMenu != null)
                     {
                         menuViewModel.IsMealOrdered = true;
                         menuViewModel.IsMealOrderApproved = orderedMenu.IsOrderApproved;
                         menuViewModel.MealState = GourmetMenuMealState.Ordered;
+
+                        // TODO: Check if this can be found out somehow
+                        menuViewModel.IsOrderCancelable = true;
                     }
                     else if (!menu.IsAvailable)
                     {
@@ -212,102 +215,102 @@
                 dayViewModels.Add(new GourmetMenuDayViewModel(day, menuViewModels));
             }
 
+            NotifyAboutConflictingOrderedMenus(_cache.OrderedMenus);
             MenuDays = dayViewModels.OrderBy(viewModel => viewModel.Date).ToArray();
+        }
 
-            //var viewModelMenu = new GourmetMenuViewModel(_cache.Menu);
+        private void NotifyAboutConflictingOrderedMenus(IReadOnlyCollection<GourmetOrderedMenu> orderedMenus)
+        {
+            IEnumerable<GourmetOrderedMenu> duplicateOrderedMenus = orderedMenus
+                .GroupBy(orderedMenu => orderedMenu)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key);
 
-            //foreach (var mealViewModel in viewModelMenu.Days.SelectMany(day => day.Meals))
-            //{
-            //    if (string.IsNullOrEmpty(mealViewModel.ProductId))
-            //    {
-            //        mealViewModel.MealState = GourmetMenuMealState.NotAvailable;
-            //    }
-            //}
+            IEnumerable<DateTime> daysWithMultipleOrderedMenus = orderedMenus
+                .GroupBy(orderedMenu => orderedMenu.Day)
+                .Where(group => group.Count() > 1)
+                .Select(group => group.Key);
 
-            //foreach (var orderedDay in _cache.OrderedMenu.Days)
-            //{
-            //    var dayViewModel = viewModelMenu.Days.SingleOrDefault(day => day.Date == orderedDay.Date);
-            //    var mealViewModel = dayViewModel?.Meals.SingleOrDefault(meal => meal.MealName == orderedDay.Meal.Name);
+            foreach (var duplicateOrderedMenu in duplicateOrderedMenus)
+            {
+                _notificationService.Send(new Notification(NotificationType.Warning, $"Das Menü '{duplicateOrderedMenu.MenuName}' am {duplicateOrderedMenu.Day:dd.MM.yyyy} ist mehrfach bestellt"));
+            }
 
-            //    if (mealViewModel == null)
-            //    {
-            //        mealViewModel = dayViewModel?.AddMeal(new GourmetMenuMeal(string.Empty, orderedDay.Meal.Name, string.Empty));
-            //    }
-
-            //    if (mealViewModel != null)
-            //    {
-            //        mealViewModel.IsMealOrdered = true;
-            //        mealViewModel.IsMealOrderApproved = orderedDay.Meal.IsOrderApproved;
-            //        mealViewModel.IsOrderCancelable = orderedDay.Meal.IsOrderCancelable;
-            //        mealViewModel.MealState = GourmetMenuMealState.Ordered;
-            //    }
-            //}
-
-            //Menu = viewModelMenu;
+            foreach (var dayWithMultipleOrderedMenus in daysWithMultipleOrderedMenus)
+            {
+                _notificationService.Send(new Notification(NotificationType.Warning, $"Am {dayWithMultipleOrderedMenus:dd.MM.yyyy} sind mehrere Menüs bestellt"));
+            }
         }
 
         private async Task ExecuteSelectedOrder()
         {
-            //if (_menu == null)
-            //{
-            //    return;
-            //}
-
             IsMenuUpdating = true;
 
             try
             {
                 _cacheService.InvalidateCache();
-                //var currentData = await _cacheService.GetCache();
+                var currentData = await _cacheService.GetCache();
 
-                //var errorDays = new List<DateTime>();
-                //var mealsToOrder = new List<GourmetMenuMeal>();
-                //var mealsToCancel = new List<OrderedGourmetMenuMeal>();
+                var errorDays = new List<DateTime>();
+                var mealsToOrder = new List<GourmetMeal>();
+                var mealsToCancel = new List<GourmetOrderedMenu>();
 
-                //foreach (var dayViewModel in _menu.Days)
-                //{
-                //    var mealToOrder = dayViewModel.Meals.SingleOrDefault(meal => meal.MealState == GourmetMenuMealState.MarkedForOrder);
+                foreach (var dayViewModel in _menuDays)
+                {
+                    var mealToOrder = dayViewModel.Meals.SingleOrDefault(meal => meal.MealState == GourmetMenuMealState.MarkedForOrder);
 
-                //    if (mealToOrder != null)
-                //    {
-                //        var actualDayData = currentData.Menu.Days.FirstOrDefault(day => day.Date == dayViewModel.Date);
-                //        var actualMealData =
-                //            actualDayData?.Meals.FirstOrDefault(meal => meal.Name == mealToOrder.MealName);
+                    if (mealToOrder != null)
+                    {
+                        var menuModel = mealToOrder.GetModel();
+                        var actualMenu = currentData.Menus.FirstOrDefault(menu => menu.Equals(menuModel));
 
-                //        if (string.IsNullOrEmpty(actualMealData?.ProductId))
-                //        {
-                //            errorDays.Add(dayViewModel.Date);
-                //            _notificationService.Send(new Notification(NotificationType.Error, $"{mealToOrder.MealName} für den {dayViewModel.Date:dd.MM.yyyy} ist nicht mehr verfügbar"));
-                //        }
-                //        else
-                //        {
-                //            mealsToOrder.Add(mealToOrder.GetModel());
-                //        }
-                //    }
-                //}
+                        if (actualMenu is { IsAvailable: true })
+                        {
+                            mealsToOrder.Add(mealToOrder.GetModel());
+                        }
+                        else
+                        {
+                            errorDays.Add(dayViewModel.Date);
+                            _notificationService.Send(new Notification(NotificationType.Error, $"{mealToOrder.MealName} für den {dayViewModel.Date:dd.MM.yyyy} ist nicht mehr verfügbar"));
+                        }
+                    }
+                }
 
-                //foreach (var dayViewModel in _menu.Days.Where(day => !errorDays.Contains(day.Date)))
-                //{
-                //    foreach (var mealViewModel in dayViewModel.Meals)
-                //    {
-                //        if (mealViewModel.MealState == GourmetMenuMealState.MarkedForCancel)
-                //        {
-                //            var actualOrderedDayData = currentData.OrderedMenu.Days.FirstOrDefault(day => day.Date == dayViewModel.Date && day.Meal.Name == mealViewModel.MealName);
+                foreach (var dayViewModel in _menuDays.Where(day => !errorDays.Contains(day.Date)))
+                {
+                    foreach (var mealViewModel in dayViewModel.Meals)
+                    {
+                        if (mealViewModel.MealState == GourmetMenuMealState.MarkedForCancel)
+                        {
+                            var menuModel = mealViewModel.GetModel();
+                            var matchingOrderedMenus = currentData.OrderedMenus.Where(orderedMenu => orderedMenu.MatchesMenu(menuModel));
+                            var mealsToCancelCount = mealsToCancel.Count;
 
-                //            if (actualOrderedDayData != null && actualOrderedDayData.Meal.IsOrderCancelable)
-                //            {
-                //                mealsToCancel.Add(GetOrderedMeal(mealViewModel.GetModel()));
-                //            }
-                //            else
-                //            {
-                //                _notificationService.Send(new Notification(NotificationType.Error, $"{mealViewModel.MealName} für den {dayViewModel.Date:dd.MM.yyyy} kann nicht storniert werden"));
-                //            }
-                //        }
-                //    }
-                //}
+                            // Cancel all orders in case the menu has been ordered multiple times
+                            foreach (var actualOrderedMenu in matchingOrderedMenus)
+                            {
+                                // TODO: Apply IsOrderCancelable if this information is available
+                                // if (!actualOrderedMenu.Meal.IsOrderCancelable)
+                                //{
+                                //   // Assume that, in case of multiple orders of the same menu, if one of the order can't be cancelled, then none of the orders can be cancelled
+                                //   break;
+                                //}
 
-                //await _cacheService.UpdateOrderedMenu(mealsToOrder, mealsToCancel);
-                _cacheService.InvalidateCache();
+                                mealsToCancel.Add(actualOrderedMenu);
+                            }
+
+                            if (mealsToCancelCount == mealsToCancel.Count)
+                            {
+                                // Nothing was added
+                                _notificationService.Send(new Notification(NotificationType.Error, $"{mealViewModel.MealName} für den {dayViewModel.Date:dd.MM.yyyy} kann nicht storniert werden"));
+                            }
+                        }
+                    }
+                }
+
+                GourmetUpdateOrderResult updateOrderResult = await _cacheService.UpdateOrderedMenu(currentData.UserInformation, mealsToOrder, mealsToCancel);
+                NotifyAboutFailedOrders(updateOrderResult);
+
                 await UpdateMenu();
             }
             catch (Exception exception)
@@ -320,6 +323,17 @@
             }
         }
 
+        private void NotifyAboutFailedOrders(GourmetUpdateOrderResult updateOrderResult)
+        {
+            foreach (FailedMenuToOrderInformation information in updateOrderResult.FailedMenusToOrder)
+            {
+                _notificationService.Send(
+                    new Notification(
+                        NotificationType.Warning,
+                        $"Das Menü '{information.Menu.MenuName}' am {information.Menu.Day:dd.MM.yyyy} konnte nicht bestellt werden. Ursache: {information.Message}"));
+            }
+        }
+
         private bool CanToggleMealOrderedMark(GourmetMenuMealViewModel mealViewModel)
         {
             if (mealViewModel == null)
@@ -327,76 +341,76 @@
                 return false;
             }
 
-            //if (string.IsNullOrEmpty(mealViewModel.ProductId))
-            //{
-            //    if (mealViewModel.IsMealOrdered && mealViewModel.IsOrderCancelable)
-            //    {
-            //        // Meal can no longer be ordered but it is ordered and the order can be canceled
-            //        return true;
-            //    }
+            if (!mealViewModel.IsMealAvailable)
+            {
+                if (mealViewModel.IsMealOrdered && mealViewModel.IsOrderCancelable)
+                {
+                    // Meal can no longer be ordered, but it is ordered and the order can be canceled
+                    return true;
+                }
 
-            //    // Meal can no longer be ordered
-            //    return false;
-            //}
+                // Meal can no longer be ordered
+                return false;
+            }
 
-            //if (mealViewModel.IsMealOrdered && !mealViewModel.IsOrderCancelable)
-            //{
-            //    // Meal is ordered and the order cannot be canceled
-            //    return false;
-            //}
+            if (mealViewModel.IsMealOrdered && !mealViewModel.IsOrderCancelable)
+            {
+                // Meal is ordered and the order cannot be canceled
+                return false;
+            }
 
             return true;
         }
 
         private Task ToggleMealOrderedMark(GourmetMenuMealViewModel mealViewModel)
         {
-            //if (mealViewModel.MealState == GourmetMenuMealState.Ordered)
-            //{
-            //    mealViewModel.MealState = GourmetMenuMealState.MarkedForCancel;
-            //}
-            //else if (mealViewModel.MealState == GourmetMenuMealState.MarkedForOrder)
-            //{
-            //    mealViewModel.MealState = GourmetMenuMealState.None;
+            if (mealViewModel.MealState == GourmetMenuMealState.Ordered)
+            {
+                mealViewModel.MealState = GourmetMenuMealState.MarkedForCancel;
+            }
+            else if (mealViewModel.MealState == GourmetMenuMealState.MarkedForOrder)
+            {
+                mealViewModel.MealState = GourmetMenuMealState.None;
 
-            //    var orderedMeal = GetDayViewModel(mealViewModel)?.Meals.FirstOrDefault(meal => meal.IsMealOrdered);
+                var orderedMeal = GetDayViewModel(mealViewModel)?.Meals.FirstOrDefault(meal => meal.IsMealOrdered);
 
-            //    if (orderedMeal != null)
-            //    {
-            //        orderedMeal.MealState = GourmetMenuMealState.Ordered;
-            //    }
-            //}
-            //else
-            //{
-            //    var dayViewModel = GetDayViewModel(mealViewModel);
+                if (orderedMeal != null)
+                {
+                    orderedMeal.MealState = GourmetMenuMealState.Ordered;
+                }
+            }
+            else
+            {
+                var dayViewModel = GetDayViewModel(mealViewModel);
 
-            //    if (dayViewModel != null)
-            //    {
-            //        foreach (var mealOfDay in GetMealsWhereOrderCanBeChanged(dayViewModel))
-            //        {
-            //            if (mealOfDay == mealViewModel)
-            //            {
-            //                mealOfDay.MealState = mealOfDay.IsMealOrdered ? GourmetMenuMealState.Ordered : GourmetMenuMealState.MarkedForOrder;
-            //            }
-            //            else
-            //            {
-            //                mealOfDay.MealState = mealOfDay.IsMealOrdered ? GourmetMenuMealState.MarkedForCancel : GourmetMenuMealState.None;
-            //            }
-            //        }
-            //    }
-            //}
+                if (dayViewModel != null)
+                {
+                    foreach (var mealOfDay in GetMealsWhereOrderCanBeChanged(dayViewModel))
+                    {
+                        if (mealOfDay == mealViewModel)
+                        {
+                            mealOfDay.MealState = mealOfDay.IsMealOrdered ? GourmetMenuMealState.Ordered : GourmetMenuMealState.MarkedForOrder;
+                        }
+                        else
+                        {
+                            mealOfDay.MealState = mealOfDay.IsMealOrdered ? GourmetMenuMealState.MarkedForCancel : GourmetMenuMealState.None;
+                        }
+                    }
+                }
+            }
 
             return Task.CompletedTask;
         }
 
-        //private IEnumerable<GourmetMenuMealViewModel> GetMealsWhereOrderCanBeChanged(GourmetMenuDayViewModel dayViewModel)
-        //{
-        //    return dayViewModel.Meals.Where(meal => meal.MealState != GourmetMenuMealState.NotAvailable && (!meal.IsMealOrdered || meal.IsOrderCancelable));
-        //}
+        private IEnumerable<GourmetMenuMealViewModel> GetMealsWhereOrderCanBeChanged(GourmetMenuDayViewModel dayViewModel)
+        {
+            return dayViewModel.Meals.Where(meal => meal.MealState != GourmetMenuMealState.NotAvailable && (!meal.IsMealOrdered || meal.IsOrderCancelable));
+        }
 
-        //private GourmetMenuDayViewModel GetDayViewModel(GourmetMenuMealViewModel mealViewModel)
-        //{
-        //    return _menu?.Days.First(day => day.Meals.Contains(mealViewModel));
-        //}
+        private GourmetMenuDayViewModel GetDayViewModel(GourmetMenuMealViewModel mealViewModel)
+        {
+            return _menuDays.First(day => day.Meals.Contains(mealViewModel));
+        }
 
         //private GourmetMenuDay GetDay(GourmetMenuMeal meal)
         //{

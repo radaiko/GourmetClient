@@ -14,7 +14,9 @@
 
 		private bool _isMealOrderApproved;
 
-		public GourmetMenuMealViewModel(GourmetMeal meal)
+        private bool _isOrderCancelable;
+
+        public GourmetMenuMealViewModel(GourmetMeal meal)
 		{
 			_menu = meal ?? throw new ArgumentNullException(nameof(meal));
 		}
@@ -22,6 +24,8 @@
 		public string MealName => _menu.MenuName;
 
 		public string MealDescription => _menu.Description;
+
+        public bool IsMealAvailable => _menu.IsAvailable;
 
 		public bool IsMealOrdered
 		{
@@ -49,9 +53,23 @@
 					OnPropertyChanged();
 				}
 			}
-		}
+        }
 
-		public GourmetMenuMealState MealState
+        public bool IsOrderCancelable
+        {
+            get => _isOrderCancelable;
+
+            set
+            {
+                if (_isOrderCancelable != value)
+                {
+                    _isOrderCancelable = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public GourmetMenuMealState MealState
 		{
 			get => _mealState;
 

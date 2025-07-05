@@ -1,4 +1,5 @@
-﻿using System.Security;
+﻿using System.Linq;
+using System.Security;
 using System.Text.Json;
 
 namespace GourmetClient.Network
@@ -57,43 +58,55 @@ namespace GourmetClient.Network
             return _cache;
         }
 
-        public async Task UpdateOrderedMenu(IReadOnlyList<GourmetMenuMeal> mealsToOrder, IReadOnlyList<OrderedGourmetMenuMeal> mealsToCancel)
+        public async Task<GourmetUpdateOrderResult> UpdateOrderedMenu(
+            GourmetUserInformation userInformation,
+            IReadOnlyList<GourmetMeal> mealsToOrder,
+            IReadOnlyList<GourmetOrderedMenu> mealsToCancel)
         {
+            userInformation = userInformation ?? throw new ArgumentNullException(nameof(userInformation));
             mealsToOrder = mealsToOrder ?? throw new ArgumentNullException(nameof(mealsToOrder));
             mealsToCancel = mealsToCancel ?? throw new ArgumentNullException(nameof(mealsToCancel));
 
             var userSettings = _settingsService.GetCurrentUserSettings();
 
-            if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
+            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
+
+            if (!loginHandle.LoginSuccessful)
             {
-                return;
+                return FailAllMenusWithMessage("Login fehlgeschlagen");
             }
 
-            //await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
+            var failedOrders = new List<FailedMenuToOrderInformation>();
 
-            //if (!loginHandle.LoginSuccessful)
-            //{
-            //    return;
-            //}
+            try
+            {
+                foreach (var orderedMeal in mealsToCancel)
+                {
+                    await _webClient.CancelOrder(orderedMeal);
+                }
 
-            //try
-            //{
-            //    foreach (var orderedMeal in mealsToCancel)
-            //    {
-            //        await _webClient.CancelOrder(orderedMeal);
-            //    }
+                foreach (var meal in mealsToOrder)
+                {
+                    GourmetApiResult apiResult = await _webClient.AddMealToOrderedMenu(userInformation, meal);
+                    if (!apiResult.Success)
+                    {
+                        failedOrders.Add(new FailedMenuToOrderInformation(meal, apiResult.Message));
+                    }
+                }
 
-            //    foreach (var meal in mealsToOrder)
-            //    {
-            //        await _webClient.AddMealToOrderedMenu(meal);
-            //    }
+                await _webClient.ConfirmOrder();
+            }
+            finally
+            {
+                InvalidateCache();
+            }
 
-            //    await _webClient.ConfirmOrder();
-            //}
-            //finally
-            //{
-            //    InvalidateCache();
-            //}
+            return new GourmetUpdateOrderResult(failedOrders);
+
+            GourmetUpdateOrderResult FailAllMenusWithMessage(string message)
+            {
+                return new GourmetUpdateOrderResult(mealsToOrder.Select(menu => new FailedMenuToOrderInformation(menu, message)).ToArray());
+            }
         }
 
         private async Task UpdateCache()
@@ -150,7 +163,7 @@ namespace GourmetClient.Network
                     // Unsupported version
                     return new InvalidatedGourmetCache();
                 }
-                
+
                 return serializedCache.ToGourmetMenuCache();
             }
             catch
@@ -172,7 +185,7 @@ namespace GourmetClient.Network
                 {
                     Directory.CreateDirectory(cacheDirectory);
                 }
-                
+
                 await using var fileStream = new FileStream(_cacheFileName, FileMode.Create, FileAccess.Write, FileShare.None);
                 await JsonSerializer.SerializeAsync(fileStream, serializedCache, new JsonSerializerOptions { WriteIndented = true });
             }

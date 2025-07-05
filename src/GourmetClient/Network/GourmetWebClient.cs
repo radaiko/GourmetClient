@@ -41,7 +41,7 @@ namespace GourmetClient.Network
 
         protected override async Task<bool> LoginImpl(string userName, SecureString password)
         {
-            var ufprtValue = await GetUfprtValueFromPage(PageNameLogin);
+            var ufprtValue = await GetUfprtValueFromPage(PageNameLogin, "//div[@class='login']//form");
 
             var parameters = new Dictionary<string, string>
             {
@@ -51,7 +51,7 @@ namespace GourmetClient.Network
                 {"ufprt", ufprtValue}
             };
 
-            using var response = await ExecutePostRequest(WebUrl, parameters);
+            using var response = await ExecuteFormPostRequest(WebUrl, parameters);
             var httpContent = await GetResponseContent(response);
 
             // Login is successful if link to user settings is received
@@ -60,7 +60,7 @@ namespace GourmetClient.Network
 
         protected override async Task LogoutImpl()
         {
-            var ufprtValue = await GetUfprtValueFromPage(PageNameLogout);
+            var ufprtValue = await GetUfprtValueFromPage(PageNameLogout, "//form[.//button[@id='btnHeaderLogout']]");
 
             var parameters = new Dictionary<string, string>
             {
@@ -74,7 +74,7 @@ namespace GourmetClient.Network
         {
             // The page contains the menu elements twice (once for the desktop UI and once for the mobile UI).
             // By using a HashSet with a custom comparer, it is ensured that the same menu is only added once.
-            var parsedMenus = new HashSet<GourmetMeal>(new GourmetMenuComparer());
+            var parsedMenus = new HashSet<GourmetMeal>();
 
             GourmetUserInformation userInformation = null;
             var currentPage = 0;
@@ -174,51 +174,74 @@ namespace GourmetClient.Network
             }
         }
 
-      /*  public async Task AddMealToOrderedMenu(GourmetMenuMeal meal)
+        public async Task<GourmetApiResult> AddMealToOrderedMenu(GourmetUserInformation userInformation, GourmetMeal menu)
         {
-            meal = meal ?? throw new ArgumentNullException(nameof(meal));
+            menu = menu ?? throw new ArgumentNullException(nameof(menu));
 
-            if (string.IsNullOrEmpty(meal.ProductId))
+            var parameter = new
             {
-                throw new InvalidOperationException($"Meal {meal.Name} (Description: '{meal.Description}') cannot be ordered");
-            }
-
-            var parameters = new Dictionary<string, string>
-            {
-                { "ProductID", meal.ProductId },
-                { "IsMenu", "1" }
+                dates = new[]
+                {
+                    new { date = menu.Day.ToString("MM-dd-yyyy"), menuIds = new string[] { menu.MenuId }}
+                },
+                eaterId = userInformation.EaterId,
+                shopModelId = userInformation.ShopModelId,
+                staffgroupId = userInformation.StaffGroupId
             };
 
-            using var response = await ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(PageNameAddMealToOrderedMenu, ActionNameAddMealToOrderedMenu, parameters));
+            using var response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaCartApi/AddToMenuesCart", parameter);
+            return await GetJsonResponseObject(response, json =>
+                new GourmetApiResult(
+                    json.GetProperty("success").GetBoolean(),
+                    json.GetProperty("message").GetString()));
         }
 
-        public async Task CancelOrder(OrderedGourmetMenuMeal orderedMeal)
+        public async Task CancelOrder(GourmetOrderedMenu orderedMenu)
         {
-            orderedMeal = orderedMeal ?? throw new ArgumentNullException(nameof(orderedMeal));
+            orderedMenu = orderedMenu ?? throw new ArgumentNullException(nameof(orderedMenu));
 
-            if (!orderedMeal.IsOrderCancelable)
+            (HtmlDocument document, string resultUriInfo, string resultHttpContent) = await EnterOrderedMenuEditMode();
+
+            Dictionary<string, string> cancelOrderParameters;
+            try
             {
-                throw new InvalidOperationException($"Order {orderedMeal.Name} (OrderId: '{orderedMeal.OrderId}') cannot be canceled");
+                cancelOrderParameters = GetCancelOrderParameters(document, orderedMenu.PositionId);
+            }
+            catch (Exception exception)
+            {
+                throw new GourmetParseException("Error parsing the ordered menu HTML", resultUriInfo, resultHttpContent, exception);
             }
 
-            var parameters = new Dictionary<string, string>
-            {
-                { "id", orderedMeal.OrderId },
-                { "ismenu", "1" }
-            };
-
-            using var response = await ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(PageNameOrderedMenu, ActionNameCancelMealOrder, parameters));
+            using var cancelOrderResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, cancelOrderParameters);
         }
-
+        
         public async Task ConfirmOrder()
         {
-            using var responseOrderedMenu = await ExecuteGetRequestForPage__Old(PageNameOrderedMenu);
-            var httpContentOrderedMenu = await GetResponseContent(responseOrderedMenu);
-            var confirmParameters = ParseConfirmParametersFromOrderedGourmetMenuHtml(httpContentOrderedMenu);
+            using var orderedMenuResponse = await ExecuteGetRequestForPage(PageNameOrderedMenu);
+            var orderedMenuHttpContent = await GetResponseContent(orderedMenuResponse);
 
-            using var response = await ExecutePostRequest(WebUrl, confirmParameters);
+            Dictionary<string, string> confirmOrderParameters;
+            try
+            {
+                var document = new HtmlDocument();
+                document.LoadHtml(orderedMenuHttpContent);
+
+                if (!IsOrderedMenuPageEditModeActive(document))
+                {
+                    // Only needs to be confirmed if edit mode is active
+                    return;
+                }
+
+                confirmOrderParameters = GetToggleOrderMenuEditModeParameters(document);
+            }
+            catch (Exception exception)
+            {
+                throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(orderedMenuResponse), orderedMenuHttpContent, exception);
+            }
+
+            using var confirmResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, confirmOrderParameters);
         }
-      */
+
         public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
         {
             var parameters = new Dictionary<string, string>
@@ -228,7 +251,7 @@ namespace GourmetClient.Network
             };
 
             //using var response = await ExecutePostRequest(WebUrl, GetUrlParametersForPage__Old(PageNameBilling), parameters);
-            using var response = await ExecutePostRequest(WebUrl, parameters);
+            using var response = await ExecuteFormPostRequest(WebUrl, parameters);
             var httpContent = await GetResponseContent(response);
 
             try
@@ -245,20 +268,60 @@ namespace GourmetClient.Network
             }
         }
 
-        private async Task<string> GetUfprtValueFromPage(string pageName)
+        private async Task<(HtmlDocument Document, string ResultUriInfo, string ResultHttpContent)> EnterOrderedMenuEditMode()
+        {
+            using var orderedMenuResponse = await ExecuteGetRequestForPage(PageNameOrderedMenu);
+            var orderedMenuHttpContent = await GetResponseContent(orderedMenuResponse);
+
+            var orderedMenuDocument = new HtmlDocument();
+            orderedMenuDocument.LoadHtml(orderedMenuHttpContent);
+
+            Dictionary<string, string> enterEditModeParameters;
+
+            try
+            {
+                if (IsOrderedMenuPageEditModeActive(orderedMenuDocument))
+                {
+                    // Already in edit mode
+                    return (orderedMenuDocument, GetRequestUriString(orderedMenuResponse), orderedMenuHttpContent);
+                }
+
+                enterEditModeParameters = GetToggleOrderMenuEditModeParameters(orderedMenuDocument);
+            }
+            catch (Exception exception)
+            {
+                throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(orderedMenuResponse), orderedMenuHttpContent, exception);
+            }
+
+            using var enterEditModeResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, enterEditModeParameters);
+            var enterEditModeHttpContent = await GetResponseContent(enterEditModeResponse);
+
+            var enterEditModeDocument = new HtmlDocument();
+            enterEditModeDocument.LoadHtml(enterEditModeHttpContent);
+
+            if (!IsOrderedMenuPageEditModeActive(enterEditModeDocument))
+            {
+                throw new GourmetRequestException("Cannot enter edit mode of ordered menus", GetRequestUriString(enterEditModeResponse));
+            }
+
+            return (enterEditModeDocument, GetRequestUriString(enterEditModeResponse), enterEditModeHttpContent);
+        }
+
+        private async Task<string> GetUfprtValueFromPage(string pageName, string formXPath)
         {
             var response = await ExecuteGetRequestForPage(pageName);
             var httpContent = await GetResponseContent(response);
+
             var document = new HtmlDocument();
-
             document.LoadHtml(httpContent);
-            var ufprtNode = document.DocumentNode.GetSingleNode($"//input[@name='{UfprtNodeName}']");
 
-            if (ufprtNode == null)
-            {
-                throw new GourmetParseException($"Node with name '{UfprtNodeName}' not found", GetRequestUriString(response), httpContent);
-            }
+            var formNode = document.DocumentNode.GetSingleNode(formXPath);
+            return ParseUfprtValue(formNode);
+        }
 
+        private static string ParseUfprtValue(HtmlNode formNode)
+        {
+            var ufprtNode = formNode.GetSingleNode($".//input[@name='{UfprtNodeName}']");
             return ufprtNode.Attributes["value"].Value;
         }
 
@@ -269,12 +332,7 @@ namespace GourmetClient.Network
 
         private Task<HttpResponseMessage> ExecutePostRequestForPage(string pageName, IReadOnlyDictionary<string, string> formParameters)
         {
-            return ExecutePostRequest($"{WebUrl}{pageName}/", formParameters);
-        }
-
-        private Task<HttpResponseMessage> ExecuteGetRequestForPage__Old(string pageName)
-        {
-            return ExecuteGetRequest(WebUrl, GetUrlParametersForPage__Old(pageName));
+            return ExecuteFormPostRequest($"{WebUrl}{pageName}/", formParameters);
         }
 
         private static GourmetUserInformation ParseHtmlForUserInformation(HtmlDocument document)
@@ -423,29 +481,49 @@ namespace GourmetClient.Network
             return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
         }
 
-        private static IReadOnlyDictionary<string, string> ParseConfirmParametersFromOrderedGourmetMenuHtml(string html)
+        private static bool IsOrderedMenuPageEditModeActive(HtmlDocument document)
         {
-            var parameters = new Dictionary<string, string>();
+            var toggleEditModeParameterNode = document.DocumentNode.GetSingleNode("//form[@id='form_toggleEditMode']//input[@name='editMode' and @type='hidden']");
 
-            var document = new HtmlDocument();
-            document.LoadHtml(html);
+            // Edit mode is active if value is "False", because when submitting this value would disable the edit mode
+            return toggleEditModeParameterNode.Attributes["value"].Value == "False";
+        }
 
-            var formNode = document.DocumentNode.GetSingleNode("//form[@action='default.aspx' and @method='post' and @name='genericform']");
+        private static Dictionary<string, string> GetToggleOrderMenuEditModeParameters(HtmlDocument document)
+        {
+            var formNode = document.DocumentNode.GetSingleNode("//form[@id='form_toggleEditMode']");
+            var editModeNode = formNode.GetSingleNode(".//input[@name='editMode' and @type='hidden']");
 
-            foreach (var inputNode in formNode.GetNodes(".//*[self::input or self::select]"))
+            string editModeValue = editModeNode.Attributes["value"].Value;
+            string ufprtValue = ParseUfprtValue(formNode);
+
+            return new Dictionary<string, string>
             {
-                var name = inputNode.Attributes["name"]?.Value;
+                {"editMode", editModeValue},
+                {"ufprt", ufprtValue}
+            };
+        }
 
-                if (!string.IsNullOrEmpty(name))
-                {
-                    parameters.Add(name, inputNode.Attributes["value"]?.Value ?? string.Empty);
-                }
-            }
+        private static Dictionary<string, string> GetCancelOrderParameters(HtmlDocument document, string positionId)
+        {
+            var eatingCycleIdNodeName = $"cp_EatingCycleId_{positionId}";
+            var dateNodeName = $"cp_Date_{positionId}";
 
-            var confirmButtonNode = formNode.GetSingleNode(".//button[@name='btn_order_confirm']");
-            parameters.Add(confirmButtonNode.Attributes["name"].Value, confirmButtonNode.Attributes["value"].Value);
+            var formNode = document.DocumentNode.GetSingleNode($"//form[@id='form_{positionId}_cp']");
+            var eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='{eatingCycleIdNodeName}') and @type='hidden']");
+            var dateInputNode = formNode.GetSingleNode($".//input[(@name='{dateNodeName}') and @type='hidden']");
 
-            return parameters;
+            var eatingCycleIdValue = eatingCycleIdInputNode.Attributes["value"].Value;
+            var dateValue = dateInputNode.Attributes["value"].Value;
+            var ufprtValue = ParseUfprtValue(formNode);
+
+            return new Dictionary<string, string>
+            {
+                {"cp_PositionId", positionId},
+                {eatingCycleIdNodeName, eatingCycleIdValue},
+                {dateNodeName, dateValue},
+                {"ufprt", ufprtValue}
+            };
         }
 
         private static IReadOnlyList<BillingPosition> ParseBillingPositionsFromBillingHtml(string html)
@@ -561,43 +639,6 @@ namespace GourmetClient.Network
             }
 
             return pageParameters;
-        }
-
-        private class GourmetMenuComparer : IEqualityComparer<GourmetMeal>
-        {
-            /// <summary>
-            /// Compares whether two <see cref="GourmetMeal"/> instances are equal.
-            /// Two meals are considered equal if their <see cref="GourmetMeal.MenuId"/> and <see cref="GourmetMeal.Day"/>
-            /// properties are equal. This is because the menu id is only unique within one day, but menus on different
-            /// days can have the same menu id.
-            /// </summary>
-            /// <param name="x">The first instance.</param>
-            /// <param name="y">The second instance.</param>
-            /// <returns>A value indicating whether the two instances are equal.</returns>
-            public bool Equals(GourmetMeal x, GourmetMeal y)
-            {
-                if (ReferenceEquals(x, y))
-                {
-                    return true;
-                }
-
-                if (x is null || y is null)
-                {
-                    return false;
-                }
-
-                if (x.GetType() != y.GetType())
-                {
-                    return false;
-                }
-
-                return x.Day == y.Day && x.MenuId == y.MenuId;
-            }
-
-            public int GetHashCode(GourmetMeal obj)
-            {
-                return HashCode.Combine(obj.Day, obj.MenuId);
-            }
         }
     }
 }

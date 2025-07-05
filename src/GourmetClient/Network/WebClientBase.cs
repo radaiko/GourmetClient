@@ -127,7 +127,7 @@ namespace GourmetClient.Network
             }
             catch (Exception exception)
             {
-                throw new GourmetRequestException($"Error executing GET request", requestUrl, exception);
+                throw new GourmetRequestException("Error executing GET request", requestUrl, exception);
             }
 
             EnsureSuccessStatusCode(response);
@@ -135,7 +135,7 @@ namespace GourmetClient.Network
             return response;
         }
 
-        protected async Task<HttpResponseMessage> ExecutePostRequest(string url, IReadOnlyDictionary<string, string> formParameters)
+        protected async Task<HttpResponseMessage> ExecuteFormPostRequest(string url, IReadOnlyDictionary<string, string> formParameters)
         {
             var content = new FormUrlEncodedContent(formParameters);
 
