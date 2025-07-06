@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using GourmetClient.Update.Response;
+using GourmetClient.Update.GitHubApi;
 using GourmetClient.Utils;
 using Semver;
 
