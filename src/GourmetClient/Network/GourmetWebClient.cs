@@ -1,5 +1,5 @@
 ﻿using System.Net.Http;
-using System.Text.Json;
+using GourmetClient.Network.GourmetApi;
 
 namespace GourmetClient.Network
 {
@@ -138,10 +138,9 @@ namespace GourmetClient.Network
             };
 
             using var response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaCartApi/AddToMenuesCart", parameter);
-            return await GetJsonResponseObject(response, json =>
-                new GourmetApiResult(
-                    json.GetProperty("success").GetBoolean(),
-                    json.GetProperty("message").GetString()));
+            var responseObject = await GetJsonResponseObject<AddToMenuesCartResponse>(response);
+
+            return new GourmetApiResult(responseObject.Success, responseObject.Message);
         }
 
         public async Task CancelOrder(GourmetOrderedMenu orderedMenu)
@@ -222,39 +221,24 @@ namespace GourmetClient.Network
             try
             {
                 using var apiResponse = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaMyBillingApi/GetMyBillings", parameters);
-                return await GetJsonResponseObject(apiResponse, ConvertToBillingPositions);
-            }
-            finally
-            {
-                progress.Report(100);
-            }
+                var bills = await GetJsonResponseObject<Bill[]>(apiResponse);
 
-            IReadOnlyList<BillingPosition> ConvertToBillingPositions(JsonElement resultJson)
-            {
                 var result = new List<BillingPosition>();
 
-                int billingCount = resultJson.GetArrayLength();
-                for (int billingIndex = 0; billingIndex < billingCount; billingIndex++)
+                foreach (Bill bill in bills)
                 {
-                    JsonElement billingElement = resultJson[billingIndex];
-                    DateTime billDate = billingElement.GetProperty("BillDate").GetDateTime();
-                    JsonElement billingItems = billingElement.GetProperty("BillingItemInfo");
-                    int billingItemsCount = billingItems.GetArrayLength();
-
-                    for (int itemIndex = 0; itemIndex < billingItemsCount; itemIndex++)
+                    foreach (BillingItem billingItem in bill.BillingItems)
                     {
-                        JsonElement itemElement = billingItems[itemIndex];
-                        string description = itemElement.GetProperty("Description").GetString();
-                        int count = itemElement.GetProperty("Count").GetInt32();
-                        double totalCost = itemElement.GetProperty("Total").GetDouble();
-                        double subsidy = itemElement.GetProperty("Subsidy").GetDouble();
-                        double cost = totalCost - subsidy;
-
-                        result.Add(new BillingPosition(billDate, BillingPositionType.Menu, description, count, cost));
+                        double cost = billingItem.TotalCost - billingItem.Subsidy;
+                        result.Add(new BillingPosition(bill.BillDate, BillingPositionType.Menu, billingItem.Description, billingItem.Count, cost));
                     }
                 }
 
                 return result;
+            }
+            finally
+            {
+                progress.Report(100);
             }
         }
 
@@ -315,7 +299,7 @@ namespace GourmetClient.Network
             return ufprtNode.Attributes["value"].Value;
         }
 
-        private Task<HttpResponseMessage> ExecuteGetRequestForPage(string pageName, IReadOnlyDictionary<string, string> urlParameters = null)
+        private Task<HttpResponseMessage> ExecuteGetRequestForPage(string pageName, IReadOnlyDictionary<string, string>? urlParameters = null)
         {
             return ExecuteGetRequest($"{WebUrl}{pageName}/", urlParameters);
         }

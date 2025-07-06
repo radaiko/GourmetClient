@@ -178,24 +178,26 @@ namespace GourmetClient.Network
             }
         }
 
-        protected static async Task<T> GetJsonResponseObject<T>(HttpResponseMessage response, Func<JsonElement, T> parseFunc)
+        protected static async Task<T> GetJsonResponseObject<T>(HttpResponseMessage response)
         {
             string jsonResponseContent = await GetResponseContent(response);
+            T? result;
 
             try
             {
-                var obj = JsonSerializer.Deserialize<object>(jsonResponseContent);
-                if (obj is JsonElement jsonElement)
-                {
-                    return parseFunc(jsonElement);
-                }
+                result = JsonSerializer.Deserialize<T>(jsonResponseContent);
             }
             catch (Exception exception)
             {
                 throw new GourmetParseException("Error parsing response content as JSON", GetRequestUriString(response), jsonResponseContent, exception);
             }
 
-            throw new GourmetParseException("Error parsing response content as JSON", GetRequestUriString(response), jsonResponseContent);
+            if (result is null)
+            {
+                throw new GourmetParseException("Invalid JSON content", GetRequestUriString(response), jsonResponseContent);
+            }
+
+            return result;
         }
 
         protected static string GetRequestUriString(HttpResponseMessage response)
