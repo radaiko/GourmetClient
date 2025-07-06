@@ -184,9 +184,9 @@
 		<ContentControl ContentTemplate="{StaticResource GroupedBillingPositionsHeader}" />
 
 		<ItemsControl ItemTemplate="{StaticResource GroupedBillingPositionTemplate}"
-		              ItemsSource="{Binding MealBillingPositions}" />
+		              ItemsSource="{Binding MenuBillingPositions}" />
 
-		<ContentControl Content="{Binding SumCostMealBillingPositions}"
+		<ContentControl Content="{Binding SumCostMenuBillingPositions}"
 		                ContentTemplate="{StaticResource GroupedBillingPositionsFooter}" />
 
 		<TextBlock Style="{StaticResource HeaderTextBlock}"

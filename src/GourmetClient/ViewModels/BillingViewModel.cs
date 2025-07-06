@@ -17,7 +17,7 @@
 
         private readonly ObservableCollection<DateTime> _availableMonths;
 
-        private readonly ObservableCollection<GroupedBillingPositionsViewModel> _mealBillingPositions;
+        private readonly ObservableCollection<GroupedBillingPositionsViewModel> _menuBillingPositions;
 
         private readonly ObservableCollection<GroupedBillingPositionsViewModel> _drinkBillingPositions;
 
@@ -25,7 +25,7 @@
 
         private DateTime _selectedMonth;
 
-        private double _sumCostMealBillingPositions;
+        private double _sumCostMenuBillingPositions;
 
         private double _sumCostDrinkBillingPositions;
 
@@ -40,14 +40,14 @@
             _billingCacheService = InstanceProvider.BillingCacheService;
 
             _availableMonths = new ObservableCollection<DateTime>();
-            _mealBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
+            _menuBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
             _drinkBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
             _unknownBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
         }
 
         public IReadOnlyList<DateTime> AvailableMonths => _availableMonths;
 
-        public IReadOnlyList<GroupedBillingPositionsViewModel> MealBillingPositions => _mealBillingPositions;
+        public IReadOnlyList<GroupedBillingPositionsViewModel> MenuBillingPositions => _menuBillingPositions;
 
         public IReadOnlyList<GroupedBillingPositionsViewModel> DrinkBillingPositions => _drinkBillingPositions;
 
@@ -67,12 +67,12 @@
             }
         }
 
-        public double SumCostMealBillingPositions
+        public double SumCostMenuBillingPositions
         {
-            get => _sumCostMealBillingPositions;
+            get => _sumCostMenuBillingPositions;
             private set
             {
-                _sumCostMealBillingPositions = value;
+                _sumCostMenuBillingPositions = value;
                 OnPropertyChanged();
             }
         }
@@ -134,7 +134,6 @@
 
         public void OnActivated()
         {
-
         }
 
         private async void UpdateBillingPositions()
@@ -142,11 +141,11 @@
             IsUpdating = true;
             UpdateProgress = 0;
 
-            _mealBillingPositions.Clear();
+            _menuBillingPositions.Clear();
             _drinkBillingPositions.Clear();
             _unknownBillingPositions.Clear();
 
-            SumCostMealBillingPositions = 0;
+            SumCostMenuBillingPositions = 0;
             SumCostDrinkBillingPositions = 0;
             SumCostUnknownBillingPositions = 0;
 
@@ -165,17 +164,17 @@
                     progress.ProgressChanged -= OnUpdateProgressChanged;
                 }
 
-                var mealMenuBillingPositions = FindMealMenusBillingPositions(billingPositions).ToList();
-                var remainingBillingPositions = billingPositions.Except(mealMenuBillingPositions).ToList();
+                var menuBillingPositions = FindMenusBillingPositions(billingPositions).ToList();
+                var remainingBillingPositions = billingPositions.Except(menuBillingPositions).ToList();
 
-                foreach (var viewModel in GroupMealMenusBillingPositions(mealMenuBillingPositions))
+                foreach (var viewModel in GroupMenusBillingPositions(menuBillingPositions))
                 {
-                    _mealBillingPositions.Add(viewModel);
+                    _menuBillingPositions.Add(viewModel);
                 }
 
                 foreach (var viewModel in GroupBillingPositions(BillingPositionType.Menu, remainingBillingPositions))
                 {
-                    _mealBillingPositions.Add(viewModel);
+                    _menuBillingPositions.Add(viewModel);
                 }
 
                 foreach (var viewModel in GroupBillingPositions(BillingPositionType.Drink, remainingBillingPositions))
@@ -189,7 +188,7 @@
                 }
             }
 
-            SumCostMealBillingPositions = _mealBillingPositions.Sum(p => p.SumCost);
+            SumCostMenuBillingPositions = _menuBillingPositions.Sum(p => p.SumCost);
             SumCostDrinkBillingPositions = _drinkBillingPositions.Sum(p => p.SumCost);
             SumCostUnknownBillingPositions = _unknownBillingPositions.Sum(p => p.SumCost);
 
@@ -197,38 +196,35 @@
             IsUpdating = false;
         }
 
-        private IEnumerable<BillingPosition> FindMealMenusBillingPositions(IEnumerable<BillingPosition> billingPositions)
+        private IEnumerable<BillingPosition> FindMenusBillingPositions(IEnumerable<BillingPosition> billingPositions)
         {
             foreach (var billingPosition in billingPositions.Where(p => p.PositionType == BillingPositionType.Menu))
             {
-                if (billingPosition.PositionName.StartsWith("Menü I ") || billingPosition.PositionName.StartsWith("Menü 1") ||
-                    billingPosition.PositionName.StartsWith("Menü II ") || billingPosition.PositionName.StartsWith("Menü 2") ||
-                    billingPosition.PositionName.StartsWith("Menü III ") || billingPosition.PositionName.StartsWith("Menü 3") ||
-                    billingPosition.PositionName.StartsWith("Menü IV ") || billingPosition.PositionName.StartsWith("Menü 4"))
+                if (billingPosition.PositionName == "MENÜ I"
+                    || billingPosition.PositionName == "MENÜ II"
+                    || billingPosition.PositionName == "MENÜ III")
                 {
                     yield return billingPosition;
                 }
             }
         }
 
-        private IEnumerable<GroupedBillingPositionsViewModel> GroupMealMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions)
+        private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions)
         {
-            var menu1Positions = billingPositions.Where(p => p.PositionName.StartsWith("Menü I ") || p.PositionName.StartsWith("Menü 1")).ToList();
-            var menu2Positions = billingPositions.Where(p => p.PositionName.StartsWith("Menü II ") || p.PositionName.StartsWith("Menü 2")).ToList();
-            var menu3Positions = billingPositions.Where(p => p.PositionName.StartsWith("Menü III ") || p.PositionName.StartsWith("Menü 3")).ToList();
-            var menu4Positions = billingPositions.Where(p => p.PositionName.StartsWith("Menü IV ") || p.PositionName.StartsWith("Menü 4")).ToList();
+            var menu1Positions = billingPositions.Where(p => p.PositionName == "MENÜ I").ToList();
+            var menu2Positions = billingPositions.Where(p => p.PositionName == "MENÜ II").ToList();
+            var menu3Positions = billingPositions.Where(p => p.PositionName == "MENÜ III").ToList();
 
             var groupedPositions = new List<GroupedBillingPositionsViewModel>();
 
-            groupedPositions.AddRange(GroupMealMenusBillingPositions(menu1Positions, "Menü 1"));
-            groupedPositions.AddRange(GroupMealMenusBillingPositions(menu2Positions, "Menü 2"));
-            groupedPositions.AddRange(GroupMealMenusBillingPositions(menu3Positions, "Menü 3"));
-            groupedPositions.AddRange(GroupMealMenusBillingPositions(menu4Positions, "Menü 4"));
+            groupedPositions.AddRange(GroupMenusBillingPositions(menu1Positions, "Menü 1"));
+            groupedPositions.AddRange(GroupMenusBillingPositions(menu2Positions, "Menü 2"));
+            groupedPositions.AddRange(GroupMenusBillingPositions(menu3Positions, "Menü 3"));
 
             return groupedPositions;
         }
 
-        private IEnumerable<GroupedBillingPositionsViewModel> GroupMealMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions, string groupName)
+        private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions, string groupName)
         {
             foreach (var singleCostGroup in billingPositions.GroupBy(position => position.SumCost / position.Count))
             {
