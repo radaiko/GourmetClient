@@ -19,7 +19,7 @@
 		{
 			if (IsLoaded)
 			{
-				((SettingsViewModel)DataContext).LoginPassword = LoginPasswordBox.SecurePassword;
+				((SettingsViewModel)DataContext).LoginPassword = LoginPasswordBox.Password;
 			}
 		}
 
@@ -27,7 +27,7 @@
         {
             if (IsLoaded)
             {
-                ((SettingsViewModel)DataContext).VentopayPassword = VentopayPasswordBox.SecurePassword;
+                ((SettingsViewModel)DataContext).VentopayPassword = VentopayPasswordBox.Password;
             }
         }
     }

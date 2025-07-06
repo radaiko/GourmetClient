@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Security;
 using System.Text.Json;
 
 namespace GourmetClient.Network
@@ -25,7 +24,7 @@ namespace GourmetClient.Network
 
         private readonly string _cacheFileName;
 
-        private GourmetCache _cache;
+        private GourmetCache? _cache;
 
         public GourmetCacheService()
         {
@@ -34,7 +33,6 @@ namespace GourmetClient.Network
             _notificationService = InstanceProvider.NotificationService;
 
             _cacheFileName = Path.Combine(App.LocalAppDataPath, "GourmetCache.json");
-            _cache = new InvalidatedGourmetCache();
         }
 
         public void InvalidateCache()
@@ -66,7 +64,7 @@ namespace GourmetClient.Network
         {
             var userSettings = _settingsService.GetCurrentUserSettings();
 
-            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
+            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
 
             if (!loginHandle.LoginSuccessful)
             {
@@ -109,7 +107,7 @@ namespace GourmetClient.Network
         private async Task UpdateCache()
         {
             _cache = await CreateCacheFromServerData();
-            await SaveMenuCache(_cache);
+            await SaveCache(_cache);
         }
 
         private async Task<GourmetCache> CreateCacheFromServerData()
@@ -168,7 +166,7 @@ namespace GourmetClient.Network
             }
         }
 
-        private async Task SaveMenuCache(GourmetCache menuCache)
+        private async Task SaveCache(GourmetCache menuCache)
         {
             var serializedCache = new SerializableGourmetCache(menuCache);
 

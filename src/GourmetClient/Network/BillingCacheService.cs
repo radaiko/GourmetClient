@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Security;
     using System.Threading.Tasks;
     using Model;
 
@@ -72,7 +71,7 @@
             
             try
             {
-                await using var loginHandle = await _gourmetWebClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
+                await using var loginHandle = await _gourmetWebClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
                 if (!loginHandle.LoginSuccessful)
                 {
                     _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Gourmet konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
@@ -109,7 +108,7 @@
             
             try
             {
-                await using var loginHandle = await _ventopayWebClient.Login(userSettings.VentopayUsername, userSettings.VentopayPassword ?? new SecureString());
+                await using var loginHandle = await _ventopayWebClient.Login(userSettings.VentopayUsername, userSettings.VentopayPassword);
                 if (!loginHandle.LoginSuccessful)
                 {
                     _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Ventopay konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));

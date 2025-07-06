@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace GourmetClient.Network
 {
-    using System.Security;
     using System.Text.Json;
 
     public abstract class WebClientBase
@@ -26,14 +25,14 @@ namespace GourmetClient.Network
         private Task? _logoutTask;
         private int _loginCounter;
 
-        public async Task<LoginHandle> Login(string userName, SecureString password)
+        public async Task<LoginHandle> Login(string userName, string password)
         {
             var loginSuccessful = await RequestLogin(userName, password);
 
             return new LoginHandle(loginSuccessful, OnLoginHandleReturned);
         }
 
-        private async Task<bool> RequestLogin(string userName, SecureString password)
+        private async Task<bool> RequestLogin(string userName, string password)
         {
             Task? activeLogoutTask;
 
@@ -106,7 +105,7 @@ namespace GourmetClient.Network
             return ValueTask.CompletedTask;
         }
 
-        protected abstract Task<bool> LoginImpl(string username, SecureString password);
+        protected abstract Task<bool> LoginImpl(string username, string password);
 
         protected abstract Task LogoutImpl();
 

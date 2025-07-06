@@ -15,11 +15,11 @@
 
         private string _loginUsername;
 
-        private SecureString _loginPassword;
+        private string _loginPassword;
 
         private string _ventopayUsername;
 
-        private SecureString _ventopayPassword;
+        private string _ventopayPassword;
 
         private bool _checkForUpdates;
 
@@ -28,9 +28,9 @@
             _settingsService = InstanceProvider.SettingsService;
 
             _loginUsername = string.Empty;
-            _loginPassword = new SecureString();
+            _loginPassword = string.Empty;
             _ventopayUsername = string.Empty;
-            _ventopayPassword = new SecureString();
+            _ventopayPassword = string.Empty;
 
             SaveSettingsCommand = new AsyncDelegateCommand(SaveSettings);
         }
@@ -50,9 +50,9 @@
             }
         }
 
-        public SecureString LoginPassword
+        public string LoginPassword
         {
-            get => _loginPassword;
+            private get => _loginPassword;
             set
             {
                 _loginPassword = value;
@@ -73,9 +73,9 @@
             }
         }
 
-        public SecureString VentopayPassword
+        public string VentopayPassword
         {
-            get => _ventopayPassword;
+            private get => _ventopayPassword;
             set
             {
                 _ventopayPassword = value;

@@ -9,7 +9,6 @@ namespace GourmetClient.Network
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Security;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
@@ -26,14 +25,14 @@ namespace GourmetClient.Network
         [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]
         private static partial Regex LoginSuccessfulRegex();
 
-        protected override async Task<bool> LoginImpl(string userName, SecureString password)
+        protected override async Task<bool> LoginImpl(string userName, string password)
         {
             var ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//div[@class='login']//form");
 
             var parameters = new Dictionary<string, string>
             {
                 {"Username", userName},
-                {"Password", password.ToPlainPassword()},
+                {"Password", password},
                 {"RememberMe", "false"},
                 {"ufprt", ufprtValue}
             };

@@ -56,33 +56,21 @@
 			return userSettings;
 		}
 
-		private static string Encrypt(SecureString secureString)
+		private static string Encrypt(string value)
 		{
-			return EncryptionHelper.Encrypt(secureString.ToPlainPassword(), GetEncryptionKey());
+			return EncryptionHelper.Encrypt(value, GetEncryptionKey());
 		}
 
-		private static SecureString Decrypt(string encryptedText)
+		private static string Decrypt(string encryptedText)
 		{
 			try
 			{
-				return StringToSecureString(EncryptionHelper.Decrypt(encryptedText, GetEncryptionKey()));
+				return EncryptionHelper.Decrypt(encryptedText, GetEncryptionKey());
 			}
 			catch (Exception)
-			{
-				return new SecureString();
-			}
-		}
-
-		private static SecureString StringToSecureString(string plainText)
-		{
-			var secureString = new SecureString();
-
-			foreach (var c in plainText.ToCharArray())
-			{
-				secureString.AppendChar(c);
-			}
-
-			return secureString;
+            {
+                return string.Empty;
+            }
 		}
 
         private static string GetEncryptionKey()

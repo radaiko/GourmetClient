@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System;
-using System.Security;
 using System.Threading.Tasks;
 using GourmetClient.Utils;
 using System.Text.RegularExpressions;
@@ -25,7 +24,7 @@ namespace GourmetClient.Network
 
         private const string CompanyIdTrumpf = "0da8d3ec-0178-47d5-9ccd-a996f04acb61";
 
-        protected override async Task<bool> LoginImpl(string userName, SecureString password)
+        protected override async Task<bool> LoginImpl(string userName, string password)
         {
             var requestUrl = GetWebUrlForPage(PageNameLogin);
             using var loginPageResponse = await ExecuteGetRequest(requestUrl);
@@ -34,7 +33,7 @@ namespace GourmetClient.Network
             var parameters = ParseAspxParameters(loginPageContent);
             parameters.Add("DropDownList1", CompanyIdTrumpf);
             parameters.Add("TxtUsername", userName);
-            parameters.Add("TxtPassword", password.ToPlainPassword());
+            parameters.Add("TxtPassword", password);
             parameters.Add("BtnLogin", "Login");
             parameters.Add("languageRadio", "DE");
 
