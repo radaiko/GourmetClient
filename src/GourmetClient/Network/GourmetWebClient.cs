@@ -17,9 +17,7 @@ namespace GourmetClient.Network
     public partial class GourmetWebClient : WebClientBase
     {
         private const string WebUrl = "https://alaclickneu.gourmet.at/";
-
-        private const string UfprtNodeName = "ufprt";
-
+        
         private const string PageNameLogin = "start";
 
         private const string PageNameLogout = "start";
@@ -28,13 +26,7 @@ namespace GourmetClient.Network
 
         private const string PageNameOrderedMenu = "bestellungen";
 
-        private const string PageNameAddMealToOrderedMenu = "AddItem";
-
         private const string PageNameBilling = "Billing";
-
-        private const string ActionNameAddMealToOrderedMenu = "AddItemToShoppingCart";
-
-        private const string ActionNameCancelMealOrder = "CancelItem";
 
         [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]
         private static partial Regex LoginSuccessfulRegex();
@@ -74,7 +66,7 @@ namespace GourmetClient.Network
         {
             // The page contains the menu elements twice (once for the desktop UI and once for the mobile UI).
             // By using a HashSet with a custom comparer, it is ensured that the same menu is only added once.
-            var parsedMenus = new HashSet<GourmetMeal>();
+            var parsedMenus = new HashSet<GourmetMenu>();
 
             GourmetUserInformation userInformation = null;
             var currentPage = 0;
@@ -97,7 +89,7 @@ namespace GourmetClient.Network
 
                     userInformation ??= ParseHtmlForUserInformation(document);
 
-                    foreach (GourmetMeal parsedMenu in ParseGourmetMenuHtml(document))
+                    foreach (GourmetMenu parsedMenu in ParseGourmetMenuHtml(document))
                     {
                         parsedMenus.Add(parsedMenu);
                     }
@@ -118,44 +110,6 @@ namespace GourmetClient.Network
             return new GourmetMenuResult(userInformation, parsedMenus);
         }
 
-        //public async Task<GourmetMeal> GetFullMenu(GourmetUserInformation userInformation, ParsedGourmetMenu parsedMenu)
-        //{
-        //    var parameter = new
-        //    {
-        //        shopModelId = userInformation.ShopModelId,
-        //        eaterId = userInformation.EaterId,
-        //        staffgroupId = userInformation.StaffGroupId,
-        //        date = parsedMenu.DateString,
-        //        menuId = parsedMenu.PositionId
-        //    };
-
-        //    char[] ParseAllergens(string value)
-        //    {
-        //        if (string.IsNullOrWhiteSpace(value))
-        //        {
-        //            return [];
-        //        }
-
-        //        return value.Split('|', StringSplitOptions.RemoveEmptyEntries).Select(part => part[0]).ToArray();
-        //    }
-
-        //    using var response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaArticleApi/GetMenuInfo", parameter);
-        //    return await GetJsonResponseObject(
-        //        response,
-        //        json => new GourmetMeal(
-        //            ParseMealDateString(json.GetProperty("dateString").GetString()),
-        //            json.GetProperty("id").GetString(),
-        //            json.GetProperty("menuName").GetString(),
-        //            json.GetProperty("description").GetString(),
-        //            json.GetProperty("menuNumber").GetString(),
-        //            ParseAllergens(json.GetProperty("allergens").GetString()),
-        //            json.GetProperty("grossPrice").GetDouble(),
-        //            json.GetProperty("amount").GetInt32(),
-        //            json.GetProperty("ordered").GetInt32())
-        //        );
-
-        //}
-
         public async Task<IReadOnlyCollection<GourmetOrderedMenu>> GetOrderedMenus()
         {
             using var response = await ExecuteGetRequestForPage(PageNameOrderedMenu);
@@ -174,7 +128,7 @@ namespace GourmetClient.Network
             }
         }
 
-        public async Task<GourmetApiResult> AddMealToOrderedMenu(GourmetUserInformation userInformation, GourmetMeal menu)
+        public async Task<GourmetApiResult> AddMenuToOrderedMenu(GourmetUserInformation userInformation, GourmetMenu menu)
         {
             menu = menu ?? throw new ArgumentNullException(nameof(menu));
 
@@ -321,7 +275,7 @@ namespace GourmetClient.Network
 
         private static string ParseUfprtValue(HtmlNode formNode)
         {
-            var ufprtNode = formNode.GetSingleNode($".//input[@name='{UfprtNodeName}']");
+            var ufprtNode = formNode.GetSingleNode(".//input[@name='ufprt']");
             return ufprtNode.Attributes["value"].Value;
         }
 
@@ -350,19 +304,19 @@ namespace GourmetClient.Network
             return new GourmetUserInformation(nameOfUser, shopModelId, eaterId, staffGroupId);
         }
 
-        private static IEnumerable<GourmetMeal> ParseGourmetMenuHtml(HtmlDocument document)
+        private static IEnumerable<GourmetMenu> ParseGourmetMenuHtml(HtmlDocument document)
         {
-            foreach (var mealNode in document.DocumentNode.GetNodes("//div[@class='meal']"))
+            foreach (var menuNode in document.DocumentNode.GetNodes("//div[@class='meal']"))
             {
-                var detailNode = mealNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
+                var detailNode = menuNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
                 var positionId = detailNode.Attributes["data-id"].Value;
                 var day = ParseMenuDateString(detailNode.Attributes["data-date"].Value);
-                var title = mealNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText().Trim();
-                var subTitle = mealNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
-                var allergens = ParseAllergens(mealNode.GetSingleNode(".//li[@class='allergen']").GetInnerText());
-                var isAvailable = mealNode.ContainsNode(".//input[@type='checkbox' and @class='menu-clicked']");
+                var title = menuNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText().Trim();
+                var subTitle = menuNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
+                var allergens = ParseAllergens(menuNode.GetSingleNode(".//li[@class='allergen']").GetInnerText());
+                var isAvailable = menuNode.ContainsNode(".//input[@type='checkbox' and @class='menu-clicked']");
 
-                yield return new GourmetMeal(day, positionId, title, subTitle, allergens, isAvailable);
+                yield return new GourmetMenu(day, positionId, title, subTitle, allergens, isAvailable);
             }
         }
 
@@ -544,7 +498,7 @@ namespace GourmetClient.Network
                 }
 
                 var countNode = rowNode.GetSingleNode(".//td[@data-title='Stk.']");
-                var mealNameNode = rowNode.GetSingleNode(".//td[@data-title='Speise']");
+                var menuNameNode = rowNode.GetSingleNode(".//td[@data-title='Speise']");
                 var totalCostNode = rowNode.GetSingleNode(".//td[@data-title='Gesamt']");
                 var subsidyNode = rowNode.GetSingleNode(".//td[@data-title='Stützung']");
 
@@ -558,7 +512,7 @@ namespace GourmetClient.Network
                     lastParsedDate = date;
                 }
 
-                var mealName = mealNameNode.GetInnerText();
+                var menuName = menuNameNode.GetInnerText();
                 var countString = countNode.GetInnerText();
                 var totalCostString = totalCostNode.GetInnerText().Replace("€", string.Empty).Trim();
                 var subsidyString = subsidyNode.GetInnerText().Replace("€", string.Empty).Trim();
@@ -582,7 +536,7 @@ namespace GourmetClient.Network
                 }
 
                 var cost = totalCost - subsidy;
-                billingPositions.Add(new BillingPosition(date, false, BillingPositionType.Meal, mealName, count, cost));
+                billingPositions.Add(new BillingPosition(date, false, BillingPositionType.Menu, menuName, count, cost));
             }
 
             return billingPositions;

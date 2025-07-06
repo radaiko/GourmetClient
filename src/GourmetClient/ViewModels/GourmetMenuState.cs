@@ -1,6 +1,6 @@
 ﻿namespace GourmetClient.ViewModels
 {
-	public enum GourmetMenuMealState
+	public enum GourmetMenuState
 	{
 		None,
 

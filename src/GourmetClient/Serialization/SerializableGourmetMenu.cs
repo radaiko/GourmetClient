@@ -10,7 +10,7 @@ internal class SerializableGourmetMenu
         // Used for deserialization
     }
 
-    public SerializableGourmetMenu(GourmetMeal menu)
+    public SerializableGourmetMenu(GourmetMenu menu)
     {
         menu = menu ?? throw new ArgumentNullException(nameof(menu));
 
@@ -34,8 +34,8 @@ internal class SerializableGourmetMenu
 
     public bool IsAvailable { get; set; }
 
-    public GourmetMeal ToGourmetMenu()
+    public GourmetMenu ToGourmetMenu()
     {
-        return new GourmetMeal(Day, MenuId, MenuName, Description, Allergens, IsAvailable);
+        return new GourmetMenu(Day, MenuId, MenuName, Description, Allergens, IsAvailable);
     }
 }

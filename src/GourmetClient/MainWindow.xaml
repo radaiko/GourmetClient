@@ -10,5 +10,5 @@
         MinWidth="590"
         Height="700"
         mc:Ignorable="d">
-	<views:MealOrderView />
+	<views:MenuOrderView />
 </Window>

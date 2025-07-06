@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public record GourmetCache(
     DateTime Timestamp,
     GourmetUserInformation UserInformation,
-    IReadOnlyCollection<GourmetMeal> Menus,
+    IReadOnlyCollection<GourmetMenu> Menus,
     IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);
 
 public record InvalidatedGourmetCache()

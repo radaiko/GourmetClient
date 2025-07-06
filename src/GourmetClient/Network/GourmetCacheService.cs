@@ -60,12 +60,12 @@ namespace GourmetClient.Network
 
         public async Task<GourmetUpdateOrderResult> UpdateOrderedMenu(
             GourmetUserInformation userInformation,
-            IReadOnlyList<GourmetMeal> mealsToOrder,
-            IReadOnlyList<GourmetOrderedMenu> mealsToCancel)
+            IReadOnlyList<GourmetMenu> menusToOrder,
+            IReadOnlyList<GourmetOrderedMenu> menusToCancel)
         {
             userInformation = userInformation ?? throw new ArgumentNullException(nameof(userInformation));
-            mealsToOrder = mealsToOrder ?? throw new ArgumentNullException(nameof(mealsToOrder));
-            mealsToCancel = mealsToCancel ?? throw new ArgumentNullException(nameof(mealsToCancel));
+            menusToOrder = menusToOrder ?? throw new ArgumentNullException(nameof(menusToOrder));
+            menusToCancel = menusToCancel ?? throw new ArgumentNullException(nameof(menusToCancel));
 
             var userSettings = _settingsService.GetCurrentUserSettings();
 
@@ -80,17 +80,17 @@ namespace GourmetClient.Network
 
             try
             {
-                foreach (var orderedMeal in mealsToCancel)
+                foreach (var orderedMenu in menusToCancel)
                 {
-                    await _webClient.CancelOrder(orderedMeal);
+                    await _webClient.CancelOrder(orderedMenu);
                 }
 
-                foreach (var meal in mealsToOrder)
+                foreach (var menu in menusToOrder)
                 {
-                    GourmetApiResult apiResult = await _webClient.AddMealToOrderedMenu(userInformation, meal);
+                    GourmetApiResult apiResult = await _webClient.AddMenuToOrderedMenu(userInformation, menu);
                     if (!apiResult.Success)
                     {
-                        failedOrders.Add(new FailedMenuToOrderInformation(meal, apiResult.Message));
+                        failedOrders.Add(new FailedMenuToOrderInformation(menu, apiResult.Message));
                     }
                 }
 
@@ -105,7 +105,7 @@ namespace GourmetClient.Network
 
             GourmetUpdateOrderResult FailAllMenusWithMessage(string message)
             {
-                return new GourmetUpdateOrderResult(mealsToOrder.Select(menu => new FailedMenuToOrderInformation(menu, message)).ToArray());
+                return new GourmetUpdateOrderResult(menusToOrder.Select(menu => new FailedMenuToOrderInformation(menu, message)).ToArray());
             }
         }
 

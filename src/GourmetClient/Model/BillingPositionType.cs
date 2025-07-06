@@ -3,7 +3,7 @@
     public enum BillingPositionType
     {
         Unknown,
-        Meal,
+        Menu,
         Drink
     }
 }

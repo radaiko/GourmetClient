@@ -18,10 +18,6 @@
 		<None Remove="Resources\Icons\ExecuteOrder.png" />
 		<None Remove="Resources\Icons\Information.png" />
 		<None Remove="Resources\Icons\Information_small.png" />
-		<None Remove="Resources\Icons\MealMarkedForCancel.png" />
-		<None Remove="Resources\Icons\MealMarkedForOrder.png" />
-		<None Remove="Resources\Icons\MealNotAvailable.png" />
-		<None Remove="Resources\Icons\MealOrdered.png" />
 		<None Remove="Resources\Icons\ProgressChecked.png" />
 		<None Remove="Resources\Icons\ProgressError.png" />
 		<None Remove="Resources\Icons\RefreshLocalData.png" />
@@ -44,10 +40,10 @@
 		<Resource Include="Resources\Icons\ExecuteOrder.png" />
 		<Resource Include="Resources\Icons\Information.png" />
 		<Resource Include="Resources\Icons\Information_small.png" />
-		<Resource Include="Resources\Icons\MealMarkedForCancel.png" />
-		<Resource Include="Resources\Icons\MealMarkedForOrder.png" />
-		<Resource Include="Resources\Icons\MealNotAvailable.png" />
-		<Resource Include="Resources\Icons\MealOrdered.png" />
+		<Resource Include="Resources\Icons\MenuMarkedForCancel.png" />
+		<Resource Include="Resources\Icons\MenuMarkedForOrder.png" />
+		<Resource Include="Resources\Icons\MenuNotAvailable.png" />
+		<Resource Include="Resources\Icons\MenuOrdered.png" />
 		<Resource Include="Resources\Icons\ProgressChecked.png" />
 		<Resource Include="Resources\Icons\ProgressError.png" />
 		<Resource Include="Resources\Icons\RefreshLocalData.png" />

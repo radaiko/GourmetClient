@@ -1,0 +1,91 @@
+﻿namespace GourmetClient.ViewModels
+{
+	using System;
+	using GourmetClient.Model;
+	using GourmetClient.Utils;
+
+	public class GourmetMenuViewModel : ObservableObject
+	{
+		private readonly GourmetMenu _menu;
+
+		private bool _isOrdered;
+
+		private GourmetMenuState _menuState;
+
+		private bool _isOrderApproved;
+
+        private bool _isOrderCancelable;
+
+        public GourmetMenuViewModel(GourmetMenu menu)
+		{
+			_menu = menu ?? throw new ArgumentNullException(nameof(menu));
+		}
+
+		public string MenuName => _menu.MenuName;
+
+		public string MenuDescription => _menu.Description;
+
+        public bool IsAvailable => _menu.IsAvailable;
+
+		public bool IsOrdered
+		{
+			get => _isOrdered;
+
+			set
+			{
+				if (_isOrdered != value)
+				{
+					_isOrdered = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+
+		public bool IsOrderApproved
+		{
+			get => _isOrderApproved;
+
+			set
+			{
+				if (_isOrderApproved != value)
+				{
+					_isOrderApproved = value;
+					OnPropertyChanged();
+				}
+			}
+        }
+
+        public bool IsOrderCancelable
+        {
+            get => _isOrderCancelable;
+
+            set
+            {
+                if (_isOrderCancelable != value)
+                {
+                    _isOrderCancelable = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public GourmetMenuState MenuState
+		{
+			get => _menuState;
+
+			set
+			{
+				if (_menuState != value)
+				{
+					_menuState = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+
+		public GourmetMenu GetModel()
+		{
+			return _menu;
+		}
+	}
+}

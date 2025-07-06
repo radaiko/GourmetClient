@@ -181,7 +181,7 @@ namespace GourmetClient.Network
 
                 var positionType = positionName switch
                 {
-                    "Snackware" => BillingPositionType.Meal,
+                    "Snackware" => BillingPositionType.Menu,
                     _ => BillingPositionType.Drink
                 };
 

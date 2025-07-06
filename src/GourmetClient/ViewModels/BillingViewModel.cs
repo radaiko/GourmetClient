@@ -173,7 +173,7 @@
                     _mealBillingPositions.Add(viewModel);
                 }
 
-                foreach (var viewModel in GroupBillingPositions(BillingPositionType.Meal, remainingBillingPositions))
+                foreach (var viewModel in GroupBillingPositions(BillingPositionType.Menu, remainingBillingPositions))
                 {
                     _mealBillingPositions.Add(viewModel);
                 }
@@ -199,7 +199,7 @@
 
         private IEnumerable<BillingPosition> FindMealMenusBillingPositions(IEnumerable<BillingPosition> billingPositions)
         {
-            foreach (var billingPosition in billingPositions.Where(p => p.PositionType == BillingPositionType.Meal))
+            foreach (var billingPosition in billingPositions.Where(p => p.PositionType == BillingPositionType.Menu))
             {
                 if (billingPosition.PositionName.StartsWith("Menü I ") || billingPosition.PositionName.StartsWith("Menü 1") ||
                     billingPosition.PositionName.StartsWith("Menü II ") || billingPosition.PositionName.StartsWith("Menü 2") ||
@@ -232,7 +232,7 @@
         {
             foreach (var singleCostGroup in billingPositions.GroupBy(position => position.SumCost / position.Count))
             {
-                yield return new GroupedBillingPositionsViewModel(BillingPositionType.Meal, groupName, singleCostGroup.Sum(p => p.Count), singleCostGroup.Key, singleCostGroup.Sum(p => p.SumCost));
+                yield return new GroupedBillingPositionsViewModel(BillingPositionType.Menu, groupName, singleCostGroup.Sum(p => p.Count), singleCostGroup.Key, singleCostGroup.Sum(p => p.SumCost));
             }
         }
 

@@ -7,14 +7,14 @@
     using GourmetClient.ViewModels;
 
 	/// <summary>
-	/// Interaction logic for MealOrderView.xaml
+	/// Interaction logic for MenuOrderView.xaml
 	/// </summary>
-	public partial class MealOrderView : InitializableView
+	public partial class MenuOrderView : InitializableView
 	{
 		private static readonly DependencyPropertyKey AreAdditionalMenusOnRightSideKey = DependencyProperty.RegisterReadOnly(
 			"AreAdditionalMenusOnRightSide",
 			typeof(bool),
-			typeof(MealOrderView),
+			typeof(MenuOrderView),
 			new PropertyMetadata(false));
 
 		public static readonly DependencyProperty AreAdditionalMenusOnRightSideProperty = AreAdditionalMenusOnRightSideKey.DependencyProperty;
@@ -22,14 +22,14 @@
 		private static readonly DependencyProperty HorizontalMenuScrollOffsetProperty =DependencyProperty.Register(
 			"HorizontalMenuScrollOffset", 
 			typeof(double), 
-			typeof(MealOrderView), 
+			typeof(MenuOrderView), 
 			new PropertyMetadata(0.0, HorizontalMenuScrollOffsetChangedCallback));
 
-		public MealOrderView()
+		public MenuOrderView()
 		{
 			InitializeComponent();
 
-			DataContext = new MealOrderViewModel();
+			DataContext = new MenuOrderViewModel();
 		}
 
 		public bool AreAdditionalMenusOnRightSide
@@ -51,7 +51,7 @@
 
 		private static void HorizontalMenuScrollOffsetChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			var view = d as MealOrderView;
+			var view = d as MenuOrderView;
 			view?.MenuScrollViewer.ScrollToHorizontalOffset((double)e.NewValue);
 		}
 

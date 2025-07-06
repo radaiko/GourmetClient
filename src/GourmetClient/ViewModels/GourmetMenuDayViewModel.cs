@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 public class GourmetMenuDayViewModel
 {
-    public GourmetMenuDayViewModel(DateTime day, IReadOnlyList<GourmetMenuMealViewModel> menuViewModels)
+    public GourmetMenuDayViewModel(DateTime day, IReadOnlyList<GourmetMenuViewModel> menuViewModels)
     {
         Date = day;
-        Meals = menuViewModels;
+        Menus = menuViewModels;
     }
 
     public DateTime Date { get; }
 
-    public IReadOnlyList<GourmetMenuMealViewModel> Meals { get; }
+    public IReadOnlyList<GourmetMenuViewModel> Menus { get; }
 }
