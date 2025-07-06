@@ -185,7 +185,7 @@ namespace GourmetClient.Network
                     _ => BillingPositionType.Drink
                 };
 
-                billingPositions.Add(new BillingPosition(dateTime, true, positionType, positionName, count, cost));
+                billingPositions.Add(new BillingPosition(dateTime, positionType, positionName, count, cost));
             }
 
             return billingPositions;

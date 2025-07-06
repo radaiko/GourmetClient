@@ -67,7 +67,7 @@
                 _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Gourmet sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
                 progress.Report(100);
 
-                return Array.Empty<BillingPosition>();
+                return [];
             }
             
             try
@@ -76,7 +76,7 @@
                 if (!loginHandle.LoginSuccessful)
                 {
                     _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Gourmet konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
-                    return Array.Empty<BillingPosition>();
+                    return [];
                 }
 
                 return await _gourmetWebClient.GetBillingPositions(month, year, progress);
@@ -84,7 +84,7 @@
             catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
             {
                 _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Gourmet konnten nicht geladen werden", exception));
-                return Array.Empty<BillingPosition>();
+                return [];
             }
             finally
             {
@@ -101,7 +101,7 @@
                 _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Ventopay sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
                 progress.Report(100);
 
-                return Array.Empty<BillingPosition>();
+                return [];
             }
 
             var fromDate = new DateTime(year, month, 1);
@@ -113,7 +113,7 @@
                 if (!loginHandle.LoginSuccessful)
                 {
                     _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Ventopay konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
-                    return Array.Empty<BillingPosition>();
+                    return [];
                 }
 
                 return await _ventopayWebClient.GetBillingPositions(fromDate, toDate, progress);
@@ -121,7 +121,7 @@
             catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
             {
                 _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Ventopay konnten nicht geladen werden", exception));
-                return Array.Empty<BillingPosition>();
+                return [];
             }
             finally
             {

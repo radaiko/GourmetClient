@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Net.Http;
+using System.Text.Json;
 
 namespace GourmetClient.Network
 {
@@ -17,23 +18,19 @@ namespace GourmetClient.Network
     public partial class GourmetWebClient : WebClientBase
     {
         private const string WebUrl = "https://alaclickneu.gourmet.at/";
-        
-        private const string PageNameLogin = "start";
 
-        private const string PageNameLogout = "start";
+        private const string PageNameStart = "start";
 
         private const string PageNameMenu = "menus";
 
         private const string PageNameOrderedMenu = "bestellungen";
-
-        private const string PageNameBilling = "Billing";
 
         [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]
         private static partial Regex LoginSuccessfulRegex();
 
         protected override async Task<bool> LoginImpl(string userName, SecureString password)
         {
-            var ufprtValue = await GetUfprtValueFromPage(PageNameLogin, "//div[@class='login']//form");
+            var ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//div[@class='login']//form");
 
             var parameters = new Dictionary<string, string>
             {
@@ -52,14 +49,14 @@ namespace GourmetClient.Network
 
         protected override async Task LogoutImpl()
         {
-            var ufprtValue = await GetUfprtValueFromPage(PageNameLogout, "//form[.//button[@id='btnHeaderLogout']]");
+            var ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//form[.//button[@id='btnHeaderLogout']]");
 
             var parameters = new Dictionary<string, string>
             {
                 {"ufprt", ufprtValue}
             };
 
-            using var response = await ExecutePostRequestForPage(PageNameLogout, parameters);
+            using var response = await ExecutePostRequestForPage(PageNameStart, parameters);
         }
 
         public async Task<GourmetMenuResult> GetMenus()
@@ -168,7 +165,7 @@ namespace GourmetClient.Network
 
             using var cancelOrderResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, cancelOrderParameters);
         }
-        
+
         public async Task ConfirmOrder()
         {
             using var orderedMenuResponse = await ExecuteGetRequestForPage(PageNameOrderedMenu);
@@ -198,27 +195,71 @@ namespace GourmetClient.Network
 
         public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
         {
-            var parameters = new Dictionary<string, string>
-            {
-                {"PostBackSelectMonth", "1"},
-                {"inputAbrechnung", $"{month}-{year}"}
-            };
+            using var billingResponse = await ExecuteGetRequestForPage(PageNameStart);
+            var httpContent = await GetResponseContent(billingResponse);
 
-            //using var response = await ExecutePostRequest(WebUrl, GetUrlParametersForPage__Old(PageNameBilling), parameters);
-            using var response = await ExecuteFormPostRequest(WebUrl, parameters);
-            var httpContent = await GetResponseContent(response);
-
+            GourmetUserInformation userInformation;
             try
             {
-                return ParseBillingPositionsFromBillingHtml(httpContent);
+                var document = new HtmlDocument();
+                document.LoadHtml(httpContent);
+
+                userInformation = ParseHtmlForUserInformation(document);
             }
             catch (Exception exception)
             {
-                throw new GourmetParseException("Error parsing the billing HTML", GetRequestUriString(response), httpContent, exception);
+                throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(billingResponse), httpContent, exception);
+            }
+
+            var inputDate = new DateTime(year, month, 1);
+            var currentDate = DateTime.Now;
+            int monthsDifference = (currentDate.Year - inputDate.Year) * 12 + currentDate.Month - inputDate.Month;
+
+            var parameters = new Dictionary<string, string>
+            {
+                // checkLastMonthNumber describes the target month by specifying how many months back the report should be generated
+                // This value starts at zero, i.e., "0" means the current month, "1" means one month back, etc.
+                {"checkLastMonthNumber", (monthsDifference).ToString()},
+                {"eaterId", userInformation.EaterId},
+                {"shopModelId", userInformation.ShopModelId}
+            };
+
+            try
+            {
+                using var apiResponse = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaMyBillingApi/GetMyBillings", parameters);
+                return await GetJsonResponseObject(apiResponse, ConvertToBillingPositions);
             }
             finally
             {
                 progress.Report(100);
+            }
+
+            IReadOnlyList<BillingPosition> ConvertToBillingPositions(JsonElement resultJson)
+            {
+                var result = new List<BillingPosition>();
+
+                int billingCount = resultJson.GetArrayLength();
+                for (int billingIndex = 0; billingIndex < billingCount; billingIndex++)
+                {
+                    JsonElement billingElement = resultJson[billingIndex];
+                    DateTime billDate = billingElement.GetProperty("BillDate").GetDateTime();
+                    JsonElement billingItems = billingElement.GetProperty("BillingItemInfo");
+                    int billingItemsCount = billingItems.GetArrayLength();
+
+                    for (int itemIndex = 0; itemIndex < billingItemsCount; itemIndex++)
+                    {
+                        JsonElement itemElement = billingItems[itemIndex];
+                        string description = itemElement.GetProperty("Description").GetString();
+                        int count = itemElement.GetProperty("Count").GetInt32();
+                        double totalCost = itemElement.GetProperty("Total").GetDouble();
+                        double subsidy = itemElement.GetProperty("Subsidy").GetDouble();
+                        double cost = totalCost - subsidy;
+
+                        result.Add(new BillingPosition(billDate, BillingPositionType.Menu, description, count, cost));
+                    }
+                }
+
+                return result;
             }
         }
 
@@ -291,10 +332,10 @@ namespace GourmetClient.Network
 
         private static GourmetUserInformation ParseHtmlForUserInformation(HtmlDocument document)
         {
-            var loginNameNode = document.DocumentNode.SelectSingleNode("//div[@class='userfield']//span[@class='loginname']");
-            var shopModelNode = document.DocumentNode.SelectSingleNode("//input[@id='shopModel']");
-            var eaterNode = document.DocumentNode.SelectSingleNode("//input[@id='eater']");
-            var staffGroupNode = document.DocumentNode.SelectSingleNode("//input[@id='staffGroup']");
+            var loginNameNode = document.DocumentNode.GetSingleNode("//div[@class='userfield']//span[@class='loginname']");
+            var shopModelNode = document.DocumentNode.GetSingleNode("//input[@id='shopModel']");
+            var eaterNode = document.DocumentNode.GetSingleNode("//input[@id='eater']");
+            var staffGroupNode = document.DocumentNode.GetSingleNode("//input[@id='staffGroup']");
 
             var nameOfUser = loginNameNode.GetInnerText();
             var shopModelId = shopModelNode.Attributes["value"].Value;
@@ -536,7 +577,7 @@ namespace GourmetClient.Network
                 }
 
                 var cost = totalCost - subsidy;
-                billingPositions.Add(new BillingPosition(date, false, BillingPositionType.Menu, menuName, count, cost));
+                billingPositions.Add(new BillingPosition(date, BillingPositionType.Menu, menuName, count, cost));
             }
 
             return billingPositions;
