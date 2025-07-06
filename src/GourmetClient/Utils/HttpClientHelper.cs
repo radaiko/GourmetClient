@@ -9,7 +9,7 @@ namespace GourmetClient.Utils
     {
         public static async Task<HttpClientResult<T>> CreateHttpClient<T>(string requestUrl, Func<HttpClient, Task<T>> proxyTestRequestFunc, CookieContainer cookieContainer)
         {
-            HttpClient client;
+            HttpClient? client;
             T requestResult;
 
             var proxy = GetProxy(requestUrl);
@@ -64,7 +64,7 @@ namespace GourmetClient.Utils
             }
         }
 
-        public static WebProxy GetProxy(string requestUrl)
+        public static WebProxy? GetProxy(string requestUrl)
         {
             var requestUri = new Uri(requestUrl);
             var proxyUri = WebRequest.DefaultWebProxy?.GetProxy(requestUri);

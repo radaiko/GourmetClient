@@ -35,7 +35,7 @@ namespace GourmetClient.Update
 
         public SemVersion CurrentVersion { get; }
 
-        public async Task<ReleaseDescription> CheckForUpdate(bool acceptPreReleases)
+        public async Task<ReleaseDescription?> CheckForUpdate(bool acceptPreReleases)
         {
             try
             {
@@ -55,8 +55,6 @@ namespace GourmetClient.Update
 
         public async Task<string> DownloadUpdatePackage(ReleaseDescription updateRelease, IProgress<int> progress, CancellationToken cancellationToken)
         {
-            updateRelease = updateRelease ?? throw new ArgumentNullException(nameof(updateRelease));
-
             var tempFolderPath = GetTempFolderPath();
             var packagePath = Path.Combine(GetTempFolderPath(), "GourmetClient.zip");
             var signedChecksumFilePath = Path.Combine(GetTempFolderPath(), "checksum.txt");
@@ -93,7 +91,7 @@ namespace GourmetClient.Update
 
                 var clientResult = await CreateHttpClient(updateRelease.UpdatePackageDownloadUrl, client => client.GetStreamAsync(updateRelease.UpdatePackageDownloadUrl, cancellationToken));
                 using var client = clientResult.Client;
-                
+
                 await using var packageSourceStream = clientResult.ResponseResult;
                 await DownloadFile(packageSourceStream, packageFileStream, totalBytesCount, totalReadBytes, progress, cancellationToken);
                 totalReadBytes += updateRelease.UpdatePackageSize;
@@ -222,13 +220,18 @@ namespace GourmetClient.Update
                 var assemblyLocation = Assembly.GetEntryAssembly()?.Location;
                 var assemblyPath = Path.GetDirectoryName(assemblyLocation);
 
+                if (assemblyPath is null)
+                {
+                    throw new GourmetUpdateException($"Could not create backup. Directory name of assembly location '{assemblyPath}' is null.");
+                }
+
                 cancellationToken.ThrowIfCancellationRequested();
 
                 await CopyDirectory(assemblyPath, targetPath, cancellationToken);
             }
             catch (IOException exception)
             {
-                throw new GourmetUpdateException("Could not created backup", exception);
+                throw new GourmetUpdateException("Could not create backup", exception);
             }
         }
 
@@ -287,7 +290,7 @@ namespace GourmetClient.Update
             }
         }
 
-        private async Task<ReleaseDescription> GetLatestRelease(bool acceptPreReleases)
+        private async Task<ReleaseDescription?> GetLatestRelease(bool acceptPreReleases)
         {
             IEnumerable<ReleaseDescription> releaseDescriptions = await GetAvailableReleases();
 
@@ -303,7 +306,7 @@ namespace GourmetClient.Update
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, ReleaseListUri);
 
-            IReadOnlyList<ReleaseDescription> releaseDescriptions = Array.Empty<ReleaseDescription>();
+            IReadOnlyList<ReleaseDescription> releaseDescriptions = [];
 
             var cachedQueryResult = await GetCachedReleaseListQueryResult();
             if (cachedQueryResult != null)
@@ -318,7 +321,7 @@ namespace GourmetClient.Update
 
                 // Not needed anymore
                 clientResult.Client.Dispose();
-                
+
                 using var response = clientResult.ResponseResult;
 
                 if (response.StatusCode != HttpStatusCode.NotModified)
@@ -326,7 +329,7 @@ namespace GourmetClient.Update
                     response.EnsureSuccessStatusCode();
 
                     var contentStream = await response.Content.ReadAsStreamAsync();
-                    var releases = await JsonSerializer.DeserializeAsync<ReleaseEntry[]>(contentStream);
+                    var releases = await JsonSerializer.DeserializeAsync<ReleaseEntry[]>(contentStream) ?? [];
 
                     releaseDescriptions = ReleaseEntriesToDescriptions(releases);
 
@@ -357,7 +360,7 @@ namespace GourmetClient.Update
             }
         }
 
-        private async Task<ReleaseListQueryResult> GetCachedReleaseListQueryResult()
+        private async Task<ReleaseListQueryResult?> GetCachedReleaseListQueryResult()
         {
             if (File.Exists(_releaseListQueryResultFilePath))
             {
@@ -366,7 +369,7 @@ namespace GourmetClient.Update
                     await using var fileStream = new FileStream(_releaseListQueryResultFilePath, FileMode.Open, FileAccess.Read, FileShare.None);
                     var serializedResult = await JsonSerializer.DeserializeAsync<SerializableReleaseListQueryResult>(fileStream);
 
-                    return serializedResult.ToReleaseListQueryResult();
+                    return serializedResult?.ToReleaseListQueryResult();
                 }
                 catch (Exception exception) when (exception is IOException || exception is JsonException || exception is InvalidOperationException)
                 {
@@ -378,8 +381,6 @@ namespace GourmetClient.Update
 
         private async Task SaveReleaseListQueryResult(ReleaseListQueryResult queryResult)
         {
-            queryResult = queryResult ?? throw new ArgumentNullException(nameof(queryResult));
-
             var serializedQueryResult = new SerializableReleaseListQueryResult(queryResult);
 
             try

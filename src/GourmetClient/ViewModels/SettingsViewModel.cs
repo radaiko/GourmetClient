@@ -1,82 +1,87 @@
 ﻿namespace GourmetClient.ViewModels
 {
-	using System.Security;
-	using System.Threading.Tasks;
+    using System.Security;
+    using System.Threading.Tasks;
     using System.Windows.Input;
 
     using Behaviors;
 
     using Settings;
-	using Utils;
+    using Utils;
 
-	public class SettingsViewModel : ViewModelBase
-	{
-		private readonly GourmetSettingsService _settingsService;
+    public class SettingsViewModel : ViewModelBase
+    {
+        private readonly GourmetSettingsService _settingsService;
 
-		private string _loginUsername;
+        private string _loginUsername;
 
-		private SecureString _loginPassword;
+        private SecureString _loginPassword;
 
         private string _ventopayUsername;
 
-		private SecureString _ventopayPassword;
+        private SecureString _ventopayPassword;
 
         private bool _checkForUpdates;
 
-		public SettingsViewModel()
-		{
-			_settingsService = InstanceProvider.SettingsService;
+        public SettingsViewModel()
+        {
+            _settingsService = InstanceProvider.SettingsService;
 
-			SaveSettingsCommand = new AsyncDelegateCommand(SaveSettings);
-		}
+            _loginUsername = string.Empty;
+            _loginPassword = new SecureString();
+            _ventopayUsername = string.Empty;
+            _ventopayPassword = new SecureString();
 
-		public ICommand SaveSettingsCommand { get; }
+            SaveSettingsCommand = new AsyncDelegateCommand(SaveSettings);
+        }
 
-		public string LoginUsername
-		{
-			get => _loginUsername;
+        public ICommand SaveSettingsCommand { get; }
+
+        public string LoginUsername
+        {
+            get => _loginUsername;
             set
-			{
-				if (_loginUsername != value)
-				{
-					_loginUsername = value;
-					OnPropertyChanged();
-				}
-			}
-		}
+            {
+                if (_loginUsername != value)
+                {
+                    _loginUsername = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
-		public SecureString LoginPassword
-		{
-			get => _loginPassword;
+        public SecureString LoginPassword
+        {
+            get => _loginPassword;
             set
-			{
-				_loginPassword = value;
-				OnPropertyChanged();
-			}
-		}
+            {
+                _loginPassword = value;
+                OnPropertyChanged();
+            }
+        }
 
-		public string VentopayUsername
-		{
-			get => _ventopayUsername;
+        public string VentopayUsername
+        {
+            get => _ventopayUsername;
             set
-			{
-				if (_ventopayUsername != value)
-				{
+            {
+                if (_ventopayUsername != value)
+                {
                     _ventopayUsername = value;
-					OnPropertyChanged();
-				}
-			}
-		}
+                    OnPropertyChanged();
+                }
+            }
+        }
 
-		public SecureString VentopayPassword
-		{
-			get => _ventopayPassword;
+        public SecureString VentopayPassword
+        {
+            get => _ventopayPassword;
             set
-			{
+            {
                 _ventopayPassword = value;
-				OnPropertyChanged();
-			}
-		}
+                OnPropertyChanged();
+            }
+        }
 
         public bool CheckForUpdates
         {
@@ -91,26 +96,26 @@
             }
         }
 
-		public override void Initialize()
-		{
-			var userSettings = _settingsService.GetCurrentUserSettings();
+        public override void Initialize()
+        {
+            var userSettings = _settingsService.GetCurrentUserSettings();
             var updateSettings = _settingsService.GetCurrentUpdateSettings();
 
-			LoginUsername = userSettings.GourmetLoginUsername;
-			LoginPassword = userSettings.GourmetLoginPassword;
+            LoginUsername = userSettings.GourmetLoginUsername;
+            LoginPassword = userSettings.GourmetLoginPassword;
             VentopayUsername = userSettings.VentopayUsername;
-			VentopayPassword = userSettings.VentopayPassword;
+            VentopayPassword = userSettings.VentopayPassword;
 
             CheckForUpdates = updateSettings.CheckForUpdates;
         }
 
-		private Task SaveSettings()
-		{
-			var userSettings = _settingsService.GetCurrentUserSettings();
+        private Task SaveSettings()
+        {
+            var userSettings = _settingsService.GetCurrentUserSettings();
             var updateSettings = _settingsService.GetCurrentUpdateSettings();
 
             userSettings.GourmetLoginUsername = LoginUsername;
-			userSettings.GourmetLoginPassword = LoginPassword;
+            userSettings.GourmetLoginPassword = LoginPassword;
             userSettings.VentopayUsername = VentopayUsername;
             userSettings.VentopayPassword = VentopayPassword;
 
@@ -123,6 +128,6 @@
             }
 
             return Task.CompletedTask;
-		}
-	}
+        }
+    }
 }

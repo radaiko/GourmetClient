@@ -12,8 +12,6 @@ internal class SerializableGourmetMenu
 
     public SerializableGourmetMenu(GourmetMenu menu)
     {
-        menu = menu ?? throw new ArgumentNullException(nameof(menu));
-
         Day = menu.Day;
         MenuId = menu.MenuId;
         MenuName = menu.MenuName;
@@ -22,20 +20,25 @@ internal class SerializableGourmetMenu
         IsAvailable = menu.IsAvailable;
     }
 
-    public DateTime Day { get; set; }
+    public DateTime? Day { get; set; }
 
-    public string MenuId { get; set; }
+    public string? MenuId { get; set; }
 
-    public string MenuName { get; set; }
+    public string? MenuName { get; set; }
 
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
-    public char[] Allergens { get; set; }
+    public char[]? Allergens { get; set; }
 
-    public bool IsAvailable { get; set; }
+    public bool? IsAvailable { get; set; }
 
     public GourmetMenu ToGourmetMenu()
     {
-        return new GourmetMenu(Day, MenuId, MenuName, Description, Allergens, IsAvailable);
+        if (Day is null || MenuId is null || MenuName is null || Description is null || IsAvailable is null)
+        {
+            throw new InvalidOperationException("Information for the menu is not complete");
+        }
+
+        return new GourmetMenu(Day.Value, MenuId, MenuName, Description, Allergens ?? [], IsAvailable.Value);
     }
 }

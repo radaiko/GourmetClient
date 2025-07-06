@@ -46,7 +46,7 @@ namespace GourmetClient
             TaskScheduler.UnobservedTaskException += (sender, args) => UnhandledExceptionOccurred(args.Exception);
         }
 
-        private void UnhandledExceptionOccurred(Exception exception)
+        private void UnhandledExceptionOccurred(Exception? exception)
         {
             if (exception == null)
             {
@@ -139,7 +139,7 @@ namespace GourmetClient
 
             executeUpdateWindow.Show();
 
-            Exception updateException = null;
+            Exception? updateException = null;
 
             try
             {
@@ -176,12 +176,12 @@ namespace GourmetClient
             }.ShowDialog();
         }
 
-        private void ExecuteUpdateWindowOnClosing(object sender, CancelEventArgs e)
+        private void ExecuteUpdateWindowOnClosing(object? sender, CancelEventArgs e)
         {
             e.Cancel = true;
         }
 
-        private Process GetRunningInstance()
+        private Process? GetRunningInstance()
         {
             var currentProcess = Process.GetCurrentProcess();
             return Process.GetProcessesByName(currentProcess.ProcessName).FirstOrDefault(process => process.Id != currentProcess.Id);

@@ -17,7 +17,7 @@
         public T FalseValue { get; set; }
 
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is bool boolValue && boolValue)
             {
@@ -27,7 +27,7 @@
             return FalseValue;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             return Equals(value, TrueValue);
         }

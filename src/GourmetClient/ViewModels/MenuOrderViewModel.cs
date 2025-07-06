@@ -20,8 +20,6 @@
 
         private readonly NotificationService _notificationService;
 
-        private GourmetCache _cache;
-
         private bool _showWelcomeMessage;
 
         private IReadOnlyList<GourmetMenuDayViewModel> _menuDays;
@@ -41,6 +39,7 @@
             _notificationService = InstanceProvider.NotificationService;
 
             _menuDays = [];
+            _nameOfUser = string.Empty;
 
             UpdateMenuCommand = new AsyncDelegateCommand(ForceUpdateMenu, () => !IsMenuUpdating);
             ExecuteSelectedOrderCommand = new AsyncDelegateCommand(ExecuteSelectedOrder, () => !IsMenuUpdating);
@@ -177,14 +176,14 @@
 
         private async Task UpdateMenu()
         {
-            _cache = await _cacheService.GetCache();
+            GourmetCache cache = await _cacheService.GetCache();
 
-            LastMenuUpdate = _cache.Timestamp;
-            NameOfUser = _cache.UserInformation?.NameOfUser;
+            LastMenuUpdate = cache.Timestamp;
+            NameOfUser = cache.UserInformation.NameOfUser;
 
             var dayViewModels = new List<GourmetMenuDayViewModel>();
 
-            foreach (var dayGroup in _cache.Menus.GroupBy(menu => menu.Day))
+            foreach (var dayGroup in cache.Menus.GroupBy(menu => menu.Day))
             {
                 DateTime day = dayGroup.Key;
                 var menuViewModels = new List<GourmetMenuViewModel>();
@@ -192,7 +191,7 @@
                 foreach (var menu in dayGroup.OrderBy(menu => menu.MenuName))
                 {
                     var menuViewModel = new GourmetMenuViewModel(menu);
-                    var orderedMenu = _cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
+                    var orderedMenu = cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
 
                     if (orderedMenu != null)
                     {
@@ -214,7 +213,7 @@
                 dayViewModels.Add(new GourmetMenuDayViewModel(day, menuViewModels));
             }
 
-            NotifyAboutConflictingOrderedMenus(_cache.OrderedMenus);
+            NotifyAboutConflictingOrderedMenus(cache.OrderedMenus);
             MenuDays = dayViewModels.OrderBy(viewModel => viewModel.Date).ToArray();
         }
 
@@ -333,7 +332,7 @@
             }
         }
 
-        private bool CanToggleMenuOrderedMark(GourmetMenuViewModel menuViewModel)
+        private bool CanToggleMenuOrderedMark(GourmetMenuViewModel? menuViewModel)
         {
             if (menuViewModel == null)
             {
@@ -361,8 +360,13 @@
             return true;
         }
 
-        private Task ToggleMenuOrderedMark(GourmetMenuViewModel menuViewModel)
+        private Task ToggleMenuOrderedMark(GourmetMenuViewModel? menuViewModel)
         {
+            if (menuViewModel == null)
+            {
+                return Task.CompletedTask;
+            }
+
             if (menuViewModel.MenuState == GourmetMenuState.Ordered)
             {
                 menuViewModel.MenuState = GourmetMenuState.MarkedForCancel;
@@ -371,7 +375,7 @@
             {
                 menuViewModel.MenuState = GourmetMenuState.None;
 
-                var orderedMenu = GetDayViewModel(menuViewModel)?.Menus.FirstOrDefault(menu => menu.IsOrdered);
+                var orderedMenu = GetDayViewModel(menuViewModel).Menus.FirstOrDefault(menu => menu.IsOrdered);
 
                 if (orderedMenu != null)
                 {
@@ -382,18 +386,15 @@
             {
                 var dayViewModel = GetDayViewModel(menuViewModel);
 
-                if (dayViewModel != null)
+                foreach (var menuOfDay in GetMenusWhereOrderCanBeChanged(dayViewModel))
                 {
-                    foreach (var menuOfDay in GetMenusWhereOrderCanBeChanged(dayViewModel))
+                    if (menuOfDay == menuViewModel)
                     {
-                        if (menuOfDay == menuViewModel)
-                        {
-                            menuOfDay.MenuState = menuOfDay.IsOrdered ? GourmetMenuState.Ordered : GourmetMenuState.MarkedForOrder;
-                        }
-                        else
-                        {
-                            menuOfDay.MenuState = menuOfDay.IsOrdered ? GourmetMenuState.MarkedForCancel : GourmetMenuState.None;
-                        }
+                        menuOfDay.MenuState = menuOfDay.IsOrdered ? GourmetMenuState.Ordered : GourmetMenuState.MarkedForOrder;
+                    }
+                    else
+                    {
+                        menuOfDay.MenuState = menuOfDay.IsOrdered ? GourmetMenuState.MarkedForCancel : GourmetMenuState.None;
                     }
                 }
             }
@@ -411,7 +412,7 @@
             return _menuDays.First(day => day.Menus.Contains(menuViewModel));
         }
 
-        private async void SettingsServiceOnSettingsSaved(object sender, EventArgs e)
+        private async void SettingsServiceOnSettingsSaved(object? sender, EventArgs e)
         {
             IsSettingsPopupOpened = false;
             ShowWelcomeMessage = false;

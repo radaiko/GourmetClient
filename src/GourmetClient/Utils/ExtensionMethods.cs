@@ -27,7 +27,7 @@ namespace GourmetClient.Utils
                 return nodes;
             }
 
-            return Enumerable.Empty<HtmlNode>();
+            return [];
         }
 
         public static string GetInnerText(this HtmlNode node)

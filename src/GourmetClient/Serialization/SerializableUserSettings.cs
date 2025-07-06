@@ -21,8 +21,6 @@
 
 		public SerializableUserSettings(UserSettings userSettings)
 		{
-			userSettings = userSettings ?? throw new ArgumentNullException(nameof(userSettings));
-
 			CacheValidityMinutes = (int)userSettings.CacheValidity.TotalMinutes;
 			GourmetLoginUsername = userSettings.GourmetLoginUsername;
 			GourmetLoginPassword = Encrypt(userSettings.GourmetLoginPassword);
@@ -60,28 +58,18 @@
 
 		private static string Encrypt(SecureString secureString)
 		{
-            if (secureString == null)
-            {
-                return null;
-            }
-
 			return EncryptionHelper.Encrypt(secureString.ToPlainPassword(), GetEncryptionKey());
 		}
 
 		private static SecureString Decrypt(string encryptedText)
 		{
-            if (encryptedText == null)
-            {
-                return null;
-            }
-
 			try
 			{
 				return StringToSecureString(EncryptionHelper.Decrypt(encryptedText, GetEncryptionKey()));
 			}
 			catch (Exception)
 			{
-				return null;
+				return new SecureString();
 			}
 		}
 

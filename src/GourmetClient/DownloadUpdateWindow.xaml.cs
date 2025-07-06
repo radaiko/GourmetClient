@@ -15,7 +15,7 @@ namespace GourmetClient
             Closing += OnClosing;
         }
 
-        private void OnClosing(object sender, CancelEventArgs e)
+        private void OnClosing(object? sender, CancelEventArgs e)
         {
             Closing -= OnClosing;
             CancelButton.Command?.Execute(null);

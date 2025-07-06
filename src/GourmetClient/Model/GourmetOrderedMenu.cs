@@ -17,7 +17,7 @@ public record GourmetOrderedMenu(
     /// </summary>
     /// <param name="other">The other instance.</param>
     /// <returns>True if this instance is equal to the other instance, otherwise false.</returns>
-    public virtual bool Equals(GourmetOrderedMenu other)
+    public virtual bool Equals(GourmetOrderedMenu? other)
     {
         if (other is null)
         {

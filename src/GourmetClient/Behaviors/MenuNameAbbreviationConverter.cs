@@ -10,7 +10,7 @@ public partial class MenuNameAbbreviationConverter : IValueConverter
     [GeneratedRegex(@"(MENÜ\s+[I]{1,3})")]
     private static partial Regex MenuTitleRegex();
 
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is string stringValue)
         {
@@ -24,7 +24,7 @@ public partial class MenuNameAbbreviationConverter : IValueConverter
         return value;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         return Binding.DoNothing;
     }

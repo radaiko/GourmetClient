@@ -39,10 +39,10 @@
         {
             _billingCacheService = InstanceProvider.BillingCacheService;
 
-            _availableMonths = new ObservableCollection<DateTime>();
-            _menuBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
-            _drinkBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
-            _unknownBillingPositions = new ObservableCollection<GroupedBillingPositionsViewModel>();
+            _availableMonths = [];
+            _menuBillingPositions = [];
+            _drinkBillingPositions = [];
+            _unknownBillingPositions = [];
         }
 
         public IReadOnlyList<DateTime> AvailableMonths => _availableMonths;
@@ -245,7 +245,7 @@
             }
         }
 
-        private void OnUpdateProgressChanged(object sender, int e)
+        private void OnUpdateProgressChanged(object? sender, int e)
         {
             UpdateProgress = e;
         }

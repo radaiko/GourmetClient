@@ -27,9 +27,6 @@ namespace GourmetClient.Network
 
         protected override async Task<bool> LoginImpl(string userName, SecureString password)
         {
-            userName = userName ?? throw new ArgumentNullException(nameof(userName));
-            password = password ?? throw new ArgumentNullException(nameof(password));
-
             var requestUrl = GetWebUrlForPage(PageNameLogin);
             using var loginPageResponse = await ExecuteGetRequest(requestUrl);
             var loginPageContent = await GetResponseContent(loginPageResponse);
@@ -148,7 +145,7 @@ namespace GourmetClient.Network
             if (restaurantInfo.Name.Contains("Gourmet") && !restaurantInfo.Location.Contains("Kaffeeautomat"))
             {
                 // Gourmet transactions are received from the Gourmet website (except for the coffee machine)
-                return Array.Empty<BillingPosition>();
+                return [];
             }
 
             var dateNode = contentNode.GetSingleNode(".//span[@id='ContentPlaceHolder1_LblTimestamp']");

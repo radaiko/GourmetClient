@@ -34,6 +34,7 @@ namespace GourmetClient.Network
             _notificationService = InstanceProvider.NotificationService;
 
             _cacheFileName = Path.Combine(App.LocalAppDataPath, "GourmetCache.json");
+            _cache = new InvalidatedGourmetCache();
         }
 
         public void InvalidateCache()
@@ -63,10 +64,6 @@ namespace GourmetClient.Network
             IReadOnlyList<GourmetMenu> menusToOrder,
             IReadOnlyList<GourmetOrderedMenu> menusToCancel)
         {
-            userInformation = userInformation ?? throw new ArgumentNullException(nameof(userInformation));
-            menusToOrder = menusToOrder ?? throw new ArgumentNullException(nameof(menusToOrder));
-            menusToCancel = menusToCancel ?? throw new ArgumentNullException(nameof(menusToCancel));
-
             var userSettings = _settingsService.GetCurrentUserSettings();
 
             await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
@@ -126,7 +123,7 @@ namespace GourmetClient.Network
 
             try
             {
-                await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword ?? new SecureString());
+                await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
 
                 if (!loginHandle.LoginSuccessful)
                 {
@@ -158,9 +155,8 @@ namespace GourmetClient.Network
                 await using var fileStream = new FileStream(_cacheFileName, FileMode.Open, FileAccess.Read, FileShare.None);
                 var serializedCache = await JsonSerializer.DeserializeAsync<SerializableGourmetCache>(fileStream);
 
-                if (serializedCache.Version != 2)
+                if (serializedCache == null)
                 {
-                    // Unsupported version
                     return new InvalidatedGourmetCache();
                 }
 
@@ -174,8 +170,6 @@ namespace GourmetClient.Network
 
         private async Task SaveMenuCache(GourmetCache menuCache)
         {
-            menuCache = menuCache ?? throw new ArgumentNullException(nameof(menuCache));
-
             var serializedCache = new SerializableGourmetCache(menuCache);
 
             try

@@ -15,22 +15,22 @@
 
 		public DelegateCommand(Action executeMethod, Func<bool> canExecuteMethod)
 		{
-			_executeMethod = executeMethod ?? throw new ArgumentNullException(nameof(executeMethod));
-			_canExecuteMethod = canExecuteMethod ?? throw new ArgumentNullException(nameof(canExecuteMethod));
+			_executeMethod = executeMethod;
+			_canExecuteMethod = canExecuteMethod;
 		}
 
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add => CommandManager.RequerySuggested += value;
             remove => CommandManager.RequerySuggested -= value;
         }
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
 		{
 			return _canExecuteMethod();
 		}
 
-		public void Execute(object parameter)
+		public void Execute(object? parameter)
 		{
             if (CanExecute(parameter))
             {

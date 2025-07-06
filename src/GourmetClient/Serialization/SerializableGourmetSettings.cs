@@ -12,8 +12,6 @@
 
         public SerializableGourmetSettings(GourmetSettings settings)
         {
-            settings = settings ?? throw new ArgumentNullException(nameof(settings));
-
             Version = 1;
             UserSettings = new SerializableUserSettings(settings.UserSettings);
             UpdateSettings = new SerializableUpdateSettings(settings.UpdateSettings);
@@ -26,11 +24,11 @@
 
         public int? Version { get; set; }
 
-        public SerializableUserSettings UserSettings { get; set; }
+        public SerializableUserSettings? UserSettings { get; set; }
 
-        public SerializableWindowSettings WindowSettings { get; set; }
+        public SerializableWindowSettings? WindowSettings { get; set; }
 
-        public SerializableUpdateSettings UpdateSettings { get; set; }
+        public SerializableUpdateSettings? UpdateSettings { get; set; }
 
         public GourmetSettings ToGourmetSettings()
         {

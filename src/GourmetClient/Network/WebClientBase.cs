@@ -21,19 +21,13 @@ namespace GourmetClient.Network
 
         private readonly CookieContainer _cookieContainer = new CookieContainer();
 
-        private HttpClient _client;
-
-        private Task<bool> _loginTask;
-
-        private Task _logoutTask;
-
+        private HttpClient? _client;
+        private Task<bool>? _loginTask;
+        private Task? _logoutTask;
         private int _loginCounter;
 
         public async Task<LoginHandle> Login(string userName, SecureString password)
         {
-            userName = userName ?? throw new ArgumentNullException(nameof(userName));
-            password = password ?? throw new ArgumentNullException(nameof(password));
-
             var loginSuccessful = await RequestLogin(userName, password);
 
             return new LoginHandle(loginSuccessful, OnLoginHandleReturned);
@@ -41,7 +35,7 @@ namespace GourmetClient.Network
 
         private async Task<bool> RequestLogin(string userName, SecureString password)
         {
-            Task activeLogoutTask;
+            Task? activeLogoutTask;
 
             lock (_loginLogoutLockObject)
             {
@@ -89,7 +83,7 @@ namespace GourmetClient.Network
 
         private ValueTask OnLoginHandleReturned()
         {
-            Task logoutTask;
+            Task? logoutTask;
 
             lock (_loginLogoutLockObject)
             {
@@ -116,7 +110,7 @@ namespace GourmetClient.Network
 
         protected abstract Task LogoutImpl();
 
-        protected async Task<HttpResponseMessage> ExecuteGetRequest(string url, IReadOnlyDictionary<string, string> urlParameters = null)
+        protected async Task<HttpResponseMessage> ExecuteGetRequest(string url, IReadOnlyDictionary<string, string>? urlParameters = null)
         {
             var requestUrl = AppendParametersToUrl(url, urlParameters);
             HttpResponseMessage response;
@@ -191,13 +185,18 @@ namespace GourmetClient.Network
 
             try
             {
-                var jsonElement = (JsonElement)JsonSerializer.Deserialize<object>(jsonResponseContent);
-                return parseFunc(jsonElement);
+                var obj = JsonSerializer.Deserialize<object>(jsonResponseContent);
+                if (obj is JsonElement jsonElement)
+                {
+                    return parseFunc(jsonElement);
+                }
             }
             catch (Exception exception)
             {
                 throw new GourmetParseException("Error parsing response content as JSON", GetRequestUriString(response), jsonResponseContent, exception);
             }
+
+            throw new GourmetParseException("Error parsing response content as JSON", GetRequestUriString(response), jsonResponseContent);
         }
 
         protected static string GetRequestUriString(HttpResponseMessage response)
@@ -245,7 +244,7 @@ namespace GourmetClient.Network
                 throw;
             }
 
-            async Task<HttpClientResult<HttpResponseMessage>> GetOrCreateClient(bool resetClient = false)
+            async Task<HttpClientResult<HttpResponseMessage?>> GetOrCreateClient(bool resetClient = false)
             {
                 await _clientCreationSemaphore.WaitAsync();
 
@@ -259,10 +258,10 @@ namespace GourmetClient.Network
                         var result = await HttpClientHelper.CreateHttpClient(requestUrl, requestFunc, _cookieContainer);
                         _client = result.Client;
 
-                        return result;
+                        return new HttpClientResult<HttpResponseMessage?>(result.Client, result.ResponseResult);
                     }
 
-                    return new HttpClientResult<HttpResponseMessage>(_client, null);
+                    return new HttpClientResult<HttpResponseMessage?>(_client, null);
                 }
                 finally
                 {
@@ -271,7 +270,7 @@ namespace GourmetClient.Network
             }
         }
 
-        private static string AppendParametersToUrl(string url, IReadOnlyDictionary<string, string> parameters)
+        private static string AppendParametersToUrl(string url, IReadOnlyDictionary<string, string>? parameters)
         {
             if (parameters == null)
             {

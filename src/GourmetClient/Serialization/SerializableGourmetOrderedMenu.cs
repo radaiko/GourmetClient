@@ -12,8 +12,6 @@ internal class SerializableGourmetOrderedMenu
 
     public SerializableGourmetOrderedMenu(GourmetOrderedMenu orderedMenu)
     {
-        orderedMenu = orderedMenu ?? throw new ArgumentNullException(nameof(orderedMenu));
-
         Day = orderedMenu.Day;
         PositionId = orderedMenu.PositionId;
         EatingCycleId = orderedMenu.EatingCycleId;
@@ -21,18 +19,23 @@ internal class SerializableGourmetOrderedMenu
         IsOrderApproved = orderedMenu.IsOrderApproved;
     }
 
-    public DateTime Day { get; set; }
+    public DateTime? Day { get; set; }
 
-    public string PositionId { get; set; }
+    public string? PositionId { get; set; }
 
-    public string EatingCycleId { get; set; }
+    public string? EatingCycleId { get; set; }
 
-    public string MenuName { get; set; }
+    public string? MenuName { get; set; }
 
-    public bool IsOrderApproved { get; set; }
+    public bool? IsOrderApproved { get; set; }
 
     public GourmetOrderedMenu ToOrderedGourmetMenu()
     {
-        return new GourmetOrderedMenu(Day, PositionId, EatingCycleId, MenuName, IsOrderApproved);
+        if (Day is null || PositionId is null || EatingCycleId is null || MenuName is null || IsOrderApproved is null)
+        {
+            throw new InvalidOperationException("Information for the ordered menu is not complete");
+        }
+
+        return new GourmetOrderedMenu(Day.Value, PositionId, EatingCycleId, MenuName, IsOrderApproved.Value);
     }
 }

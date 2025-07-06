@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
 
 namespace GourmetClient.Network
@@ -10,7 +9,6 @@ namespace GourmetClient.Network
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Security;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -64,16 +62,17 @@ namespace GourmetClient.Network
             // The page contains the menu elements twice (once for the desktop UI and once for the mobile UI).
             // By using a HashSet with a custom comparer, it is ensured that the same menu is only added once.
             var parsedMenus = new HashSet<GourmetMenu>();
-
-            GourmetUserInformation userInformation = null;
-            var currentPage = 0;
+            GourmetUserInformation? userInformation = null;
 
             // Set 10 pages as upper limit
-            while (currentPage < 10)
+            var maxPages = 10;
+            var currentPage = 0;
+
+            do
             {
                 var pageParameter = new Dictionary<string, string>
                 {
-                    {"page", currentPage.ToString()}
+                    { "page", currentPage.ToString() }
                 };
 
                 using var response = await ExecuteGetRequestForPage(PageNameMenu, pageParameter);
@@ -98,11 +97,12 @@ namespace GourmetClient.Network
                 }
                 catch (Exception exception)
                 {
-                    throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response), httpContent, exception);
+                    throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response),
+                        httpContent, exception);
                 }
 
                 currentPage++;
-            }
+            } while (currentPage < maxPages);
 
             return new GourmetMenuResult(userInformation, parsedMenus);
         }
@@ -127,8 +127,6 @@ namespace GourmetClient.Network
 
         public async Task<GourmetApiResult> AddMenuToOrderedMenu(GourmetUserInformation userInformation, GourmetMenu menu)
         {
-            menu = menu ?? throw new ArgumentNullException(nameof(menu));
-
             var parameter = new
             {
                 dates = new[]
@@ -149,8 +147,6 @@ namespace GourmetClient.Network
 
         public async Task CancelOrder(GourmetOrderedMenu orderedMenu)
         {
-            orderedMenu = orderedMenu ?? throw new ArgumentNullException(nameof(orderedMenu));
-
             (HtmlDocument document, string resultUriInfo, string resultHttpContent) = await EnterOrderedMenuEditMode();
 
             Dictionary<string, string> cancelOrderParameters;

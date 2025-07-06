@@ -13,8 +13,6 @@ namespace GourmetClient.Serialization
 
         public SerializableReleaseDescription(ReleaseDescription releaseDescription)
         {
-            releaseDescription = releaseDescription ?? throw new ArgumentNullException(nameof(releaseDescription));
-
             ReleaseVersion = releaseDescription.Version.ToString();
             UpdatePackageDownloadUrl = releaseDescription.UpdatePackageDownloadUrl;
             UpdatePackageSize = releaseDescription.UpdatePackageSize;
@@ -22,13 +20,13 @@ namespace GourmetClient.Serialization
             ChecksumSize = releaseDescription.ChecksumSize;
         }
 
-        public string ReleaseVersion { get; set; }
+        public string? ReleaseVersion { get; set; }
 
-        public string UpdatePackageDownloadUrl { get; set; }
+        public string? UpdatePackageDownloadUrl { get; set; }
 
         public long? UpdatePackageSize { get; set; }
 
-        public string ChecksumDownloadUrl { get; set; }
+        public string? ChecksumDownloadUrl { get; set; }
 
         public long? ChecksumSize { get; set; }
 

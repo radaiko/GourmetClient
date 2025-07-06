@@ -8,7 +8,7 @@
 
         public NotificationService()
         {
-            _notifications = new ObservableCollection<Notification>();
+            _notifications = [];
             Notifications = new ReadOnlyObservableCollection<Notification>(_notifications);
         }
 

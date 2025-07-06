@@ -5,12 +5,12 @@ namespace GourmetClient.Update.Response
     internal class ReleaseAsset
     {
         [JsonPropertyName("name")]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         [JsonPropertyName("browser_download_url")]
-        public string DownloadUrl { get; set; }
+        public required string DownloadUrl { get; set; }
 
         [JsonPropertyName("size")]
-        public long Size { get; set; }
+        public required long Size { get; set; }
     }
 }

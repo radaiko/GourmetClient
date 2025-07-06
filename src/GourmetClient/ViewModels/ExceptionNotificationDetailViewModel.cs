@@ -20,7 +20,7 @@
 
         public ExceptionNotificationDetailViewModel(ExceptionNotification notification)
         {
-            _notification = notification ?? throw new ArgumentNullException(nameof(notification));
+            _notification = notification;
 
             CopyDetailsToClipboardCommand = new AsyncDelegateCommand(CopyInformationToClipboard);
         }

@@ -1,6 +1,5 @@
 ﻿namespace GourmetClient.Serialization
 {
-	using System;
     using Settings;
 
     internal class SerializableUpdateSettings
@@ -12,8 +11,6 @@
 
 		public SerializableUpdateSettings(UpdateSettings updateSettings)
 		{
-			updateSettings = updateSettings ?? throw new ArgumentNullException(nameof(updateSettings));
-
 			CheckForUpdates = updateSettings.CheckForUpdates;
 		}
 

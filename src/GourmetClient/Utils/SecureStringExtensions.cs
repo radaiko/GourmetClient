@@ -8,14 +8,12 @@
 	{
 		public static string ToPlainPassword(this SecureString secureString)
 		{
-			secureString = secureString ?? throw new ArgumentNullException(nameof(secureString));
-
 			IntPtr valuePtr = IntPtr.Zero;
 
 			try
 			{
 				valuePtr = Marshal.SecureStringToGlobalAllocUnicode(secureString);
-				return Marshal.PtrToStringUni(valuePtr);
+				return Marshal.PtrToStringUni(valuePtr) ?? string.Empty;
 			}
 			finally
 			{

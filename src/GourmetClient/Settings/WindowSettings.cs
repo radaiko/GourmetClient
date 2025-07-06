@@ -18,7 +18,7 @@
 
 		public int WindowHeight { get; }
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			var otherWindowSettings = obj as WindowSettings;
 

@@ -1,7 +1,6 @@
 ﻿namespace GourmetClient.ViewModels
 {
-	using System;
-	using GourmetClient.Model;
+    using GourmetClient.Model;
 	using GourmetClient.Utils;
 
 	public class GourmetMenuViewModel : ObservableObject
@@ -18,7 +17,7 @@
 
         public GourmetMenuViewModel(GourmetMenu menu)
 		{
-			_menu = menu ?? throw new ArgumentNullException(nameof(menu));
+			_menu = menu;
 		}
 
 		public string MenuName => _menu.MenuName;

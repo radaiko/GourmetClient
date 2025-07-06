@@ -25,16 +25,16 @@
 
         private UpdateStepState _extractStepState;
 
-        private Task _updateTask;
+        private Task? _updateTask;
 
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource? _updateCancellationTokenSource;
 
         public DownloadUpdateViewModel()
         {
             _updateService = InstanceProvider.UpdateService;
             _notificationService = InstanceProvider.NotificationService;
 
-            CancelCommand = new AsyncDelegateCommand(CancelUpdate, () => _cancellationTokenSource != null);
+            CancelCommand = new AsyncDelegateCommand(CancelUpdate, () => _updateCancellationTokenSource != null);
         }
 
         public ICommand CancelCommand { get; }
@@ -82,19 +82,19 @@
                 return;
             }
 
-            _cancellationTokenSource ??= new CancellationTokenSource();
+            _updateCancellationTokenSource ??= new CancellationTokenSource();
 
             CommandManager.InvalidateRequerySuggested();
 
             try
             {
-                _updateTask = StartUpdate(updateRelease, _cancellationTokenSource.Token);
+                _updateTask = StartUpdate(updateRelease, _updateCancellationTokenSource.Token);
                 await _updateTask;
             }
             finally
             {
-                _cancellationTokenSource.Dispose();
-                _cancellationTokenSource = null;
+                _updateCancellationTokenSource.Dispose();
+                _updateCancellationTokenSource = null;
 
                 _updateTask = null;
 
@@ -164,11 +164,11 @@
 
         private Task CancelUpdate()
         {
-            _cancellationTokenSource?.Cancel();
+            _updateCancellationTokenSource?.Cancel();
             return _updateTask ?? Task.CompletedTask;
         }
 
-        private void OnDownloadProgressChanged(object sender, int e)
+        private void OnDownloadProgressChanged(object? sender, int e)
         {
             DownloadProgress = e;
         }

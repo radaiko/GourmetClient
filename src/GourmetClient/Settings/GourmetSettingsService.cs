@@ -9,9 +9,9 @@
     {
         private readonly string _settingsFileName;
 
-        private GourmetSettings _currentSettings;
+        private GourmetSettings? _currentSettings;
 
-        public event EventHandler SettingsSaved;
+        public event EventHandler? SettingsSaved;
 
         public GourmetSettingsService()
         {
@@ -25,15 +25,13 @@
 
         public void SaveUserSettings(UserSettings userSettings)
         {
-            userSettings = userSettings ?? throw new ArgumentNullException(nameof(userSettings));
-
             var settings = GetCurrentSettings();
             settings.UserSettings = userSettings;
 
             SaveSettings(settings);
         }
 
-        public WindowSettings GetCurrentWindowSettings()
+        public WindowSettings? GetCurrentWindowSettings()
         {
             return GetCurrentSettings().WindowSettings;
         }
@@ -76,8 +74,8 @@
                 return new GourmetSettings();
             }
 
-            SerializableGourmetSettings serializedSettings = null;
-            GourmetSettings settings = null;
+            SerializableGourmetSettings? serializedSettings = null;
+            GourmetSettings? settings = null;
 
             try
             {
@@ -101,8 +99,6 @@
 
         private void SaveSettings(GourmetSettings settings)
         {
-            settings = settings ?? throw new ArgumentNullException(nameof(settings));
-
             var serializedSettings = new SerializableGourmetSettings(settings);
 
             try

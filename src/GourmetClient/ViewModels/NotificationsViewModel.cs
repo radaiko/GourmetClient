@@ -29,28 +29,39 @@
 
         public IReadOnlyList<Notification> Notifications => _notificationService.Notifications;
 
-        private Task DismissNotification(Notification notification)
+        private Task DismissNotification(Notification? notification)
         {
-            _notificationService.Dismiss(notification);
-            return Task.CompletedTask;
-        }
-
-        private Task ShowExceptionDetails(ExceptionNotification notification)
-        {
-            var window = new ExceptionNotificationDetailWindow
+            if (notification != null)
             {
-                Owner = Application.Current.MainWindow,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Notification = notification
-            };
-            window.ShowDialog();
+                _notificationService.Dismiss(notification);
+            }
 
             return Task.CompletedTask;
         }
 
-        private Task StartUpdate(UpdateNotification notification)
+        private Task ShowExceptionDetails(ExceptionNotification? notification)
         {
-            notification.StartUpdateAction();
+            if (notification != null)
+            {
+                var window = new ExceptionNotificationDetailWindow
+                {
+                    Owner = Application.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Notification = notification
+                };
+                window.ShowDialog();
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private Task StartUpdate(UpdateNotification? notification)
+        {
+            if (notification != null)
+            {
+                notification.StartUpdateAction();
+            }
+
             return Task.CompletedTask;
         }
     }

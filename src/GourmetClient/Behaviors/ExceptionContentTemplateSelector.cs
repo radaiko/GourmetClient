@@ -7,13 +7,13 @@
 
     public class ExceptionContentTemplateSelector : DataTemplateSelector
     {
-        public DataTemplate GourmetRequestExceptionTemplate { get; set; }
+        public DataTemplate? GourmetRequestExceptionTemplate { get; set; }
 
-        public DataTemplate GourmetParseExceptionTemplate { get; set; }
+        public DataTemplate? GourmetParseExceptionTemplate { get; set; }
 
-        public DataTemplate GenericExceptionTemplate { get; set; }
+        public DataTemplate? GenericExceptionTemplate { get; set; }
 
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        public override DataTemplate? SelectTemplate(object? item, DependencyObject container)
         {
             return item switch
             {

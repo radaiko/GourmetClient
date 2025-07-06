@@ -7,13 +7,13 @@
 
     public class NotificationButtonTemplateSelector : DataTemplateSelector
     {
-        public DataTemplate UpdateNotificationTemplate { get; set; }
+        public DataTemplate? UpdateNotificationTemplate { get; set; }
 
-        public DataTemplate ExceptionNotificationTemplate { get; set; }
+        public DataTemplate? ExceptionNotificationTemplate { get; set; }
         
-        public DataTemplate EmptyTemplate { get; set; }
+        public DataTemplate? EmptyTemplate { get; set; }
 
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        public override DataTemplate? SelectTemplate(object? item, DependencyObject container)
         {
             return item switch
             {

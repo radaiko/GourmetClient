@@ -19,7 +19,7 @@
 			Closing += OnClosing;
 		}
 
-		private void OnSourceInitialized(object sender, EventArgs e)
+		private void OnSourceInitialized(object? sender, EventArgs e)
 		{
 			var windowSettings = InstanceProvider.SettingsService.GetCurrentWindowSettings();
 
@@ -52,7 +52,7 @@
 			}
 		}
 
-		private void OnClosing(object sender, CancelEventArgs e)
+		private void OnClosing(object? sender, CancelEventArgs e)
 		{
 			Closing -= OnClosing;
 

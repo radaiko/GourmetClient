@@ -11,7 +11,7 @@ namespace GourmetClient
             InitializeComponent();
         }
 
-        public ExceptionNotification Notification
+        public ExceptionNotification? Notification
         {
             get => NotificationDetailView.Notification;
             set => NotificationDetailView.Notification = value;

@@ -1,11 +1,7 @@
 ﻿namespace GourmetClient.ViewModels
 {
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Windows.Input;
-
-    using Behaviors;
     using Update;
 
     using Utils;
@@ -22,7 +18,7 @@
 
         private UpdateStepState _cleanupStepState;
 
-        private Task _updateTask;
+        private Task? _updateTask;
 
         public ExecuteUpdateViewModel()
         {
