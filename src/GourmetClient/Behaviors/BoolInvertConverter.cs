@@ -1,29 +1,28 @@
-﻿namespace GourmetClient.Behaviors
+﻿using System;
+using System.Globalization;
+using System.Windows.Data;
+
+namespace GourmetClient.Behaviors;
+
+public class BoolInvertConverter : IValueConverter
 {
-    using System;
-    using System.Globalization;
-    using System.Windows.Data;
-
-    public class BoolInvertConverter : IValueConverter
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        if (value is bool boolValue)
         {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
-
-            return Binding.DoNothing;
+            return !boolValue;
         }
 
-        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
-        {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
+        return Binding.DoNothing;
+    }
 
-            return Binding.DoNothing;
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool boolValue)
+        {
+            return !boolValue;
         }
+
+        return Binding.DoNothing;
     }
 }

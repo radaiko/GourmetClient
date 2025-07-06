@@ -1,16 +1,14 @@
-﻿namespace GourmetClient.Notifications
+﻿using System;
+
+namespace GourmetClient.Notifications;
+
+public class UpdateNotification : Notification
 {
-    using System;
-    using System.Threading.Tasks;
-
-    public class UpdateNotification : Notification
+    public UpdateNotification(string message, Action startUpdateCallback)
+        : base(NotificationType.Information, message)
     {
-        public UpdateNotification(string message, Action startUpdateCallback)
-            : base(NotificationType.Information, message)
-        {
-            StartUpdateAction = startUpdateCallback;
-        }
-
-        public Action StartUpdateAction { get; }
+        StartUpdateAction = startUpdateCallback;
     }
+
+    public Action StartUpdateAction { get; }
 }

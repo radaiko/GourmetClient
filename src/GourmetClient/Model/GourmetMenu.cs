@@ -1,6 +1,6 @@
-﻿namespace GourmetClient.Model;
+﻿using System;
 
-using System;
+namespace GourmetClient.Model;
 
 public record GourmetMenu(
     DateTime Day,

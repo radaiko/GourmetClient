@@ -1,16 +1,14 @@
-﻿using GourmetClient.ViewModels;
+﻿using System.Windows.Controls;
+using GourmetClient.ViewModels;
 
-namespace GourmetClient.Views
-{
-    using System.Windows.Controls;
+namespace GourmetClient.Views;
 	
-	public partial class AboutView : UserControl
-	{
-		public AboutView()
-        {
-			InitializeComponent();
+public partial class AboutView : UserControl
+{
+    public AboutView()
+    {
+        InitializeComponent();
 
-            DataContext = new AboutViewModel();
-        }
-	}
+        DataContext = new AboutViewModel();
+    }
 }

@@ -1,29 +1,27 @@
 ﻿using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
+using GourmetClient.Update;
 
-namespace GourmetClient
+namespace GourmetClient;
+
+public partial class DownloadUpdateWindow : Window
 {
-    using GourmetClient.Update;
-    using System.Threading.Tasks;
-
-    public partial class DownloadUpdateWindow : Window
+    public DownloadUpdateWindow()
     {
-        public DownloadUpdateWindow()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            Closing += OnClosing;
-        }
+        Closing += OnClosing;
+    }
 
-        private void OnClosing(object? sender, CancelEventArgs e)
-        {
-            Closing -= OnClosing;
-            CancelButton.Command?.Execute(null);
-        }
+    private void OnClosing(object? sender, CancelEventArgs e)
+    {
+        Closing -= OnClosing;
+        CancelButton.Command?.Execute(null);
+    }
 
-        public Task StartUpdate(ReleaseDescription updateRelease)
-        {
-            return DownloadUpdateView.StartUpdate(updateRelease);
-        }
+    public Task StartUpdate(ReleaseDescription updateRelease)
+    {
+        return DownloadUpdateView.StartUpdate(updateRelease);
     }
 }

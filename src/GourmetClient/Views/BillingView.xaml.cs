@@ -1,19 +1,18 @@
-﻿namespace GourmetClient.Views
+﻿using GourmetClient.ViewModels;
+
+namespace GourmetClient.Views;
+
+public partial class BillingView : InitializableView
 {
-    using ViewModels;
-
-    public partial class BillingView : InitializableView
+    public BillingView()
     {
-        public BillingView()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            DataContext = new BillingViewModel();
-        }
+        DataContext = new BillingViewModel();
+    }
 
-        public void OnActivated()
-        {
-            (DataContext as BillingViewModel)?.OnActivated();
-        }
+    public void OnActivated()
+    {
+        (DataContext as BillingViewModel)?.OnActivated();
     }
 }

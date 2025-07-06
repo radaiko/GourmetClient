@@ -1,22 +1,20 @@
-﻿namespace GourmetClient.Views
+﻿using System.Threading.Tasks;
+using GourmetClient.Update;
+using GourmetClient.ViewModels;
+
+namespace GourmetClient.Views;
+
+public partial class DownloadUpdateView : InitializableView
 {
-    using GourmetClient.Update;
-    using System.Threading.Tasks;
-
-    using ViewModels;
-
-    public partial class DownloadUpdateView : InitializableView
+    public DownloadUpdateView()
     {
-        public DownloadUpdateView()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            DataContext = new DownloadUpdateViewModel();
-        }
+        DataContext = new DownloadUpdateViewModel();
+    }
 
-        public Task StartUpdate(ReleaseDescription updateRelease)
-        {
-            return ((DownloadUpdateViewModel)DataContext).StartUpdate(updateRelease);
-        }
+    public Task StartUpdate(ReleaseDescription updateRelease)
+    {
+        return ((DownloadUpdateViewModel)DataContext).StartUpdate(updateRelease);
     }
 }

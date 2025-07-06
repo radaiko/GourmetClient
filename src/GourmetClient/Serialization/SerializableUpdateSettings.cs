@@ -1,31 +1,30 @@
-﻿namespace GourmetClient.Serialization
-{
-    using Settings;
+﻿using GourmetClient.Settings;
 
-    internal class SerializableUpdateSettings
+namespace GourmetClient.Serialization;
+
+internal class SerializableUpdateSettings
+{
+    public SerializableUpdateSettings()
     {
-        public SerializableUpdateSettings()
-		{
-			// Used for deserialization
+        // Used for deserialization
+    }
+
+    public SerializableUpdateSettings(UpdateSettings updateSettings)
+    {
+        CheckForUpdates = updateSettings.CheckForUpdates;
+    }
+
+    public bool? CheckForUpdates { get; set; }
+
+    public UpdateSettings ToUpdateSettings()
+    {
+        var updateSettings = new UpdateSettings();
+
+        if (CheckForUpdates.HasValue)
+        {
+            updateSettings.CheckForUpdates = CheckForUpdates.Value;
         }
 
-		public SerializableUpdateSettings(UpdateSettings updateSettings)
-		{
-			CheckForUpdates = updateSettings.CheckForUpdates;
-		}
-
-		public bool? CheckForUpdates { get; set; }
-
-		public UpdateSettings ToUpdateSettings()
-        {
-            var updateSettings = new UpdateSettings();
-
-            if (CheckForUpdates.HasValue)
-            {
-				updateSettings.CheckForUpdates = CheckForUpdates.Value;
-            }
-
-			return updateSettings;
-		}
-	}
+        return updateSettings;
+    }
 }

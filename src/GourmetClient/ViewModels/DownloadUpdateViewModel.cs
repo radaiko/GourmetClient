@@ -1,176 +1,171 @@
-﻿namespace GourmetClient.ViewModels
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using GourmetClient.Behaviors;
+using GourmetClient.Notifications;
+using GourmetClient.Update;
+using GourmetClient.Utils;
+
+namespace GourmetClient.ViewModels;
+
+public class DownloadUpdateViewModel : ViewModelBase
 {
-    using System;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using System.Windows.Input;
+    private readonly UpdateService _updateService;
 
-    using Behaviors;
+    private readonly NotificationService _notificationService;
 
-    using Notifications;
+    private int _downloadProgress;
 
-    using Update;
+    private UpdateStepState _downloadStepState;
 
-    using Utils;
+    private UpdateStepState _extractStepState;
 
-    public class DownloadUpdateViewModel : ViewModelBase
+    private Task? _updateTask;
+
+    private CancellationTokenSource? _updateCancellationTokenSource;
+
+    public DownloadUpdateViewModel()
     {
-        private readonly UpdateService _updateService;
+        _updateService = InstanceProvider.UpdateService;
+        _notificationService = InstanceProvider.NotificationService;
 
-        private readonly NotificationService _notificationService;
+        CancelCommand = new AsyncDelegateCommand(CancelUpdate, () => _updateCancellationTokenSource != null);
+    }
 
-        private int _downloadProgress;
+    public ICommand CancelCommand { get; }
 
-        private UpdateStepState _downloadStepState;
-
-        private UpdateStepState _extractStepState;
-
-        private Task? _updateTask;
-
-        private CancellationTokenSource? _updateCancellationTokenSource;
-
-        public DownloadUpdateViewModel()
+    public int DownloadProgress
+    {
+        get => _downloadProgress;
+        private set
         {
-            _updateService = InstanceProvider.UpdateService;
-            _notificationService = InstanceProvider.NotificationService;
+            _downloadProgress = value;
+            OnPropertyChanged();
+        }
+    }
 
-            CancelCommand = new AsyncDelegateCommand(CancelUpdate, () => _updateCancellationTokenSource != null);
+    public UpdateStepState DownloadStepState
+    {
+        get => _downloadStepState;
+        private set
+        {
+            _downloadStepState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public UpdateStepState ExtractStepState
+    {
+        get => _extractStepState;
+        private set
+        {
+            _extractStepState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public override void Initialize()
+    {
+    }
+
+    public async Task StartUpdate(ReleaseDescription updateRelease)
+    {
+        var runningTask = _updateTask;
+        if (runningTask != null)
+        {
+            await runningTask;
+            return;
         }
 
-        public ICommand CancelCommand { get; }
+        _updateCancellationTokenSource ??= new CancellationTokenSource();
 
-        public int DownloadProgress
+        CommandManager.InvalidateRequerySuggested();
+
+        try
         {
-            get => _downloadProgress;
-            private set
-            {
-                _downloadProgress = value;
-                OnPropertyChanged();
-            }
+            _updateTask = StartUpdate(updateRelease, _updateCancellationTokenSource.Token);
+            await _updateTask;
         }
-
-        public UpdateStepState DownloadStepState
+        finally
         {
-            get => _downloadStepState;
-            private set
-            {
-                _downloadStepState = value;
-                OnPropertyChanged();
-            }
-        }
+            _updateCancellationTokenSource.Dispose();
+            _updateCancellationTokenSource = null;
 
-        public UpdateStepState ExtractStepState
-        {
-            get => _extractStepState;
-            private set
-            {
-                _extractStepState = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public override void Initialize()
-        {
-        }
-
-        public async Task StartUpdate(ReleaseDescription updateRelease)
-        {
-            var runningTask = _updateTask;
-            if (runningTask != null)
-            {
-                await runningTask;
-                return;
-            }
-
-            _updateCancellationTokenSource ??= new CancellationTokenSource();
+            _updateTask = null;
 
             CommandManager.InvalidateRequerySuggested();
-
-            try
-            {
-                _updateTask = StartUpdate(updateRelease, _updateCancellationTokenSource.Token);
-                await _updateTask;
-            }
-            finally
-            {
-                _updateCancellationTokenSource.Dispose();
-                _updateCancellationTokenSource = null;
-
-                _updateTask = null;
-
-                CommandManager.InvalidateRequerySuggested();
-            }
         }
+    }
 
-        private async Task StartUpdate(ReleaseDescription updateRelease, CancellationToken cancellationToken)
+    private async Task StartUpdate(ReleaseDescription updateRelease, CancellationToken cancellationToken)
+    {
+        DownloadProgress = 0;
+        DownloadStepState = UpdateStepState.Running;
+
+        var progress = new Progress<int>();
+        progress.ProgressChanged += OnDownloadProgressChanged;
+
+        string packagePath;
+        try
         {
-            DownloadProgress = 0;
-            DownloadStepState = UpdateStepState.Running;
-
-            var progress = new Progress<int>();
-            progress.ProgressChanged += OnDownloadProgressChanged;
-
-            string packagePath;
-            try
-            {
-                packagePath = await _updateService.DownloadUpdatePackage(updateRelease, progress, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch (GourmetUpdateException exception)
-            {
-                DownloadStepState = UpdateStepState.Error;
-                _notificationService.Send(new ExceptionNotification("Beim Herunterladen der neuen Version ist ein Fehler aufgetreten", exception));
-                return;
-            }
-            finally
-            {
-                progress.ProgressChanged -= OnDownloadProgressChanged;
-            }
-
-            DownloadStepState = UpdateStepState.Finished;
-            ExtractStepState = UpdateStepState.Running;
-
-            string extractedPackageLocation;
-            try
-            {
-                extractedPackageLocation = await _updateService.ExtractUpdatePackage(packagePath, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch (GourmetUpdateException exception)
-            {
-                ExtractStepState = UpdateStepState.Error;
-                _notificationService.Send(new ExceptionNotification("Beim Entpacken der neuen Version ist ein Fehler aufgetreten", exception));
-                return;
-            }
-
-            ExtractStepState = UpdateStepState.Finished;
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-
-            if (!_updateService.StartUpdate(extractedPackageLocation))
-            {
-                _notificationService.Send(new Notification(NotificationType.Error, "Update konnte nicht gestartet werden"));
-            }
+            packagePath = await _updateService.DownloadUpdatePackage(updateRelease, progress, cancellationToken);
         }
-
-        private Task CancelUpdate()
+        catch (OperationCanceledException)
         {
-            _updateCancellationTokenSource?.Cancel();
-            return _updateTask ?? Task.CompletedTask;
+            return;
+        }
+        catch (GourmetUpdateException exception)
+        {
+            DownloadStepState = UpdateStepState.Error;
+            _notificationService.Send(new ExceptionNotification("Beim Herunterladen der neuen Version ist ein Fehler aufgetreten", exception));
+            return;
+        }
+        finally
+        {
+            progress.ProgressChanged -= OnDownloadProgressChanged;
         }
 
-        private void OnDownloadProgressChanged(object? sender, int e)
+        DownloadStepState = UpdateStepState.Finished;
+        ExtractStepState = UpdateStepState.Running;
+
+        string extractedPackageLocation;
+        try
         {
-            DownloadProgress = e;
+            extractedPackageLocation = await _updateService.ExtractUpdatePackage(packagePath, cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (GourmetUpdateException exception)
+        {
+            ExtractStepState = UpdateStepState.Error;
+            _notificationService.Send(new ExceptionNotification("Beim Entpacken der neuen Version ist ein Fehler aufgetreten", exception));
+            return;
+        }
+
+        ExtractStepState = UpdateStepState.Finished;
+
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (!_updateService.StartUpdate(extractedPackageLocation))
+        {
+            _notificationService.Send(new Notification(NotificationType.Error, "Update konnte nicht gestartet werden"));
+        }
+    }
+
+    private Task CancelUpdate()
+    {
+        _updateCancellationTokenSource?.Cancel();
+        return _updateTask ?? Task.CompletedTask;
+    }
+
+    private void OnDownloadProgressChanged(object? sender, int e)
+    {
+        DownloadProgress = e;
     }
 }

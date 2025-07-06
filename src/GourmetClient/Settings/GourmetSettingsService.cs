@@ -1,122 +1,121 @@
-﻿namespace GourmetClient.Settings
+﻿using System;
+using System.IO;
+using System.Text.Json;
+using GourmetClient.Serialization;
+
+namespace GourmetClient.Settings;
+
+public class GourmetSettingsService
 {
-    using System;
-    using System.IO;
-    using System.Text.Json;
-    using Serialization;
+    private readonly string _settingsFileName;
 
-    public class GourmetSettingsService
+    private GourmetSettings? _currentSettings;
+
+    public event EventHandler? SettingsSaved;
+
+    public GourmetSettingsService()
     {
-        private readonly string _settingsFileName;
+        _settingsFileName = Path.Combine(App.LocalAppDataPath, "GourmetClientSettings.json");
+    }
 
-        private GourmetSettings? _currentSettings;
+    public UserSettings GetCurrentUserSettings()
+    {
+        return GetCurrentSettings().UserSettings;
+    }
 
-        public event EventHandler? SettingsSaved;
+    public void SaveUserSettings(UserSettings userSettings)
+    {
+        var settings = GetCurrentSettings();
+        settings.UserSettings = userSettings;
 
-        public GourmetSettingsService()
+        SaveSettings(settings);
+    }
+
+    public WindowSettings? GetCurrentWindowSettings()
+    {
+        return GetCurrentSettings().WindowSettings;
+    }
+
+    public void SaveWindowSettings(WindowSettings windowSettings)
+    {
+        var settings = GetCurrentSettings();
+        settings.WindowSettings = windowSettings;
+
+        SaveSettings(settings);
+    }
+
+    public UpdateSettings GetCurrentUpdateSettings()
+    {
+        return GetCurrentSettings().UpdateSettings;
+    }
+
+    public void SaveUpdateSettings(UpdateSettings updateSettings)
+    {
+        var settings = GetCurrentSettings();
+        settings.UpdateSettings = updateSettings;
+
+        SaveSettings(settings);
+    }
+
+    private GourmetSettings GetCurrentSettings()
+    {
+        if (_currentSettings == null)
         {
-            _settingsFileName = Path.Combine(App.LocalAppDataPath, "GourmetClientSettings.json");
+            _currentSettings = ReadSettingsFromFile();
         }
 
-        public UserSettings GetCurrentUserSettings()
+        return _currentSettings;
+    }
+
+    private GourmetSettings ReadSettingsFromFile()
+    {
+        if (!File.Exists(_settingsFileName))
         {
-            return GetCurrentSettings().UserSettings;
+            return new GourmetSettings();
         }
 
-        public void SaveUserSettings(UserSettings userSettings)
-        {
-            var settings = GetCurrentSettings();
-            settings.UserSettings = userSettings;
+        SerializableGourmetSettings? serializedSettings = null;
+        GourmetSettings? settings = null;
 
-            SaveSettings(settings);
+        try
+        {
+            using var fileStream = new FileStream(_settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
+            serializedSettings = JsonSerializer.Deserialize<SerializableGourmetSettings>(fileStream);
+        }
+        catch (Exception exception) when (exception is IOException || exception is JsonException)
+        {
         }
 
-        public WindowSettings? GetCurrentWindowSettings()
+        try
         {
-            return GetCurrentSettings().WindowSettings;
+            settings = serializedSettings?.ToGourmetSettings();
+        }
+        catch (InvalidOperationException)
+        {
         }
 
-        public void SaveWindowSettings(WindowSettings windowSettings)
+        return settings ?? new GourmetSettings();
+    }
+
+    private void SaveSettings(GourmetSettings settings)
+    {
+        var serializedSettings = new SerializableGourmetSettings(settings);
+
+        try
         {
-            var settings = GetCurrentSettings();
-            settings.WindowSettings = windowSettings;
-
-            SaveSettings(settings);
-        }
-
-        public UpdateSettings GetCurrentUpdateSettings()
-        {
-            return GetCurrentSettings().UpdateSettings;
-        }
-
-        public void SaveUpdateSettings(UpdateSettings updateSettings)
-        {
-            var settings = GetCurrentSettings();
-            settings.UpdateSettings = updateSettings;
-
-            SaveSettings(settings);
-        }
-
-        private GourmetSettings GetCurrentSettings()
-        {
-            if (_currentSettings == null)
+            var settingsDirectory = Path.GetDirectoryName(_settingsFileName);
+            if (settingsDirectory != null && !Directory.Exists(settingsDirectory))
             {
-                _currentSettings = ReadSettingsFromFile();
+                Directory.CreateDirectory(settingsDirectory);
             }
-
-            return _currentSettings;
-        }
-
-        private GourmetSettings ReadSettingsFromFile()
-        {
-            if (!File.Exists(_settingsFileName))
-            {
-                return new GourmetSettings();
-            }
-
-            SerializableGourmetSettings? serializedSettings = null;
-            GourmetSettings? settings = null;
-
-            try
-            {
-                using var fileStream = new FileStream(_settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
-                serializedSettings = JsonSerializer.Deserialize<SerializableGourmetSettings>(fileStream);
-            }
-            catch (Exception exception) when (exception is IOException || exception is JsonException)
-            {
-            }
-
-            try
-            {
-                settings = serializedSettings?.ToGourmetSettings();
-            }
-            catch (InvalidOperationException)
-            {
-            }
-
-            return settings ?? new GourmetSettings();
-        }
-
-        private void SaveSettings(GourmetSettings settings)
-        {
-            var serializedSettings = new SerializableGourmetSettings(settings);
-
-            try
-            {
-                var settingsDirectory = Path.GetDirectoryName(_settingsFileName);
-                if (settingsDirectory != null && !Directory.Exists(settingsDirectory))
-                {
-                    Directory.CreateDirectory(settingsDirectory);
-                }
                 
-                using var fileStream = new FileStream(_settingsFileName, FileMode.Create, FileAccess.Write, FileShare.None);
-                JsonSerializer.Serialize(fileStream, serializedSettings, new JsonSerializerOptions { WriteIndented = true });
-            }
-            catch (IOException)
-            {
-            }
-
-            SettingsSaved?.Invoke(this, EventArgs.Empty);
+            using var fileStream = new FileStream(_settingsFileName, FileMode.Create, FileAccess.Write, FileShare.None);
+            JsonSerializer.Serialize(fileStream, serializedSettings, new JsonSerializerOptions { WriteIndented = true });
         }
+        catch (IOException)
+        {
+        }
+
+        SettingsSaved?.Invoke(this, EventArgs.Empty);
     }
 }

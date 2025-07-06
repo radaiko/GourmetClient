@@ -1,19 +1,18 @@
-﻿namespace GourmetClient.Behaviors
+﻿using System.Globalization;
+using System.Windows.Data;
+
+namespace GourmetClient.Behaviors;
+
+public class CultureAwareBinding : Binding
 {
-    using System.Globalization;
-    using System.Windows.Data;
+    public CultureAwareBinding()
+    {
+        ConverterCulture = CultureInfo.CurrentCulture;
+    }
 
-    public class CultureAwareBinding : Binding
-	{
-		public CultureAwareBinding()
-		{
-			ConverterCulture = CultureInfo.CurrentCulture;
-		}
-
-		public CultureAwareBinding(string path)
-			: base(path)
-		{
-			ConverterCulture = CultureInfo.CurrentCulture;
-		}
-	}
+    public CultureAwareBinding(string path)
+        : base(path)
+    {
+        ConverterCulture = CultureInfo.CurrentCulture;
+    }
 }

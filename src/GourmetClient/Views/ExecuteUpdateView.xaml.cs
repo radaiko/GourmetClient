@@ -2,20 +2,19 @@
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
-namespace GourmetClient.Views
+namespace GourmetClient.Views;
+
+public partial class ExecuteUpdateView : UserControl
 {
-    public partial class ExecuteUpdateView : UserControl
+    public ExecuteUpdateView()
     {
-        public ExecuteUpdateView()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            DataContext = new ExecuteUpdateViewModel();
-        }
+        DataContext = new ExecuteUpdateViewModel();
+    }
 
-        public Task ExecuteUpdate(string targetPath)
-        {
-            return ((ExecuteUpdateViewModel)DataContext).ExecuteUpdate(targetPath);
-        }
+    public Task ExecuteUpdate(string targetPath)
+    {
+        return ((ExecuteUpdateViewModel)DataContext).ExecuteUpdate(targetPath);
     }
 }

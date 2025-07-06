@@ -1,8 +1,8 @@
-﻿namespace GourmetClient.Serialization;
-
-using System;
+﻿using System;
 using System.Linq;
-using Model;
+using GourmetClient.Model;
+
+namespace GourmetClient.Serialization;
 
 internal class SerializableGourmetCache
 {

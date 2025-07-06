@@ -1,15 +1,14 @@
-﻿namespace GourmetClient.ViewModels
+﻿namespace GourmetClient.ViewModels;
+
+public enum GourmetMenuState
 {
-	public enum GourmetMenuState
-	{
-		None,
+    None,
 
-		NotAvailable,
+    NotAvailable,
 
-		Ordered,
+    Ordered,
 
-		MarkedForOrder,
+    MarkedForOrder,
 
-		MarkedForCancel
-	}
+    MarkedForCancel
 }

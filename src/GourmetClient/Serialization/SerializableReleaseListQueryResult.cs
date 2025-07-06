@@ -2,47 +2,46 @@
 using System.Linq;
 using GourmetClient.Update;
 
-namespace GourmetClient.Serialization
+namespace GourmetClient.Serialization;
+
+internal class SerializableReleaseListQueryResult
 {
-    internal class SerializableReleaseListQueryResult
+    public SerializableReleaseListQueryResult()
     {
-        public SerializableReleaseListQueryResult()
+        // Used for deserialization
+    }
+
+    public SerializableReleaseListQueryResult(ReleaseListQueryResult releaseListQueryResult)
+    {
+        Version = 1;
+        ETagHeaderValue = releaseListQueryResult.ETagHeaderValue;
+        IsWeakETag = releaseListQueryResult.IsWeakETag;
+        Releases = releaseListQueryResult.Releases.Select(release => new SerializableReleaseDescription(release)).ToArray();
+    }
+
+    public int? Version { get; set; }
+
+    public string? ETagHeaderValue { get; set; }
+
+    public bool? IsWeakETag { get; set; }
+
+    public SerializableReleaseDescription[]? Releases { get; set; }
+
+    public ReleaseListQueryResult ToReleaseListQueryResult()
+    {
+        if (Version is not 1)
         {
-            // Used for deserialization
+            throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
         }
 
-        public SerializableReleaseListQueryResult(ReleaseListQueryResult releaseListQueryResult)
+        if (string.IsNullOrEmpty(ETagHeaderValue) || !IsWeakETag.HasValue)
         {
-            Version = 1;
-            ETagHeaderValue = releaseListQueryResult.ETagHeaderValue;
-            IsWeakETag = releaseListQueryResult.IsWeakETag;
-            Releases = releaseListQueryResult.Releases.Select(release => new SerializableReleaseDescription(release)).ToArray();
+            throw new InvalidOperationException("At least one property has an invalid value");
         }
 
-        public int? Version { get; set; }
-
-        public string? ETagHeaderValue { get; set; }
-
-        public bool? IsWeakETag { get; set; }
-
-        public SerializableReleaseDescription[]? Releases { get; set; }
-
-        public ReleaseListQueryResult ToReleaseListQueryResult()
-        {
-            if (Version is not 1)
-            {
-                throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
-            }
-
-            if (string.IsNullOrEmpty(ETagHeaderValue) || !IsWeakETag.HasValue)
-            {
-                throw new InvalidOperationException("At least one property has an invalid value");
-            }
-
-            return new ReleaseListQueryResult(
-                ETagHeaderValue, 
-                IsWeakETag.Value,
-                Releases?.Select(release => release.ToReleaseDescription()).ToList() ?? []);
-        }
+        return new ReleaseListQueryResult(
+            ETagHeaderValue, 
+            IsWeakETag.Value,
+            Releases?.Select(release => release.ToReleaseDescription()).ToList() ?? []);
     }
 }

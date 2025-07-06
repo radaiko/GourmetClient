@@ -1,26 +1,24 @@
-﻿namespace GourmetClient.Behaviors
+﻿using System.Windows;
+using System.Windows.Controls;
+using GourmetClient.Network;
+
+namespace GourmetClient.Behaviors;
+
+public class ExceptionContentTemplateSelector : DataTemplateSelector
 {
-    using System.Windows;
-    using System.Windows.Controls;
+    public DataTemplate? GourmetRequestExceptionTemplate { get; set; }
 
-    using Network;
+    public DataTemplate? GourmetParseExceptionTemplate { get; set; }
 
-    public class ExceptionContentTemplateSelector : DataTemplateSelector
+    public DataTemplate? GenericExceptionTemplate { get; set; }
+
+    public override DataTemplate? SelectTemplate(object? item, DependencyObject container)
     {
-        public DataTemplate? GourmetRequestExceptionTemplate { get; set; }
-
-        public DataTemplate? GourmetParseExceptionTemplate { get; set; }
-
-        public DataTemplate? GenericExceptionTemplate { get; set; }
-
-        public override DataTemplate? SelectTemplate(object? item, DependencyObject container)
+        return item switch
         {
-            return item switch
-            {
-                GourmetRequestException => GourmetRequestExceptionTemplate,
-                GourmetParseException => GourmetParseExceptionTemplate,
-                _ => GenericExceptionTemplate
-            };
-        }
+            GourmetRequestException => GourmetRequestExceptionTemplate,
+            GourmetParseException => GourmetParseExceptionTemplate,
+            _ => GenericExceptionTemplate
+        };
     }
 }

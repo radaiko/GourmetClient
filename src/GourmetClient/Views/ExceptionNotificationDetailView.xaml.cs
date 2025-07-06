@@ -1,22 +1,19 @@
 ﻿using System.Windows.Controls;
+using GourmetClient.Notifications;
+using GourmetClient.ViewModels;
 
-namespace GourmetClient.Views
+namespace GourmetClient.Views;
+
+public partial class ExceptionNotificationDetailView : UserControl
 {
-    using Notifications;
-
-    using ViewModels;
-
-    public partial class ExceptionNotificationDetailView : UserControl
+    public ExceptionNotificationDetailView()
     {
-        public ExceptionNotificationDetailView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
 
-        public ExceptionNotification? Notification
-        {
-            get => (DataContext as ExceptionNotificationDetailViewModel)?.GetNotification();
-            set => DataContext = value != null ? new ExceptionNotificationDetailViewModel(value) : null;
-        }
+    public ExceptionNotification? Notification
+    {
+        get => (DataContext as ExceptionNotificationDetailViewModel)?.GetNotification();
+        set => DataContext = value != null ? new ExceptionNotificationDetailViewModel(value) : null;
     }
 }

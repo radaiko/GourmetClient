@@ -1,17 +1,16 @@
-﻿namespace GourmetClient.Update
+﻿using System;
+
+namespace GourmetClient.Update;
+
+public class GourmetUpdateException : Exception
 {
-	using System;
+    public GourmetUpdateException(string message)
+        : base(message)
+    {
+    }
 
-    public class GourmetUpdateException : Exception
-	{
-		public GourmetUpdateException(string message)
-			: base(message)
-        {
-        }
-
-		public GourmetUpdateException(string message, Exception innerException)
-			: base(message, innerException)
-        {
-        }
+    public GourmetUpdateException(string message, Exception innerException)
+        : base(message, innerException)
+    {
     }
 }

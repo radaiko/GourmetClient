@@ -1,9 +1,8 @@
-﻿namespace GourmetClient.Notifications
+﻿namespace GourmetClient.Notifications;
+
+public enum NotificationType
 {
-	public enum NotificationType
-	{
-		Information,
-		Warning,
-		Error
-	}
+    Information,
+    Warning,
+    Error
 }

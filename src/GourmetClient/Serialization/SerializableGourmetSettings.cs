@@ -1,60 +1,59 @@
-﻿namespace GourmetClient.Serialization
+﻿using System;
+using GourmetClient.Settings;
+
+namespace GourmetClient.Serialization;
+
+internal class SerializableGourmetSettings
 {
-    using System;
-    using Settings;
-
-    internal class SerializableGourmetSettings
+    public SerializableGourmetSettings()
     {
-        public SerializableGourmetSettings()
+        // Used for deserialization
+    }
+
+    public SerializableGourmetSettings(GourmetSettings settings)
+    {
+        Version = 1;
+        UserSettings = new SerializableUserSettings(settings.UserSettings);
+        UpdateSettings = new SerializableUpdateSettings(settings.UpdateSettings);
+
+        if (settings.WindowSettings != null)
         {
-            // Used for deserialization
+            WindowSettings = new SerializableWindowSettings(settings.WindowSettings);
+        }
+    }
+
+    public int? Version { get; set; }
+
+    public SerializableUserSettings? UserSettings { get; set; }
+
+    public SerializableWindowSettings? WindowSettings { get; set; }
+
+    public SerializableUpdateSettings? UpdateSettings { get; set; }
+
+    public GourmetSettings ToGourmetSettings()
+    {
+        if (Version is not 1)
+        {
+            throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
         }
 
-        public SerializableGourmetSettings(GourmetSettings settings)
+        var settings = new GourmetSettings
         {
-            Version = 1;
-            UserSettings = new SerializableUserSettings(settings.UserSettings);
-            UpdateSettings = new SerializableUpdateSettings(settings.UpdateSettings);
+            WindowSettings = WindowSettings?.ToWindowSettings()
+        };
 
-            if (settings.WindowSettings != null)
-            {
-                WindowSettings = new SerializableWindowSettings(settings.WindowSettings);
-            }
+        var userSettings = UserSettings?.ToUserSettings();
+        if (userSettings != null)
+        {
+            settings.UserSettings = userSettings;
         }
 
-        public int? Version { get; set; }
-
-        public SerializableUserSettings? UserSettings { get; set; }
-
-        public SerializableWindowSettings? WindowSettings { get; set; }
-
-        public SerializableUpdateSettings? UpdateSettings { get; set; }
-
-        public GourmetSettings ToGourmetSettings()
+        var updateSettings = UpdateSettings?.ToUpdateSettings();
+        if (updateSettings != null)
         {
-            if (Version is not 1)
-            {
-                throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
-            }
-
-            var settings = new GourmetSettings
-            {
-                WindowSettings = WindowSettings?.ToWindowSettings()
-            };
-
-            var userSettings = UserSettings?.ToUserSettings();
-            if (userSettings != null)
-            {
-                settings.UserSettings = userSettings;
-            }
-
-            var updateSettings = UpdateSettings?.ToUpdateSettings();
-            if (updateSettings != null)
-            {
-                settings.UpdateSettings = updateSettings;
-            }
-
-            return settings;
+            settings.UpdateSettings = updateSettings;
         }
+
+        return settings;
     }
 }

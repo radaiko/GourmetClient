@@ -1,39 +1,37 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using GourmetClient.Update;
 
-namespace GourmetClient.Views
+namespace GourmetClient.Views;
+
+public partial class UpdateStepStateControl : UserControl
 {
-    using Update;
+    public static readonly DependencyProperty StepStateProperty = DependencyProperty.Register(
+        "StepState",
+        typeof(UpdateStepState),
+        typeof(UpdateStepStateControl),
+        new FrameworkPropertyMetadata(UpdateStepState.NotStarted));
 
-    public partial class UpdateStepStateControl : UserControl
+    public static readonly DependencyProperty StepTextProperty = DependencyProperty.Register(
+        "StepText",
+        typeof(string),
+        typeof(UpdateStepStateControl),
+        new FrameworkPropertyMetadata(string.Empty));
+
+    public UpdateStepStateControl()
     {
-        public static readonly DependencyProperty StepStateProperty = DependencyProperty.Register(
-            "StepState",
-            typeof(UpdateStepState),
-            typeof(UpdateStepStateControl),
-            new FrameworkPropertyMetadata(UpdateStepState.NotStarted));
+        InitializeComponent();
+    }
 
-        public static readonly DependencyProperty StepTextProperty = DependencyProperty.Register(
-            "StepText",
-            typeof(string),
-            typeof(UpdateStepStateControl),
-            new FrameworkPropertyMetadata(string.Empty));
+    public UpdateStepState StepState
+    {
+        get => (UpdateStepState)GetValue(StepStateProperty);
+        set => SetValue(StepStateProperty, value);
+    }
 
-        public UpdateStepStateControl()
-        {
-            InitializeComponent();
-        }
-
-        public UpdateStepState StepState
-        {
-            get => (UpdateStepState)GetValue(StepStateProperty);
-            set => SetValue(StepStateProperty, value);
-        }
-
-        public string StepText
-        {
-            get => (string)GetValue(StepTextProperty);
-            set => SetValue(StepTextProperty, value);
-        }
+    public string StepText
+    {
+        get => (string)GetValue(StepTextProperty);
+        set => SetValue(StepTextProperty, value);
     }
 }

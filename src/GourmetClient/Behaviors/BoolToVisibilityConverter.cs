@@ -1,12 +1,11 @@
-﻿namespace GourmetClient.Behaviors
-{
-    using System.Windows;
+﻿using System.Windows;
 
-    public class BoolToVisibilityConverter : BoolConverterBase<Visibility>
+namespace GourmetClient.Behaviors;
+
+public class BoolToVisibilityConverter : BoolConverterBase<Visibility>
+{
+    public BoolToVisibilityConverter()
+        : base(Visibility.Visible, Visibility.Collapsed)
     {
-        public BoolToVisibilityConverter()
-            : base(Visibility.Visible, Visibility.Collapsed)
-        {
-        }
     }
 }

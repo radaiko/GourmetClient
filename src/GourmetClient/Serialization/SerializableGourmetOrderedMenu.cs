@@ -1,7 +1,7 @@
-﻿namespace GourmetClient.Serialization;
+﻿using System;
+using GourmetClient.Model;
 
-using System;
-using Model;
+namespace GourmetClient.Serialization;
 
 internal class SerializableGourmetOrderedMenu
 {

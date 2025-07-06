@@ -1,90 +1,89 @@
-﻿namespace GourmetClient.ViewModels
+﻿using GourmetClient.Model;
+using GourmetClient.Utils;
+
+namespace GourmetClient.ViewModels;
+
+public class GourmetMenuViewModel : ObservableObject
 {
-    using GourmetClient.Model;
-	using GourmetClient.Utils;
+    private readonly GourmetMenu _menu;
 
-	public class GourmetMenuViewModel : ObservableObject
-	{
-		private readonly GourmetMenu _menu;
+    private bool _isOrdered;
 
-		private bool _isOrdered;
+    private GourmetMenuState _menuState;
 
-		private GourmetMenuState _menuState;
+    private bool _isOrderApproved;
 
-		private bool _isOrderApproved;
+    private bool _isOrderCancelable;
 
-        private bool _isOrderCancelable;
+    public GourmetMenuViewModel(GourmetMenu menu)
+    {
+        _menu = menu;
+    }
 
-        public GourmetMenuViewModel(GourmetMenu menu)
-		{
-			_menu = menu;
-		}
+    public string MenuName => _menu.MenuName;
 
-		public string MenuName => _menu.MenuName;
+    public string MenuDescription => _menu.Description;
 
-		public string MenuDescription => _menu.Description;
+    public bool IsAvailable => _menu.IsAvailable;
 
-        public bool IsAvailable => _menu.IsAvailable;
+    public bool IsOrdered
+    {
+        get => _isOrdered;
 
-		public bool IsOrdered
-		{
-			get => _isOrdered;
-
-			set
-			{
-				if (_isOrdered != value)
-				{
-					_isOrdered = value;
-					OnPropertyChanged();
-				}
-			}
-		}
-
-		public bool IsOrderApproved
-		{
-			get => _isOrderApproved;
-
-			set
-			{
-				if (_isOrderApproved != value)
-				{
-					_isOrderApproved = value;
-					OnPropertyChanged();
-				}
-			}
-        }
-
-        public bool IsOrderCancelable
+        set
         {
-            get => _isOrderCancelable;
-
-            set
+            if (_isOrdered != value)
             {
-                if (_isOrderCancelable != value)
-                {
-                    _isOrderCancelable = value;
-                    OnPropertyChanged();
-                }
+                _isOrdered = value;
+                OnPropertyChanged();
             }
         }
+    }
 
-        public GourmetMenuState MenuState
-		{
-			get => _menuState;
+    public bool IsOrderApproved
+    {
+        get => _isOrderApproved;
 
-			set
-			{
-				if (_menuState != value)
-				{
-					_menuState = value;
-					OnPropertyChanged();
-				}
-			}
-		}
+        set
+        {
+            if (_isOrderApproved != value)
+            {
+                _isOrderApproved = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
-		public GourmetMenu GetModel()
-		{
-			return _menu;
-		}
-	}
+    public bool IsOrderCancelable
+    {
+        get => _isOrderCancelable;
+
+        set
+        {
+            if (_isOrderCancelable != value)
+            {
+                _isOrderCancelable = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public GourmetMenuState MenuState
+    {
+        get => _menuState;
+
+        set
+        {
+            if (_menuState != value)
+            {
+                _menuState = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
+    public GourmetMenu GetModel()
+    {
+        return _menu;
+    }
 }

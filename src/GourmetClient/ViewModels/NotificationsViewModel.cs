@@ -1,68 +1,67 @@
-﻿namespace GourmetClient.ViewModels
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using GourmetClient.Behaviors;
+using GourmetClient.Notifications;
+using GourmetClient.Utils;
+
+namespace GourmetClient.ViewModels;
+
+public class NotificationsViewModel : ObservableObject
 {
-    using GourmetClient.Behaviors;
-    using GourmetClient.Notifications;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using System.Windows;
-    using System.Windows.Input;
-    using Utils;
+    private readonly NotificationService _notificationService;
 
-    public class NotificationsViewModel : ObservableObject
+    public NotificationsViewModel()
     {
-        private readonly NotificationService _notificationService;
+        _notificationService = InstanceProvider.NotificationService;
 
-        public NotificationsViewModel()
+        DismissNotificationCommand = new AsyncDelegateCommand<Notification>(DismissNotification);
+        StartUpdateCommand = new AsyncDelegateCommand<UpdateNotification>(StartUpdate, p => p?.StartUpdateAction != null);
+        ShowExceptionDetailsCommand = new AsyncDelegateCommand<ExceptionNotification>(ShowExceptionDetails, p => p?.Exception != null);
+    }
+
+    public ICommand DismissNotificationCommand { get; }
+
+    public ICommand StartUpdateCommand { get; }
+
+    public ICommand ShowExceptionDetailsCommand { get; }
+
+    public IReadOnlyList<Notification> Notifications => _notificationService.Notifications;
+
+    private Task DismissNotification(Notification? notification)
+    {
+        if (notification != null)
         {
-            _notificationService = InstanceProvider.NotificationService;
-
-            DismissNotificationCommand = new AsyncDelegateCommand<Notification>(DismissNotification);
-            StartUpdateCommand = new AsyncDelegateCommand<UpdateNotification>(StartUpdate, p => p?.StartUpdateAction != null);
-            ShowExceptionDetailsCommand = new AsyncDelegateCommand<ExceptionNotification>(ShowExceptionDetails, p => p?.Exception != null);
+            _notificationService.Dismiss(notification);
         }
 
-        public ICommand DismissNotificationCommand { get; }
+        return Task.CompletedTask;
+    }
 
-        public ICommand StartUpdateCommand { get; }
-
-        public ICommand ShowExceptionDetailsCommand { get; }
-
-        public IReadOnlyList<Notification> Notifications => _notificationService.Notifications;
-
-        private Task DismissNotification(Notification? notification)
+    private Task ShowExceptionDetails(ExceptionNotification? notification)
+    {
+        if (notification != null)
         {
-            if (notification != null)
+            var window = new ExceptionNotificationDetailWindow
             {
-                _notificationService.Dismiss(notification);
-            }
-
-            return Task.CompletedTask;
+                Owner = Application.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Notification = notification
+            };
+            window.ShowDialog();
         }
 
-        private Task ShowExceptionDetails(ExceptionNotification? notification)
+        return Task.CompletedTask;
+    }
+
+    private Task StartUpdate(UpdateNotification? notification)
+    {
+        if (notification != null)
         {
-            if (notification != null)
-            {
-                var window = new ExceptionNotificationDetailWindow
-                {
-                    Owner = Application.Current.MainWindow,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Notification = notification
-                };
-                window.ShowDialog();
-            }
-
-            return Task.CompletedTask;
+            notification.StartUpdateAction();
         }
 
-        private Task StartUpdate(UpdateNotification? notification)
-        {
-            if (notification != null)
-            {
-                notification.StartUpdateAction();
-            }
-
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

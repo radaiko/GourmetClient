@@ -1,7 +1,6 @@
-﻿namespace GourmetClient.Settings
+﻿namespace GourmetClient.Settings;
+
+public record UpdateSettings
 {
-    public record UpdateSettings
-    {
-        public bool CheckForUpdates { get; set; } = true;
-    }
+    public bool CheckForUpdates { get; set; } = true;
 }

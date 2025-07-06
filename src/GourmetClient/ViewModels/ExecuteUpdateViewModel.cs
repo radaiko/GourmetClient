@@ -1,157 +1,155 @@
-﻿namespace GourmetClient.ViewModels
+﻿using System.Threading;
+using System.Threading.Tasks;
+using GourmetClient.Update;
+using GourmetClient.Utils;
+
+namespace GourmetClient.ViewModels;
+
+public class ExecuteUpdateViewModel : ViewModelBase
 {
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Update;
+    private readonly UpdateService _updateService;
 
-    using Utils;
+    private UpdateStepState _createBackupStepState;
 
-    public class ExecuteUpdateViewModel : ViewModelBase
+    private UpdateStepState _removePreviousVersionStepState;
+
+    private UpdateStepState _copyNewFilesStepState;
+
+    private UpdateStepState _cleanupStepState;
+
+    private Task? _updateTask;
+
+    public ExecuteUpdateViewModel()
     {
-        private readonly UpdateService _updateService;
+        _updateService = InstanceProvider.UpdateService;
+    }
 
-        private UpdateStepState _createBackupStepState;
-
-        private UpdateStepState _removePreviousVersionStepState;
-
-        private UpdateStepState _copyNewFilesStepState;
-
-        private UpdateStepState _cleanupStepState;
-
-        private Task? _updateTask;
-
-        public ExecuteUpdateViewModel()
+    public UpdateStepState CreateBackupStepState
+    {
+        get => _createBackupStepState;
+        private set
         {
-            _updateService = InstanceProvider.UpdateService;
+            _createBackupStepState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public UpdateStepState RemovePreviousVersionStepState
+    {
+        get => _removePreviousVersionStepState;
+        private set
+        {
+            _removePreviousVersionStepState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public UpdateStepState CopyNewFilesStepState
+    {
+        get => _copyNewFilesStepState;
+        private set
+        {
+            _copyNewFilesStepState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public UpdateStepState CleanupStepState
+    {
+        get => _cleanupStepState;
+        private set
+        {
+            _cleanupStepState = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public override void Initialize()
+    {
+    }
+
+    public async Task ExecuteUpdate(string targetPath)
+    {
+        var runningTask = _updateTask;
+        if (runningTask != null)
+        {
+            await runningTask;
+            return;
         }
 
-        public UpdateStepState CreateBackupStepState
+        try
         {
-            get => _createBackupStepState;
-            private set
-            {
-                _createBackupStepState = value;
-                OnPropertyChanged();
-            }
+            _updateTask = ExecuteUpdate(targetPath, CancellationToken.None);
+            await _updateTask;
+        }
+        finally
+        {
+            _updateTask = null;
+        }
+    }
+
+    private async Task ExecuteUpdate(string targetPath, CancellationToken cancellationToken)
+    {
+        //CreateBackupStepState = UpdateStepState.Running;
+
+        //try
+        //{
+        //    await _updateService.CreateBackup(targetPath, cancellationToken);
+        //}
+        //catch (GourmetUpdateException)
+        //{
+        //    CreateBackupStepState = UpdateStepState.Error;
+        //    throw;
+        //}
+
+        //CreateBackupStepState = UpdateStepState.Finished;
+        RemovePreviousVersionStepState = UpdateStepState.Running;
+
+        try
+        {
+            await _updateService.RemovePreviousVersion(targetPath, cancellationToken);
+        }
+        catch (GourmetUpdateException)
+        {
+            RemovePreviousVersionStepState = UpdateStepState.Error;
+            throw;
         }
 
-        public UpdateStepState RemovePreviousVersionStepState
+        RemovePreviousVersionStepState = UpdateStepState.Finished;
+        CopyNewFilesStepState = UpdateStepState.Running;
+
+        try
         {
-            get => _removePreviousVersionStepState;
-            private set
-            {
-                _removePreviousVersionStepState = value;
-                OnPropertyChanged();
-            }
+            await _updateService.CopyCurrentVersion(targetPath, cancellationToken);
+        }
+        catch (GourmetUpdateException)
+        {
+            CopyNewFilesStepState = UpdateStepState.Error;
+            throw;
         }
 
-        public UpdateStepState CopyNewFilesStepState
+        CopyNewFilesStepState = UpdateStepState.Finished;
+        CleanupStepState = UpdateStepState.Running;
+
+        try
         {
-            get => _copyNewFilesStepState;
-            private set
-            {
-                _copyNewFilesStepState = value;
-                OnPropertyChanged();
-            }
+            await _updateService.RemoveUpdateFiles(CancellationToken.None);
+        }
+        catch (GourmetUpdateException)
+        {
+            CleanupStepState = UpdateStepState.Error;
+            throw;
         }
 
-        public UpdateStepState CleanupStepState
+        CleanupStepState = UpdateStepState.Finished;
+
+        if (cancellationToken.IsCancellationRequested)
         {
-            get => _cleanupStepState;
-            private set
-            {
-                _cleanupStepState = value;
-                OnPropertyChanged();
-            }
+            return;
         }
 
-        public override void Initialize()
+        if (!_updateService.StartNewVersion(targetPath))
         {
-        }
-
-        public async Task ExecuteUpdate(string targetPath)
-        {
-            var runningTask = _updateTask;
-            if (runningTask != null)
-            {
-                await runningTask;
-                return;
-            }
-
-            try
-            {
-                _updateTask = ExecuteUpdate(targetPath, CancellationToken.None);
-                await _updateTask;
-            }
-            finally
-            {
-                _updateTask = null;
-            }
-        }
-
-        private async Task ExecuteUpdate(string targetPath, CancellationToken cancellationToken)
-        {
-            //CreateBackupStepState = UpdateStepState.Running;
-
-            //try
-            //{
-            //    await _updateService.CreateBackup(targetPath, cancellationToken);
-            //}
-            //catch (GourmetUpdateException)
-            //{
-            //    CreateBackupStepState = UpdateStepState.Error;
-            //    throw;
-            //}
-
-            //CreateBackupStepState = UpdateStepState.Finished;
-            RemovePreviousVersionStepState = UpdateStepState.Running;
-
-            try
-            {
-                await _updateService.RemovePreviousVersion(targetPath, cancellationToken);
-            }
-            catch (GourmetUpdateException)
-            {
-                RemovePreviousVersionStepState = UpdateStepState.Error;
-                throw;
-            }
-
-            RemovePreviousVersionStepState = UpdateStepState.Finished;
-            CopyNewFilesStepState = UpdateStepState.Running;
-
-            try
-            {
-                await _updateService.CopyCurrentVersion(targetPath, cancellationToken);
-            }
-            catch (GourmetUpdateException)
-            {
-                CopyNewFilesStepState = UpdateStepState.Error;
-                throw;
-            }
-
-            CopyNewFilesStepState = UpdateStepState.Finished;
-            CleanupStepState = UpdateStepState.Running;
-
-            try
-            {
-                await _updateService.RemoveUpdateFiles(CancellationToken.None);
-            }
-            catch (GourmetUpdateException)
-            {
-                CleanupStepState = UpdateStepState.Error;
-                throw;
-            }
-
-            CleanupStepState = UpdateStepState.Finished;
-
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
-
-            if (!_updateService.StartNewVersion(targetPath))
-            {
-            }
         }
     }
 }

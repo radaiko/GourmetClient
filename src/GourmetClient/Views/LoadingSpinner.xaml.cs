@@ -1,58 +1,55 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 
-namespace GourmetClient.Views
+namespace GourmetClient.Views;
+
+public partial class LoadingSpinner : UserControl
 {
-    using System.Diagnostics;
-    using System.Windows;
+    public static readonly DependencyProperty IsSpinningProperty = DependencyProperty.Register(
+        "IsSpinning",
+        typeof(bool),
+        typeof(LoadingSpinner),
+        new FrameworkPropertyMetadata(true));
 
-    public partial class LoadingSpinner : UserControl
+    public static readonly DependencyProperty SpinnerThicknessProperty = DependencyProperty.Register(
+        "SpinnerThickness",
+        typeof(double),
+        typeof(LoadingSpinner),
+        new FrameworkPropertyMetadata(2.0, OnSpinnerThicknessChanged));
+
+    public LoadingSpinner()
     {
-        public static readonly DependencyProperty IsSpinningProperty = DependencyProperty.Register(
-            "IsSpinning",
-            typeof(bool),
-            typeof(LoadingSpinner),
-            new FrameworkPropertyMetadata(true));
+        InitializeComponent();
 
-        public static readonly DependencyProperty SpinnerThicknessProperty = DependencyProperty.Register(
-            "SpinnerThickness",
-            typeof(double),
-            typeof(LoadingSpinner),
-            new FrameworkPropertyMetadata(2.0, OnSpinnerThicknessChanged));
+        SizeChanged += OnSizeChanged;
+    }
 
-        public LoadingSpinner()
-        {
-            InitializeComponent();
+    private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        RecalculateSize();
+    }
 
-            SizeChanged += OnSizeChanged;
-        }
+    public bool IsSpinning
+    {
+        get => (bool)GetValue(IsSpinningProperty);
+        set => SetValue(IsSpinningProperty, value);
+    }
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            RecalculateSize();
-        }
+    public double SpinnerThickness
+    {
+        get => (double)GetValue(SpinnerThicknessProperty);
+        set => SetValue(SpinnerThicknessProperty, value);
+    }
 
-        public bool IsSpinning
-        {
-            get => (bool)GetValue(IsSpinningProperty);
-            set => SetValue(IsSpinningProperty, value);
-        }
+    private static void OnSpinnerThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        (d as LoadingSpinner)?.RecalculateSize();
+    }
 
-        public double SpinnerThickness
-        {
-            get => (double)GetValue(SpinnerThicknessProperty);
-            set => SetValue(SpinnerThicknessProperty, value);
-        }
-
-        private static void OnSpinnerThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            (d as LoadingSpinner)?.RecalculateSize();
-        }
-
-        private void RecalculateSize()
-        {
-            SpinnerPathFigure.StartPoint = new Point(ActualWidth / 2, SpinnerThickness / 2);
-            SpinnerArcSegment.Point = new Point(ActualWidth - (SpinnerThickness / 2), ActualHeight / 2);
-            SpinnerArcSegment.Size = new Size(ActualWidth / 2, ActualHeight / 2);
-        }
+    private void RecalculateSize()
+    {
+        SpinnerPathFigure.StartPoint = new Point(ActualWidth / 2, SpinnerThickness / 2);
+        SpinnerArcSegment.Point = new Point(ActualWidth - (SpinnerThickness / 2), ActualHeight / 2);
+        SpinnerArcSegment.Size = new Size(ActualWidth / 2, ActualHeight / 2);
     }
 }

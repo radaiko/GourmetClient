@@ -1,26 +1,24 @@
-﻿namespace GourmetClient.Behaviors
+﻿using System.Windows;
+using System.Windows.Controls;
+using GourmetClient.Notifications;
+
+namespace GourmetClient.Behaviors;
+
+public class NotificationButtonTemplateSelector : DataTemplateSelector
 {
-    using System.Windows;
-    using System.Windows.Controls;
+    public DataTemplate? UpdateNotificationTemplate { get; set; }
 
-    using Notifications;
-
-    public class NotificationButtonTemplateSelector : DataTemplateSelector
-    {
-        public DataTemplate? UpdateNotificationTemplate { get; set; }
-
-        public DataTemplate? ExceptionNotificationTemplate { get; set; }
+    public DataTemplate? ExceptionNotificationTemplate { get; set; }
         
-        public DataTemplate? EmptyTemplate { get; set; }
+    public DataTemplate? EmptyTemplate { get; set; }
 
-        public override DataTemplate? SelectTemplate(object? item, DependencyObject container)
+    public override DataTemplate? SelectTemplate(object? item, DependencyObject container)
+    {
+        return item switch
         {
-            return item switch
-            {
-                UpdateNotification => UpdateNotificationTemplate,
-                ExceptionNotification => ExceptionNotificationTemplate,
-                _ => EmptyTemplate
-            };
-        }
+            UpdateNotification => UpdateNotificationTemplate,
+            ExceptionNotification => ExceptionNotificationTemplate,
+            _ => EmptyTemplate
+        };
     }
 }

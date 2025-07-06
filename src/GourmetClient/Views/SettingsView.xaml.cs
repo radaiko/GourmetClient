@@ -1,34 +1,30 @@
-﻿namespace GourmetClient.Views
+﻿using System.Windows;
+using GourmetClient.ViewModels;
+
+namespace GourmetClient.Views;
+
+public partial class SettingsView : InitializableView
 {
-	using System.Windows;
-	using GourmetClient.ViewModels;
+    public SettingsView()
+    {
+        InitializeComponent();
 
-	/// <summary>
-	/// Interaction logic for SettingsView.xaml
-	/// </summary>
-	public partial class SettingsView : InitializableView
-	{
-		public SettingsView()
-		{
-			InitializeComponent();
+        DataContext = new SettingsViewModel();
+    }
 
-			DataContext = new SettingsViewModel();
-		}
-
-		private void LoginPasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
-		{
-			if (IsLoaded)
-			{
-				((SettingsViewModel)DataContext).LoginPassword = LoginPasswordBox.Password;
-			}
-		}
-
-        private void VentopayPasswordBox_OnPasswordChangedPasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
+    private void LoginPasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (IsLoaded)
         {
-            if (IsLoaded)
-            {
-                ((SettingsViewModel)DataContext).VentopayPassword = VentopayPasswordBox.Password;
-            }
+            ((SettingsViewModel)DataContext).LoginPassword = LoginPasswordBox.Password;
+        }
+    }
+
+    private void VentopayPasswordBox_OnPasswordChangedPasswordBox_OnPasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (IsLoaded)
+        {
+            ((SettingsViewModel)DataContext).VentopayPassword = VentopayPasswordBox.Password;
         }
     }
 }

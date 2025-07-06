@@ -1,20 +1,19 @@
 ﻿using System;
 
-namespace GourmetClient.Notifications
+namespace GourmetClient.Notifications;
+
+public class Notification
 {
-    public class Notification
-	{
-		public Notification(NotificationType notificationType, string message)
-		{
-			NotificationType = notificationType;
-			Message = message;
-			Timestamp = DateTime.Now;
-		}
+    public Notification(NotificationType notificationType, string message)
+    {
+        NotificationType = notificationType;
+        Message = message;
+        Timestamp = DateTime.Now;
+    }
 
-		public NotificationType NotificationType { get; }
+    public NotificationType NotificationType { get; }
 
-		public string Message { get; }
+    public string Message { get; }
 
-		public DateTime Timestamp { get; }
-	}
+    public DateTime Timestamp { get; }
 }

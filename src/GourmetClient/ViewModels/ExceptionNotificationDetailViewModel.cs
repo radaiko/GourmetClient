@@ -1,68 +1,63 @@
-﻿namespace GourmetClient.ViewModels
+﻿using System;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using GourmetClient.Behaviors;
+using GourmetClient.Network;
+using GourmetClient.Notifications;
+using GourmetClient.Utils;
+
+namespace GourmetClient.ViewModels;
+
+public class ExceptionNotificationDetailViewModel : ObservableObject
 {
-    using System;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Windows;
-    using System.Windows.Input;
+    private readonly ExceptionNotification _notification;
 
-    using Behaviors;
-
-    using Network;
-
-    using Notifications;
-
-    using Utils;
-
-    public class ExceptionNotificationDetailViewModel : ObservableObject
+    public ExceptionNotificationDetailViewModel(ExceptionNotification notification)
     {
-        private readonly ExceptionNotification _notification;
+        _notification = notification;
 
-        public ExceptionNotificationDetailViewModel(ExceptionNotification notification)
+        CopyDetailsToClipboardCommand = new AsyncDelegateCommand(CopyInformationToClipboard);
+    }
+
+    public ICommand CopyDetailsToClipboardCommand { get; }
+
+    public string Message => _notification.Message;
+
+    public Exception Exception => _notification.Exception;
+
+    public ExceptionNotification GetNotification() => _notification;
+
+    private Task CopyInformationToClipboard()
+    {
+        var stringBuilder = new StringBuilder();
+
+        stringBuilder.AppendLine("GourmetClient notification details");
+        stringBuilder.Append("GourmetClient Version: ").AppendLine(InstanceProvider.UpdateService.CurrentVersion.ToString());
+        stringBuilder.Append("Notification Type: ").AppendLine(_notification.NotificationType.ToString());
+        stringBuilder.Append("Notification Message: ").AppendLine(_notification.Message);
+        stringBuilder.Append("Notification Timestamp: ").AppendLine(_notification.Timestamp.ToString("o"));
+
+        if (_notification.Exception is GourmetRequestException requestException)
         {
-            _notification = notification;
-
-            CopyDetailsToClipboardCommand = new AsyncDelegateCommand(CopyInformationToClipboard);
+            stringBuilder.Append("Request: ").AppendLine(requestException.UriInfo);
+            stringBuilder.AppendLine("Exception:").AppendLine(requestException.ToString());
+        }
+        else if (_notification.Exception is GourmetParseException parseException)
+        {
+            stringBuilder.Append("Request: ").AppendLine(parseException.UriInfo);
+            stringBuilder.AppendLine("Exception:").AppendLine(parseException.ToString());
+            stringBuilder.AppendLine("---------------------------------------------------");
+            stringBuilder.AppendLine("HTML:").AppendLine(parseException.ResponseContent);
+        }
+        else if (_notification.Exception != null)
+        {
+            stringBuilder.AppendLine("Exception:").AppendLine(_notification.Exception.ToString());
         }
 
-        public ICommand CopyDetailsToClipboardCommand { get; }
+        Clipboard.SetText(stringBuilder.ToString());
 
-        public string Message => _notification.Message;
-
-        public Exception Exception => _notification.Exception;
-
-        public ExceptionNotification GetNotification() => _notification;
-
-        private Task CopyInformationToClipboard()
-        {
-            var stringBuilder = new StringBuilder();
-
-            stringBuilder.AppendLine("GourmetClient notification details");
-            stringBuilder.Append("GourmetClient Version: ").AppendLine(InstanceProvider.UpdateService.CurrentVersion.ToString());
-            stringBuilder.Append("Notification Type: ").AppendLine(_notification.NotificationType.ToString());
-            stringBuilder.Append("Notification Message: ").AppendLine(_notification.Message);
-            stringBuilder.Append("Notification Timestamp: ").AppendLine(_notification.Timestamp.ToString("o"));
-
-            if (_notification.Exception is GourmetRequestException requestException)
-            {
-                stringBuilder.Append("Request: ").AppendLine(requestException.UriInfo);
-                stringBuilder.AppendLine("Exception:").AppendLine(requestException.ToString());
-            }
-            else if (_notification.Exception is GourmetParseException parseException)
-            {
-                stringBuilder.Append("Request: ").AppendLine(parseException.UriInfo);
-                stringBuilder.AppendLine("Exception:").AppendLine(parseException.ToString());
-                stringBuilder.AppendLine("---------------------------------------------------");
-                stringBuilder.AppendLine("HTML:").AppendLine(parseException.ResponseContent);
-            }
-            else if (_notification.Exception != null)
-            {
-                stringBuilder.AppendLine("Exception:").AppendLine(_notification.Exception.ToString());
-            }
-
-            Clipboard.SetText(stringBuilder.ToString());
-
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }

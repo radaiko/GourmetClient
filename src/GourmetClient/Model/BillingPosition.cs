@@ -1,11 +1,10 @@
-﻿namespace GourmetClient.Model
-{
-    using System;
+﻿using System;
 
-    public record BillingPosition(
-        DateTime Date,
-        BillingPositionType PositionType,
-        string PositionName,
-        int Count,
-        double SumCost);
-}
+namespace GourmetClient.Model;
+
+public record BillingPosition(
+    DateTime Date,
+    BillingPositionType PositionType,
+    string PositionName,
+    int Count,
+    double SumCost);

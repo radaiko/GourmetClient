@@ -1,16 +1,14 @@
 ﻿using System.Windows.Controls;
+using GourmetClient.ViewModels;
 
-namespace GourmetClient.Views
+namespace GourmetClient.Views;
+
+public partial class NotificationsView : UserControl
 {
-    using ViewModels;
-
-    public partial class NotificationsView : UserControl
+    public NotificationsView()
     {
-        public NotificationsView()
-        {
-            InitializeComponent();
+        InitializeComponent();
 
-            DataContext = new NotificationsViewModel();
-        }
+        DataContext = new NotificationsViewModel();
     }
 }

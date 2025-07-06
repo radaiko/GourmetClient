@@ -1,9 +1,8 @@
-﻿namespace GourmetClient.Model
+﻿namespace GourmetClient.Model;
+
+public enum BillingPositionType
 {
-    public enum BillingPositionType
-    {
-        Unknown,
-        Menu,
-        Drink
-    }
+    Unknown,
+    Menu,
+    Drink
 }

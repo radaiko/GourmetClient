@@ -1,28 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows.Controls;
 
-namespace GourmetClient.Views
+namespace GourmetClient.Views;
+
+public partial class ReleaseNotesView : UserControl
 {
-    /// <summary>
-    /// Interaction logic for ReleaseNotesView.xaml
-    /// </summary>
-    public partial class ReleaseNotesView : UserControl
+    public ReleaseNotesView()
     {
-        public ReleaseNotesView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

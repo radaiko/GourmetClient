@@ -1,27 +1,26 @@
-﻿namespace GourmetClient.Notifications
+﻿using System.Collections.ObjectModel;
+
+namespace GourmetClient.Notifications;
+
+public class NotificationService
 {
-    using System.Collections.ObjectModel;
+    private readonly ObservableCollection<Notification> _notifications;
 
-    public class NotificationService
+    public NotificationService()
     {
-        private readonly ObservableCollection<Notification> _notifications;
+        _notifications = [];
+        Notifications = new ReadOnlyObservableCollection<Notification>(_notifications);
+    }
 
-        public NotificationService()
-        {
-            _notifications = [];
-            Notifications = new ReadOnlyObservableCollection<Notification>(_notifications);
-        }
+    public ReadOnlyObservableCollection<Notification> Notifications { get; }
 
-        public ReadOnlyObservableCollection<Notification> Notifications { get; }
+    public void Send(Notification notification)
+    {
+        _notifications.Add(notification);
+    }
 
-        public void Send(Notification notification)
-        {
-            _notifications.Add(notification);
-        }
-
-        public void Dismiss(Notification notification)
-        {
-            _notifications.Remove(notification);
-        }
+    public void Dismiss(Notification notification)
+    {
+        _notifications.Remove(notification);
     }
 }

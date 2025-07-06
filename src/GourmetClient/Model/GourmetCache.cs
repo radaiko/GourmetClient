@@ -1,7 +1,7 @@
-﻿namespace GourmetClient.Model;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+
+namespace GourmetClient.Model;
 
 public record GourmetCache(
     DateTime Timestamp,

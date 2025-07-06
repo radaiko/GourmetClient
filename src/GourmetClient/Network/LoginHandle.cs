@@ -1,31 +1,30 @@
-﻿namespace GourmetClient.Network
+﻿using System;
+using System.Threading.Tasks;
+
+namespace GourmetClient.Network;
+
+public class LoginHandle : IAsyncDisposable
 {
-    using System;
-    using System.Threading.Tasks;
+    private readonly Func<ValueTask> _disposeAction;
 
-    public class LoginHandle : IAsyncDisposable
+    private bool _disposed;
+
+    public LoginHandle(bool loginSuccessful, Func<ValueTask> disposeAction)
     {
-        private readonly Func<ValueTask> _disposeAction;
+        _disposeAction = disposeAction;
+        LoginSuccessful = loginSuccessful;
+    }
 
-        private bool _disposed;
+    public bool LoginSuccessful { get; }
 
-        public LoginHandle(bool loginSuccessful, Func<ValueTask> disposeAction)
+    public ValueTask DisposeAsync()
+    {
+        if (_disposed)
         {
-            _disposeAction = disposeAction;
-            LoginSuccessful = loginSuccessful;
+            return ValueTask.CompletedTask;
         }
 
-        public bool LoginSuccessful { get; }
-
-        public ValueTask DisposeAsync()
-        {
-            if (_disposed)
-            {
-                return ValueTask.CompletedTask;
-            }
-
-            _disposed = true;
-            return _disposeAction();
-        }
+        _disposed = true;
+        return _disposeAction();
     }
 }

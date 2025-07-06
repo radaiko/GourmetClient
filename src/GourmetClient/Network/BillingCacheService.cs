@@ -1,131 +1,127 @@
-﻿namespace GourmetClient.Network
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using GourmetClient.Model;
+using GourmetClient.Notifications;
+using GourmetClient.Settings;
+using GourmetClient.Utils;
+
+namespace GourmetClient.Network;
+
+public class BillingCacheService
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-    using Model;
+    private readonly GourmetSettingsService _settingsService;
 
-    using Notifications;
+    private readonly GourmetWebClient _gourmetWebClient;
 
-    using Settings;
+    private readonly VentopayWebClient _ventopayWebClient;
 
-    using Utils;
+    private readonly NotificationService _notificationService;
 
-    public class BillingCacheService
+    public BillingCacheService()
     {
-        private readonly GourmetSettingsService _settingsService;
+        _settingsService = InstanceProvider.SettingsService;
+        _gourmetWebClient = InstanceProvider.GourmetWebClient;
+        _ventopayWebClient = InstanceProvider.VentopayWebClient;
+        _notificationService = InstanceProvider.NotificationService;
+    }
 
-        private readonly GourmetWebClient _gourmetWebClient;
+    public async Task<IReadOnlyCollection<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
+    {
+        var gourmetProgressValue = 0;
+        var ventopayProgressValue = 0;
 
-        private readonly VentopayWebClient _ventopayWebClient;
-
-        private readonly NotificationService _notificationService;
-
-        public BillingCacheService()
+        void UpdateProgress(ref int progressValue, int newValue)
         {
-            _settingsService = InstanceProvider.SettingsService;
-            _gourmetWebClient = InstanceProvider.GourmetWebClient;
-            _ventopayWebClient = InstanceProvider.VentopayWebClient;
-            _notificationService = InstanceProvider.NotificationService;
+            progressValue = newValue;
+            progress.Report((gourmetProgressValue + ventopayProgressValue) / 2);
         }
 
-        public async Task<IReadOnlyCollection<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
-        {
-            var gourmetProgressValue = 0;
-            var ventopayProgressValue = 0;
+        var gourmetProgress = new Progress<int>(value => UpdateProgress(ref gourmetProgressValue, value));
+        var ventopayProgress = new Progress<int>(value => UpdateProgress(ref ventopayProgressValue, value));
 
-            void UpdateProgress(ref int progressValue, int newValue)
+        var gourmetTask = GetGourmetBillingPositions(month, year, gourmetProgress);
+        var ventopayTask = GetVentopayBillingPositions(month, year, ventopayProgress);
+
+        var billingPositions = new List<BillingPosition>();
+            
+        var gourmetResult = await gourmetTask.ConfigureAwait(false);
+        var ventopayResult = await ventopayTask.ConfigureAwait(false);
+
+        billingPositions.AddRange(gourmetResult);
+        billingPositions.AddRange(ventopayResult);
+
+        return billingPositions;
+    }
+
+    private async Task<IReadOnlyList<BillingPosition>> GetGourmetBillingPositions(int month, int year, IProgress<int> progress)
+    {
+        var userSettings = _settingsService.GetCurrentUserSettings();
+
+        if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
+        {
+            _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Gourmet sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
+            progress.Report(100);
+
+            return [];
+        }
+            
+        try
+        {
+            await using var loginHandle = await _gourmetWebClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
+            if (!loginHandle.LoginSuccessful)
             {
-                progressValue = newValue;
-                progress.Report((gourmetProgressValue + ventopayProgressValue) / 2);
+                _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Gourmet konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
+                return [];
             }
 
-            var gourmetProgress = new Progress<int>(value => UpdateProgress(ref gourmetProgressValue, value));
-            var ventopayProgress = new Progress<int>(value => UpdateProgress(ref ventopayProgressValue, value));
+            return await _gourmetWebClient.GetBillingPositions(month, year, progress);
+        }
+        catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
+        {
+            _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Gourmet konnten nicht geladen werden", exception));
+            return [];
+        }
+        finally
+        {
+            progress.Report(100);
+        }
+    }
 
-            var gourmetTask = GetGourmetBillingPositions(month, year, gourmetProgress);
-            var ventopayTask = GetVentopayBillingPositions(month, year, ventopayProgress);
+    private async Task<IReadOnlyList<BillingPosition>> GetVentopayBillingPositions(int month, int year, IProgress<int> progress)
+    {
+        var userSettings = _settingsService.GetCurrentUserSettings();
 
-            var billingPositions = new List<BillingPosition>();
-            
-            var gourmetResult = await gourmetTask.ConfigureAwait(false);
-            var ventopayResult = await ventopayTask.ConfigureAwait(false);
+        if (string.IsNullOrEmpty(userSettings.VentopayUsername))
+        {
+            _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Ventopay sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
+            progress.Report(100);
 
-            billingPositions.AddRange(gourmetResult);
-            billingPositions.AddRange(ventopayResult);
-
-            return billingPositions;
+            return [];
         }
 
-        private async Task<IReadOnlyList<BillingPosition>> GetGourmetBillingPositions(int month, int year, IProgress<int> progress)
-        {
-            var userSettings = _settingsService.GetCurrentUserSettings();
-
-            if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
-            {
-                _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Gourmet sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
-                progress.Report(100);
-
-                return [];
-            }
+        var fromDate = new DateTime(year, month, 1);
+        var toDate = fromDate.AddMonths(1).AddDays(-1);
             
-            try
+        try
+        {
+            await using var loginHandle = await _ventopayWebClient.Login(userSettings.VentopayUsername, userSettings.VentopayPassword);
+            if (!loginHandle.LoginSuccessful)
             {
-                await using var loginHandle = await _gourmetWebClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
-                if (!loginHandle.LoginSuccessful)
-                {
-                    _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Gourmet konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
-                    return [];
-                }
-
-                return await _gourmetWebClient.GetBillingPositions(month, year, progress);
-            }
-            catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
-            {
-                _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Gourmet konnten nicht geladen werden", exception));
+                _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Ventopay konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
                 return [];
             }
-            finally
-            {
-                progress.Report(100);
-            }
+
+            return await _ventopayWebClient.GetBillingPositions(fromDate, toDate, progress);
         }
-
-        private async Task<IReadOnlyList<BillingPosition>> GetVentopayBillingPositions(int month, int year, IProgress<int> progress)
+        catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
         {
-            var userSettings = _settingsService.GetCurrentUserSettings();
-
-            if (string.IsNullOrEmpty(userSettings.VentopayUsername))
-            {
-                _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Ventopay sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
-                progress.Report(100);
-
-                return [];
-            }
-
-            var fromDate = new DateTime(year, month, 1);
-            var toDate = fromDate.AddMonths(1).AddDays(-1);
-            
-            try
-            {
-                await using var loginHandle = await _ventopayWebClient.Login(userSettings.VentopayUsername, userSettings.VentopayPassword);
-                if (!loginHandle.LoginSuccessful)
-                {
-                    _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Ventopay konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
-                    return [];
-                }
-
-                return await _ventopayWebClient.GetBillingPositions(fromDate, toDate, progress);
-            }
-            catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
-            {
-                _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Ventopay konnten nicht geladen werden", exception));
-                return [];
-            }
-            finally
-            {
-                progress.Report(100);
-            }
+            _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Ventopay konnten nicht geladen werden", exception));
+            return [];
+        }
+        finally
+        {
+            progress.Report(100);
         }
     }
 }

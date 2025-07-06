@@ -1,10 +1,9 @@
-﻿namespace GourmetClient.Update
+﻿namespace GourmetClient.Update;
+
+public enum UpdateStepState
 {
-    public enum UpdateStepState
-    {
-        NotStarted,
-        Running,
-        Finished,
-        Error
-    }
+    NotStarted,
+    Running,
+    Finished,
+    Error
 }
