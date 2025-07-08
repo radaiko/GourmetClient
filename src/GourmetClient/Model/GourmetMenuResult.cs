@@ -2,4 +2,4 @@
 
 namespace GourmetClient.Model;
 
-public record GourmetMenuResult(GourmetUserInformation UserInformation, IReadOnlyCollection<GourmetMenu> Menus);
+public record GourmetOrderedMenuResult(bool IsOrderChangeForTodayPossible, IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);

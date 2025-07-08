@@ -128,9 +128,9 @@ public class GourmetCacheService
             }
 
             var menuResult = await _webClient.GetMenus();
-            var orderedMenus = await _webClient.GetOrderedMenus();
+            var orderedMenusResult = await _webClient.GetOrderedMenus();
 
-            return new GourmetCache(DateTime.Now, menuResult.UserInformation, menuResult.Menus, orderedMenus);
+            return new GourmetCache(DateTime.Now, menuResult.UserInformation, menuResult.Menus, orderedMenusResult.OrderedMenus);
         }
         catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
         {
