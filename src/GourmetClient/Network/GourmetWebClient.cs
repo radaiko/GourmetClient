@@ -24,6 +24,9 @@ public partial class GourmetWebClient : WebClientBase
     [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]
     private static partial Regex LoginSuccessfulRegex();
 
+    [GeneratedRegex(@"MENÜ\s+([I]{1,3})")]
+    private static partial Regex MenuNumberRegex();
+
     protected override async Task<bool> LoginImpl(string userName, string password)
     {
         var ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//div[@class='login']//form");
@@ -333,12 +336,30 @@ public partial class GourmetWebClient : WebClientBase
             var detailNode = menuNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
             var positionId = detailNode.Attributes["data-id"].Value;
             var day = ParseMenuDateString(detailNode.Attributes["data-date"].Value);
-            var title = menuNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText().Trim();
+            var title = menuNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText();
             var subTitle = menuNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
             var allergens = ParseAllergens(menuNode.GetSingleNode(".//li[@class='allergen']").GetInnerText());
             var isAvailable = menuNode.ContainsNode(".//input[@type='checkbox' and @class='menu-clicked']");
+            var category = GourmetMenuCategory.Unknown;
+            var upperTitle = title.ToUpperInvariant();
 
-            yield return new GourmetMenu(day, positionId, title, subTitle, allergens, isAvailable);
+            var menuNumberMatch = MenuNumberRegex().Match(upperTitle);
+            if (menuNumberMatch.Success)
+            {
+                category = menuNumberMatch.Groups[1].Value switch
+                {
+                    "I" => GourmetMenuCategory.Menu1,
+                    "II" => GourmetMenuCategory.Menu2,
+                    "III" => GourmetMenuCategory.Menu3,
+                    _ => GourmetMenuCategory.Unknown
+                };
+            }
+            else if (upperTitle == "SUPPE & SALAT")
+            {
+                category = GourmetMenuCategory.SoupAndSalad;
+            }
+
+            yield return new GourmetMenu(day, category, positionId, title, subTitle, allergens, isAvailable);
         }
     }
 

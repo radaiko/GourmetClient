@@ -4,6 +4,7 @@ namespace GourmetClient.Model;
 
 public record GourmetMenu(
     DateTime Day,
+    GourmetMenuCategory Category,
     string MenuId,
     string MenuName,
     string Description,
