@@ -6,9 +6,9 @@
         xmlns:views="clr-namespace:GourmetClient.Views"
         xml:lang="de-DE"
         Title="GourmetClient"
-        Width="590"
+        Width="800"
         MinWidth="590"
-        Height="700"
+        Height="900"
         mc:Ignorable="d">
 	<views:MenuOrderView />
 </Window>

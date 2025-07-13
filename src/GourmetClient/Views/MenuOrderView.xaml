@@ -87,105 +87,109 @@
 				        Cursor="Hand"
 				        Focusable="False"
 				        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-					<DockPanel Margin="0,10,0,0">
-						<Grid DockPanel.Dock="Top">
-							<Grid.ColumnDefinitions>
-								<ColumnDefinition />
-								<ColumnDefinition Width="Auto" />
-							</Grid.ColumnDefinitions>
-							<StackPanel Grid.Column="1"
-							            Margin="5,0"
-							            Orientation="Vertical">
-								<Image Width="16"
-								       Height="16"
-								       ToolTipService.ShowOnDisabled="True">
-									<Image.Style>
-										<Style TargetType="{x:Type Image}">
-											<Style.Triggers>
-												<DataTrigger Binding="{Binding MenuState}"
-												             Value="{x:Static viewModels:GourmetMenuState.None}">
-													<Setter Property="Visibility" Value="Hidden" />
-												</DataTrigger>
-												<DataTrigger Binding="{Binding MenuState}"
-												             Value="{x:Static viewModels:GourmetMenuState.NotAvailable}">
-													<Setter Property="Source" Value="/Resources/Icons/MenuNotAvailable.png" />
-													<Setter Property="ToolTip" Value="Menü kann nicht bestellt werden" />
-												</DataTrigger>
-												<DataTrigger Binding="{Binding MenuState}"
-												             Value="{x:Static viewModels:GourmetMenuState.MarkedForOrder}">
-													<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForOrder.png" />
-													<Setter Property="ToolTip" Value="Menü wird bestellt" />
-												</DataTrigger>
-												<DataTrigger Binding="{Binding MenuState}"
-												             Value="{x:Static viewModels:GourmetMenuState.MarkedForCancel}">
-													<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForCancel.png" />
-													<Setter Property="ToolTip" Value="Menü wird abbestellt" />
-												</DataTrigger>
-												<MultiDataTrigger>
-													<MultiDataTrigger.Conditions>
-														<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
-														<Condition Binding="{Binding IsOrderCancelable}" Value="True" />
-													</MultiDataTrigger.Conditions>
-													<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
-													<Setter Property="ToolTip" Value="Menü ist bestellt" />
-												</MultiDataTrigger>
-												<MultiDataTrigger>
-													<MultiDataTrigger.Conditions>
-														<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
-														<Condition Binding="{Binding IsOrderCancelable}" Value="False" />
-													</MultiDataTrigger.Conditions>
-													<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
-													<Setter Property="ToolTip" Value="Menü ist bestellt und kann nicht storniert werden" />
-												</MultiDataTrigger>
-											</Style.Triggers>
-										</Style>
-									</Image.Style>
-								</Image>
-								<Image Width="16"
-								       Height="16"
-								       Margin="0,5,0,0"
-								       Source="/Resources/Icons/Warning.png"
-								       ToolTip="Bestellung ist nicht bestätigt"
-								       ToolTipService.ShowOnDisabled="True">
-									<Image.Style>
-										<Style TargetType="{x:Type Image}">
-											<Setter Property="Visibility" Value="Hidden" />
-											<Style.Triggers>
-												<MultiDataTrigger>
-													<MultiDataTrigger.Conditions>
-														<Condition Binding="{Binding IsOrdered}" Value="True" />
-														<Condition Binding="{Binding IsOrderApproved}" Value="False" />
-													</MultiDataTrigger.Conditions>
-													<Setter Property="Visibility" Value="Visible" />
-												</MultiDataTrigger>
-											</Style.Triggers>
-										</Style>
-									</Image.Style>
-								</Image>
-							</StackPanel>
-							<TextBlock Grid.Column="0"
-							           DockPanel.Dock="Bottom"
-							           FontSize="14"
-							           Text="{Binding MenuDescription}"
-							           TextTrimming="CharacterEllipsis"
-							           TextWrapping="Wrap"
-							           ToolTipService.ShowOnDisabled="True">
-								<TextBlock.Style>
-									<Style TargetType="{x:Type TextBlock}">
+					<Grid Margin="0,10,0,0">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition />
+							<ColumnDefinition Width="Auto" />
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition />
+							<RowDefinition Height="Auto" />
+						</Grid.RowDefinitions>
+						<TextBlock Grid.Row="0"
+						           Grid.Column="0"
+						           FontSize="14"
+						           Text="{Binding MenuDescription}"
+						           TextTrimming="CharacterEllipsis"
+						           TextWrapping="Wrap"
+						           ToolTipService.ShowOnDisabled="True">
+							<TextBlock.Style>
+								<Style TargetType="{x:Type TextBlock}">
+									<Style.Triggers>
+										<DataTrigger Binding="{Binding Path=(behaviors:IsTextTrimmedBehavior.IsTextTrimmed), RelativeSource={RelativeSource Self}}"
+										             Value="True">
+											<Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=Text}" />
+										</DataTrigger>
+									</Style.Triggers>
+								</Style>
+							</TextBlock.Style>
+							<b:Interaction.Behaviors>
+								<behaviors:IsTextTrimmedBehavior />
+							</b:Interaction.Behaviors>
+						</TextBlock>
+						<StackPanel Grid.Row="0"
+						            Grid.RowSpan="2"
+						            Grid.Column="1"
+						            Margin="5,0"
+						            Orientation="Vertical">
+							<Image Width="16"
+							       Height="16"
+							       ToolTipService.ShowOnDisabled="True">
+								<Image.Style>
+									<Style TargetType="{x:Type Image}">
 										<Style.Triggers>
-											<DataTrigger Binding="{Binding Path=(behaviors:IsTextTrimmedBehavior.IsTextTrimmed), RelativeSource={RelativeSource Self}}"
-											             Value="True">
-												<Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=Text}" />
+											<DataTrigger Binding="{Binding MenuState}"
+											             Value="{x:Static viewModels:GourmetMenuState.None}">
+												<Setter Property="Visibility" Value="Hidden" />
 											</DataTrigger>
+											<DataTrigger Binding="{Binding MenuState}"
+											             Value="{x:Static viewModels:GourmetMenuState.NotAvailable}">
+												<Setter Property="Source" Value="/Resources/Icons/MenuNotAvailable.png" />
+												<Setter Property="ToolTip" Value="Menü kann nicht bestellt werden" />
+											</DataTrigger>
+											<DataTrigger Binding="{Binding MenuState}"
+											             Value="{x:Static viewModels:GourmetMenuState.MarkedForOrder}">
+												<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForOrder.png" />
+												<Setter Property="ToolTip" Value="Menü wird bestellt" />
+											</DataTrigger>
+											<DataTrigger Binding="{Binding MenuState}"
+											             Value="{x:Static viewModels:GourmetMenuState.MarkedForCancel}">
+												<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForCancel.png" />
+												<Setter Property="ToolTip" Value="Menü wird abbestellt" />
+											</DataTrigger>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
+													<Condition Binding="{Binding IsOrderCancelable}" Value="True" />
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
+												<Setter Property="ToolTip" Value="Menü ist bestellt" />
+											</MultiDataTrigger>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
+													<Condition Binding="{Binding IsOrderCancelable}" Value="False" />
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
+												<Setter Property="ToolTip" Value="Menü ist bestellt und kann nicht storniert werden" />
+											</MultiDataTrigger>
 										</Style.Triggers>
 									</Style>
-								</TextBlock.Style>
-								<b:Interaction.Behaviors>
-									<behaviors:IsTextTrimmedBehavior />
-								</b:Interaction.Behaviors>
-							</TextBlock>
-						</Grid>
-					</DockPanel>
+								</Image.Style>
+							</Image>
+							<Image Width="16"
+							       Height="16"
+							       Margin="0,5,0,0"
+							       Source="/Resources/Icons/Warning.png"
+							       ToolTip="Bestellung ist nicht bestätigt"
+							       ToolTipService.ShowOnDisabled="True">
+								<Image.Style>
+									<Style TargetType="{x:Type Image}">
+										<Setter Property="Visibility" Value="Hidden" />
+										<Style.Triggers>
+											<MultiDataTrigger>
+												<MultiDataTrigger.Conditions>
+													<Condition Binding="{Binding IsOrdered}" Value="True" />
+													<Condition Binding="{Binding IsOrderApproved}" Value="False" />
+												</MultiDataTrigger.Conditions>
+												<Setter Property="Visibility" Value="Visible" />
+											</MultiDataTrigger>
+										</Style.Triggers>
+									</Style>
+								</Image.Style>
+							</Image>
+						</StackPanel>
+					</Grid>
 				</Button>
 			</Border>
 		</DataTemplate>
@@ -228,7 +232,9 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
 			<RowDefinition />
+			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 		</Grid.RowDefinitions>
 		<Border Grid.Row="0"
@@ -424,71 +430,73 @@
 			</ScrollViewer>
 		</Border>
 
-		<Grid Grid.Row="2">
-			<Border BorderBrush="Gray"
-			        BorderThickness="0,1">
-				<Grid>
-					<Grid.RowDefinitions>
-						<RowDefinition Height="70" />
-						<RowDefinition Height="Auto" />
-						<RowDefinition />
-					</Grid.RowDefinitions>
-					<Grid Grid.Row="0">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition />
-							<ColumnDefinition Width="Auto" />
-						</Grid.ColumnDefinitions>
-						<Border Grid.Column="0"
-						        Width="100"
-						        Background="{StaticResource DayBackgroundBrush}" />
-						<ItemsControl Grid.Column="1"
-						              ItemTemplate="{StaticResource CategoryHeaderTemplate}"
-						              ItemsSource="{Binding MenuCategories}">
-							<ItemsControl.ItemsPanel>
-								<ItemsPanelTemplate>
-									<UniformGrid Rows="1" />
-								</ItemsPanelTemplate>
-							</ItemsControl.ItemsPanel>
-						</ItemsControl>
-						<Border Grid.Column="2">
-							<Border.Style>
-								<Style TargetType="{x:Type Border}">
-									<Setter Property="Width" Value="0" />
-									<Style.Triggers>
-										<DataTrigger Binding="{Binding ComputedVerticalScrollBarVisibility, ElementName=MenuScrollViewer}"
-										             Value="Visible">
-											<Setter Property="Width" Value="{x:Static SystemParameters.VerticalScrollBarWidth}" />
-										</DataTrigger>
-									</Style.Triggers>
-								</Style>
-							</Border.Style>
-						</Border>
-					</Grid>
-					<ScrollViewer x:Name="MenuScrollViewer"
-					              Grid.Row="2"
-					              HorizontalScrollBarVisibility="Disabled"
-					              ScrollChanged="MenuScrollViewerOnScrollChanged"
-					              VerticalScrollBarVisibility="Auto">
-						<ItemsControl ItemTemplate="{StaticResource MenuDayTemplate}"
-						              ItemsSource="{Binding MenuDays}" />
-					</ScrollViewer>
-					<Border Grid.Row="2"
-					        Height="15"
-					        VerticalAlignment="Top"
-					        BorderThickness="0"
-					        IsHitTestVisible="False">
-						<Border.Background>
+		<Border Grid.Row="2"
+		        Height="1"
+		        Background="Gray" />
 
-							<LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-								<GradientStop Offset="0.0" Color="Gray" />
-								<GradientStop Offset="0.2" Color="#80808080" />
-								<GradientStop Offset="1.0" Color="#00808080" />
-							</LinearGradientBrush>
-						</Border.Background>
+		<Grid Grid.Row="3">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="70" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition />
+				</Grid.RowDefinitions>
+				<Grid Grid.Row="0">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto" />
+						<ColumnDefinition />
+						<ColumnDefinition Width="Auto" />
+					</Grid.ColumnDefinitions>
+					<Border Grid.Column="0"
+					        Width="100"
+					        Background="{StaticResource DayBackgroundBrush}" />
+					<ItemsControl Grid.Column="1"
+					              ItemTemplate="{StaticResource CategoryHeaderTemplate}"
+					              ItemsSource="{Binding MenuCategories}">
+						<ItemsControl.ItemsPanel>
+							<ItemsPanelTemplate>
+								<UniformGrid Rows="1" />
+							</ItemsPanelTemplate>
+						</ItemsControl.ItemsPanel>
+					</ItemsControl>
+					<Border Grid.Column="2">
+						<Border.Style>
+							<Style TargetType="{x:Type Border}">
+								<Setter Property="Width" Value="0" />
+								<Style.Triggers>
+									<DataTrigger Binding="{Binding ComputedVerticalScrollBarVisibility, ElementName=MenuScrollViewer}"
+									             Value="Visible">
+										<Setter Property="Width" Value="{x:Static SystemParameters.VerticalScrollBarWidth}" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</Border.Style>
 					</Border>
 				</Grid>
-			</Border>
+				<ScrollViewer x:Name="MenuScrollViewer"
+				              Grid.Row="2"
+				              HorizontalScrollBarVisibility="Disabled"
+				              ScrollChanged="MenuScrollViewerOnScrollChanged"
+				              VerticalScrollBarVisibility="Auto">
+					<ItemsControl ItemTemplate="{StaticResource MenuDayTemplate}"
+					              ItemsSource="{Binding MenuDays}" />
+				</ScrollViewer>
+				<Border Grid.Row="2"
+				        Height="15"
+				        VerticalAlignment="Top"
+				        BorderThickness="0"
+				        IsHitTestVisible="False">
+					<Border.Background>
+
+						<LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+							<GradientStop Offset="0.0" Color="Gray" />
+							<GradientStop Offset="0.2" Color="#80808080" />
+							<GradientStop Offset="1.0" Color="#00808080" />
+						</LinearGradientBrush>
+					</Border.Background>
+				</Border>
+			</Grid>
+
 
 			<Grid Background="Transparent"
 			      Visibility="{Binding IsMenuUpdating, Converter={StaticResource BoolToVisibilityConverter}}">
@@ -515,7 +523,8 @@
 			</Border>
 		</Grid>
 
-		<Canvas Grid.Row="2"
+		<Canvas Grid.Row="3"
+		        Background="White"
 		        Visibility="{Binding ShowWelcomeMessage, Converter={StaticResource BoolToVisibilityConverter}}">
 			<TextBlock Canvas.Top="80"
 			           Canvas.Right="100"
@@ -553,7 +562,11 @@
 			</Path>
 		</Canvas>
 
-		<StatusBar Grid.Row="3">
+		<Border Grid.Row="4"
+		        Height="1"
+		        Background="Gray" />
+
+		<StatusBar Grid.Row="5">
 			<StatusBarItem x:Name="NameOfUserStatusBarItem">
 				<StatusBarItem.Style>
 					<Style TargetType="{x:Type StatusBarItem}">
