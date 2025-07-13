@@ -40,6 +40,8 @@
 				<StackPanel Orientation="Vertical">
 					<TextBlock Style="{StaticResource ReleaseNoteHeader}" Text="Anpassung an Änderungen der Gourmet-Webseite" />
 					<TextBlock Style="{StaticResource ReleaseNoteDescription}" Text="Die Verarbeitung der Daten wurde an die das neue Layout der Gourmet-Webseite angepasst." />
+					<TextBlock Style="{StaticResource ReleaseNoteHeader}" Text="Überarbeitete Oberfläche" />
+					<TextBlock Style="{StaticResource ReleaseNoteDescription}" Text="Die Menüs werden jetzt als Tabelle angezeigt. Das ermöglicht eine flexiblere Anpassung an die Fenstergröße." />
 					<TextBlock Style="{StaticResource ReleaseNoteHeader}" Text="Hinweis bei widersprüchlichen Bestellungen" />
 					<TextBlock Style="{StaticResource ReleaseNoteDescription}" Text="Mit der neuen Funktionsweise der Gourmet-Webseite ist es dort möglich, für den selben Tag mehrere Menüs zu bestellen. In diesem Fall wird ein Hinweis angezeigt:" />
 					<Image Source="/Resources/ReleaseNotes/v2.3.0/MultipleOrdersOnSameDay.png" Style="{StaticResource ReleaseNoteImage}" />
