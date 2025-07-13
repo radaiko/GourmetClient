@@ -1,13 +1,14 @@
-﻿using System;
+﻿using GourmetClient.Model;
+using GourmetClient.Network.GourmetApi;
+using GourmetClient.Utils;
+using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using GourmetClient.Model;
-using GourmetClient.Network.GourmetApi;
-using GourmetClient.Utils;
-using HtmlAgilityPack;
 
 namespace GourmetClient.Network;
 
@@ -118,8 +119,8 @@ public partial class GourmetWebClient : WebClientBase
             var document = new HtmlDocument();
             document.LoadHtml(httpContent);
 
-            var orderedMenus = ParseOrderedGourmetMenuHtml(document).ToArray();
             var isOrderChangeForTodayPossible = !HasNoMoreOrdersForTodayErrorMessage(document);
+            var orderedMenus = ParseOrderedGourmetMenuHtml(document, isOrderChangeForTodayPossible).ToArray();
 
             return new GourmetOrderedMenuResult(isOrderChangeForTodayPossible, orderedMenus);
         }
@@ -416,7 +417,7 @@ public partial class GourmetWebClient : WebClientBase
         return validationNodes.Any(node => node.GetInnerText().Contains("Für heute ist keine Bestellung mehr möglich."));
     }
 
-    private static IEnumerable<GourmetOrderedMenu> ParseOrderedGourmetMenuHtml(HtmlDocument document)
+    private static IEnumerable<GourmetOrderedMenu> ParseOrderedGourmetMenuHtml(HtmlDocument document, bool isOrderChangeForTodayPossible)
     {
         foreach (var orderItemNode in document.DocumentNode.GetNodes("//div[contains(@class, 'order-item')]"))
         {
@@ -443,7 +444,16 @@ public partial class GourmetWebClient : WebClientBase
                 isOrderApproved = orderItemNode.ContainsNode(".//span[@class='checkmark']//i[@class='fa fa-check']");
             }
 
-            yield return new GourmetOrderedMenu(day, positionId, eatingCycleId, title, isOrderApproved);
+            bool isOrderCancelable = !IsToday(day) || isOrderChangeForTodayPossible;
+
+            yield return new GourmetOrderedMenu(day, positionId, eatingCycleId, title, isOrderApproved, isOrderCancelable);
+        }
+
+        bool IsToday(DateTime day)
+        {
+            Debug.Assert(day.Kind == DateTimeKind.Utc);
+            DateTime today = DateTime.UtcNow;
+            return day.Day == today.Day && day.Month == today.Month && day.Year == today.Year;
         }
     }
 

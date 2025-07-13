@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -117,6 +118,9 @@ public class GourmetCacheService
             return new InvalidatedGourmetCache();
         }
 
+        GourmetMenuResult menuResult;
+        GourmetOrderedMenuResult orderedMenuResult;
+
         try
         {
             await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
@@ -127,15 +131,50 @@ public class GourmetCacheService
                 return new InvalidatedGourmetCache();
             }
 
-            var menuResult = await _webClient.GetMenus();
-            var orderedMenusResult = await _webClient.GetOrderedMenus();
-
-            return new GourmetCache(DateTime.Now, menuResult.UserInformation, menuResult.Menus, orderedMenusResult.OrderedMenus);
+            menuResult = await _webClient.GetMenus();
+            orderedMenuResult = await _webClient.GetOrderedMenus();
         }
         catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
         {
             _notificationService.Send(new ExceptionNotification("Daten konnten nicht aktualisiert werden", exception));
             return new InvalidatedGourmetCache();
+        }
+
+        var menus = SetIsAvailableForTodayMenus().ToArray();
+        return new GourmetCache(DateTime.Now, menuResult.UserInformation, menus, orderedMenuResult.OrderedMenus);
+
+        IEnumerable<GourmetMenu> SetIsAvailableForTodayMenus()
+        {
+            foreach (GourmetMenu menu in menuResult.Menus)
+            {
+                if (!IsMenuForToday(menu))
+                {
+                    // Only look at menus for today
+                    yield return menu;
+                }
+                else if (!menu.IsAvailable)
+                {
+                    // Menu is no longer available, so nothing to update
+                    yield return menu;
+                }
+                else if (orderedMenuResult.IsOrderChangeForTodayPossible)
+                {
+                    // Order for today can still be changed, so nothing to update
+                    yield return menu;
+                }
+                else
+                {
+                    // Order for today can no longer be changed, so set the menu as not available
+                    yield return menu with { IsAvailable = false };
+                }
+            }
+        }
+
+        bool IsMenuForToday(GourmetMenu menu)
+        {
+            Debug.Assert(menu.Day.Kind == DateTimeKind.Utc);
+            DateTime today = DateTime.UtcNow;
+            return menu.Day.Day == today.Day && menu.Day.Month == today.Month && menu.Day.Year == today.Year;
         }
     }
 

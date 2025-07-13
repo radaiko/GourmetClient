@@ -212,12 +212,10 @@ public class MenuOrderViewModel : ViewModelBase
 
                     if (orderedMenu != null)
                     {
+                        menuViewModel.MenuState = GourmetMenuState.Ordered;
                         menuViewModel.IsOrdered = true;
                         menuViewModel.IsOrderApproved = orderedMenu.IsOrderApproved;
-                        menuViewModel.MenuState = GourmetMenuState.Ordered;
-
-                        // TODO: Check if this can be found out somehow
-                        menuViewModel.IsOrderCancelable = true;
+                        menuViewModel.IsOrderCancelable = orderedMenu.IsOrderCancelable;
                     }
                     else if (!menu.IsAvailable)
                     {
@@ -368,12 +366,11 @@ public class MenuOrderViewModel : ViewModelBase
                         // Cancel all orders in case the menu has been ordered multiple times
                         foreach (var actualOrderedMenu in matchingOrderedMenus)
                         {
-                            // TODO: Apply IsOrderCancelable if this information is available
-                            // if (!actualOrderedMenu.Meal.IsOrderCancelable)
-                            //{
-                            //   // Assume that, in case of multiple orders of the same menu, if one of the order can't be cancelled, then none of the orders can be cancelled
-                            //   break;
-                            //}
+                            if (!actualOrderedMenu.IsOrderCancelable)
+                            {
+                                // Assume that, in case of multiple orders of the same menu, if one of the order can't be cancelled, then none of the orders can be cancelled
+                                break;
+                            }
 
                             menusToCancel.Add(actualOrderedMenu);
                         }

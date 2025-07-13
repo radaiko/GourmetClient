@@ -14,7 +14,8 @@ internal class SerializableGourmetOrderedMenu
             PositionId = orderedMenu.PositionId,
             EatingCycleId = orderedMenu.EatingCycleId,
             MenuName = orderedMenu.MenuName,
-            IsOrderApproved = orderedMenu.IsOrderApproved
+            IsOrderApproved = orderedMenu.IsOrderApproved,
+            IsOrderCancelable = orderedMenu.IsOrderCancelable
         };
     }
 
@@ -33,8 +34,11 @@ internal class SerializableGourmetOrderedMenu
     [JsonPropertyName("IsOrderApproved")]
     public required bool IsOrderApproved { get; set; }
 
+    [JsonPropertyName("IsOrderCancelable")]
+    public required bool IsOrderCancelable { get; set; }
+
     public GourmetOrderedMenu ToOrderedGourmetMenu()
     {
-        return new GourmetOrderedMenu(Day, PositionId, EatingCycleId, MenuName, IsOrderApproved);
+        return new GourmetOrderedMenu(Day, PositionId, EatingCycleId, MenuName, IsOrderApproved, IsOrderCancelable);
     }
 }

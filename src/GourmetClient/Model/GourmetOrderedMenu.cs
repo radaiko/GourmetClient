@@ -7,7 +7,8 @@ public record GourmetOrderedMenu(
     string PositionId,
     string EatingCycleId,
     string MenuName,
-    bool IsOrderApproved)
+    bool IsOrderApproved,
+    bool IsOrderCancelable)
 {
     /// <summary>
     /// Compares whether this instance is equal to another <see cref="GourmetOrderedMenu"/> instance.
