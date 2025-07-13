@@ -10,6 +10,11 @@ namespace GourmetClient.ViewModels;
 
 public class BillingViewModel : ViewModelBase
 {
+    private const string MenuNameMenu1 = "MENÜ I";
+    private const string MenuNameMenu2 = "MENÜ II";
+    private const string MenuNameMenu3 = "MENÜ III";
+    private const string MenuNameSoupAndSalad = "SUPPE & SALAT";
+
     private readonly BillingCacheService _billingCacheService;
 
     private readonly ObservableCollection<DateTime> _availableMonths;
@@ -195,11 +200,11 @@ public class BillingViewModel : ViewModelBase
 
     private IEnumerable<BillingPosition> FindMenusBillingPositions(IEnumerable<BillingPosition> billingPositions)
     {
+        string[] menuNames = [MenuNameMenu1, MenuNameMenu2, MenuNameMenu3, MenuNameSoupAndSalad];
+
         foreach (var billingPosition in billingPositions.Where(p => p.PositionType == BillingPositionType.Menu))
         {
-            if (billingPosition.PositionName == "MENÜ I"
-                || billingPosition.PositionName == "MENÜ II"
-                || billingPosition.PositionName == "MENÜ III")
+            if (menuNames.Contains(billingPosition.PositionName.ToUpperInvariant()))
             {
                 yield return billingPosition;
             }
@@ -208,20 +213,22 @@ public class BillingViewModel : ViewModelBase
 
     private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions)
     {
-        var menu1Positions = billingPositions.Where(p => p.PositionName == "MENÜ I").ToList();
-        var menu2Positions = billingPositions.Where(p => p.PositionName == "MENÜ II").ToList();
-        var menu3Positions = billingPositions.Where(p => p.PositionName == "MENÜ III").ToList();
+        var menu1Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu1);
+        var menu2Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu2);
+        var menu3Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu3);
+        var soupAndSaladPositions = billingPositions.Where(p => p.PositionName == MenuNameSoupAndSalad);
 
         var groupedPositions = new List<GroupedBillingPositionsViewModel>();
 
         groupedPositions.AddRange(GroupMenusBillingPositions(menu1Positions, "Menü 1"));
         groupedPositions.AddRange(GroupMenusBillingPositions(menu2Positions, "Menü 2"));
         groupedPositions.AddRange(GroupMenusBillingPositions(menu3Positions, "Menü 3"));
+        groupedPositions.AddRange(GroupMenusBillingPositions(soupAndSaladPositions, "Suppe & Salat"));
 
         return groupedPositions;
     }
 
-    private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions, string groupName)
+    private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IEnumerable<BillingPosition> billingPositions, string groupName)
     {
         foreach (var singleCostGroup in billingPositions.GroupBy(position => position.SumCost / position.Count))
         {
