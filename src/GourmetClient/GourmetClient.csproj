@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Version>2.2.4</Version>
+		<Version>2.3.0</Version>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows7.0</TargetFramework>
 		<UseWPF>true</UseWPF>
@@ -29,6 +29,7 @@
 		<None Remove="Resources\Icons\Warning.png" />
 		<None Remove="Resources\ReleaseNotes\v2.2.0\BillingView.png" />
 		<None Remove="Resources\ReleaseNotes\v2.2.0\UpdateAvailableNotification.png" />
+		<None Remove="Resources\ReleaseNotes\v2.3.0\MultipleOrdersOnSameDay.png" />
 		<None Remove="Resources\UpdatePackageSignaturePublicKey.xml" />
 	</ItemGroup>
 
@@ -55,6 +56,7 @@
 		<Resource Include="Resources\Icons\Warning.png" />
 		<Resource Include="Resources\ReleaseNotes\v2.2.0\BillingView.png" />
 		<Resource Include="Resources\ReleaseNotes\v2.2.0\UpdateAvailableNotification.png" />
+		<Resource Include="Resources\ReleaseNotes\v2.3.0\MultipleOrdersOnSameDay.png" />
 		<EmbeddedResource Include="Resources\UpdatePackageSignaturePublicKey.xml" />
 	</ItemGroup>
 

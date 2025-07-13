@@ -105,7 +105,7 @@ public partial class GourmetWebClient : WebClientBase
         return new GourmetMenuResult(userInformation, parsedMenus);
     }
 
-    public async Task<IReadOnlyCollection<GourmetOrderedMenu>> GetOrderedMenus()
+    public async Task<GourmetOrderedMenuResult> GetOrderedMenus()
     {
         using var response = await ExecuteGetRequestForPage(PageNameOrderedMenu);
         var httpContent = await GetResponseContent(response);
@@ -115,7 +115,10 @@ public partial class GourmetWebClient : WebClientBase
             var document = new HtmlDocument();
             document.LoadHtml(httpContent);
 
-            return ParseOrderedGourmetMenuHtml(document).ToArray();
+            var orderedMenus = ParseOrderedGourmetMenuHtml(document).ToArray();
+            var isOrderChangeForTodayPossible = !HasNoMoreOrdersForTodayErrorMessage(document);
+
+            return new GourmetOrderedMenuResult(isOrderChangeForTodayPossible, orderedMenus);
         }
         catch (Exception exception)
         {
@@ -384,6 +387,12 @@ public partial class GourmetWebClient : WebClientBase
     private static bool HasNextPageButton(HtmlDocument document)
     {
         return document.DocumentNode.ContainsNode("//a[contains(@class, 'menues-next')]");
+    }
+
+    private static bool HasNoMoreOrdersForTodayErrorMessage(HtmlDocument document)
+    {
+        var validationNodes = document.DocumentNode.SelectNodes("//div[contains(@class, 'validation-message')]");
+        return validationNodes.Any(node => node.GetInnerText().Contains("Für heute ist keine Bestellung mehr möglich."));
     }
 
     private static IEnumerable<GourmetOrderedMenu> ParseOrderedGourmetMenuHtml(HtmlDocument document)
