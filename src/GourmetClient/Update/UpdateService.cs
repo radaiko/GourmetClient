@@ -208,7 +208,7 @@ public class UpdateService
         }
         catch (IOException exception)
         {
-            throw new GourmetUpdateException("Could not created backup", exception);
+            throw new GourmetUpdateException("Could not remove previous version", exception);
         }
     }
 
