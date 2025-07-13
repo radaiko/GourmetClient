@@ -84,7 +84,7 @@
 						   VerticalAlignment="Center"
 						   FontSize="14"
 						   Text="{Binding Message}"
-						   TextTrimming="CharacterEllipsis" />
+						   TextWrapping="Wrap" />
 				<ContentControl Grid.Column="2"
 								Content="{Binding}"
 								ContentTemplateSelector="{StaticResource NotificationButtonTemplateSelector}" />
