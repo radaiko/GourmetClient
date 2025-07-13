@@ -24,6 +24,8 @@ public class GourmetMenuViewModel : ObservableObject
 
     public string MenuDescription => _menu.Description;
 
+    public char[] Allergens => _menu.Allergens;
+
     public bool IsAvailable => _menu.IsAvailable;
 
     public bool IsOrdered

@@ -17,6 +17,7 @@
 	<views:InitializableView.Resources>
 		<behaviors:BoolInvertConverter x:Key="BoolInvertConverter" />
 		<behaviors:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+		<behaviors:AllergensToStringConverter x:Key="AllergensToStringConverter" />
 
 		<Brush x:Key="ActionBarBackgroundBrush">#F2F2F2</Brush>
 		<Brush x:Key="DayBackgroundBrush">#F2F2F2</Brush>
@@ -117,6 +118,11 @@
 								<behaviors:IsTextTrimmedBehavior />
 							</b:Interaction.Behaviors>
 						</TextBlock>
+						<TextBlock Grid.Row="1"
+						           Grid.Column="0"
+						           Margin="0,5,0,0"
+						           FontStyle="Italic"
+						           Text="{Binding Allergens, Converter={StaticResource AllergensToStringConverter}}" />
 						<StackPanel Grid.Row="0"
 						            Grid.RowSpan="2"
 						            Grid.Column="1"
