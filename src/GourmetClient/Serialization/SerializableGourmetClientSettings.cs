@@ -4,16 +4,16 @@ using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
-internal class SerializableGourmetSettings
+internal class SerializableGourmetClientSettings
 {
-    public static SerializableGourmetSettings FromGourmetSettings(GourmetSettings settings)
+    public static SerializableGourmetClientSettings FromGourmetClientSettings(GourmetClientSettings clientSettings)
     {
-        return new SerializableGourmetSettings
+        return new SerializableGourmetClientSettings
         {
             Version = 1,
-            UserSettings = SerializableUserSettings.FromUserSettings(settings.UserSettings),
-            UpdateSettings = SerializableUpdateSettings.FromUpdateSettings(settings.UpdateSettings),
-            WindowSettings = settings.WindowSettings != null ? SerializableWindowSettings.FromWindowSettings(settings.WindowSettings) : null
+            UserSettings = SerializableUserSettings.FromUserSettings(clientSettings.UserSettings),
+            UpdateSettings = SerializableUpdateSettings.FromUpdateSettings(clientSettings.UpdateSettings),
+            WindowSettings = clientSettings.WindowSettings != null ? SerializableWindowSettings.FromWindowSettings(clientSettings.WindowSettings) : null
         };
     }
 
@@ -29,14 +29,14 @@ internal class SerializableGourmetSettings
     [JsonPropertyName("UpdateSettings")]
     public SerializableUpdateSettings? UpdateSettings { get; set; }
 
-    public GourmetSettings ToGourmetSettings()
+    public GourmetClientSettings ToGourmetSettings()
     {
         if (Version is not 1)
         {
             throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
         }
 
-        var settings = new GourmetSettings
+        var settings = new GourmetClientSettings
         {
             WindowSettings = WindowSettings?.ToWindowSettings()
         };

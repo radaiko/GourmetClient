@@ -1,8 +1,8 @@
 ﻿namespace GourmetClient.Settings;
 
-public class GourmetSettings
+public class GourmetClientSettings
 {
-    public GourmetSettings()
+    public GourmetClientSettings()
     {
         UserSettings = new UserSettings();
         UpdateSettings = new UpdateSettings();

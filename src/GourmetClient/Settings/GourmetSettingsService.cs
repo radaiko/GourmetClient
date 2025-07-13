@@ -9,7 +9,7 @@ public class GourmetSettingsService
 {
     private readonly string _settingsFileName;
 
-    private GourmetSettings? _currentSettings;
+    private GourmetClientSettings? _currentSettings;
 
     public event EventHandler? SettingsSaved;
 
@@ -57,7 +57,7 @@ public class GourmetSettingsService
         SaveSettings(settings);
     }
 
-    private GourmetSettings GetCurrentSettings()
+    private GourmetClientSettings GetCurrentSettings()
     {
         if (_currentSettings == null)
         {
@@ -67,20 +67,20 @@ public class GourmetSettingsService
         return _currentSettings;
     }
 
-    private GourmetSettings ReadSettingsFromFile()
+    private GourmetClientSettings ReadSettingsFromFile()
     {
         if (!File.Exists(_settingsFileName))
         {
-            return new GourmetSettings();
+            return new GourmetClientSettings();
         }
 
-        SerializableGourmetSettings? serializedSettings = null;
-        GourmetSettings? settings = null;
+        SerializableGourmetClientSettings? serializedSettings = null;
+        GourmetClientSettings? settings = null;
 
         try
         {
             using var fileStream = new FileStream(_settingsFileName, FileMode.Open, FileAccess.Read, FileShare.None);
-            serializedSettings = JsonSerializer.Deserialize<SerializableGourmetSettings>(fileStream);
+            serializedSettings = JsonSerializer.Deserialize<SerializableGourmetClientSettings>(fileStream);
         }
         catch (Exception exception) when (exception is IOException || exception is JsonException)
         {
@@ -94,12 +94,12 @@ public class GourmetSettingsService
         {
         }
 
-        return settings ?? new GourmetSettings();
+        return settings ?? new GourmetClientSettings();
     }
 
-    private void SaveSettings(GourmetSettings settings)
+    private void SaveSettings(GourmetClientSettings settings)
     {
-        var serializedSettings = SerializableGourmetSettings.FromGourmetSettings(settings);
+        var serializedSettings = SerializableGourmetClientSettings.FromGourmetClientSettings(settings);
 
         try
         {
