@@ -1,31 +1,34 @@
-﻿using System;
+﻿using GourmetClient.Update;
+using System;
 using System.Linq;
-using GourmetClient.Update;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableReleaseListQueryResult
 {
-    public SerializableReleaseListQueryResult()
+    public static SerializableReleaseListQueryResult FromReleaseListQueryResult(ReleaseListQueryResult releaseListQueryResult)
     {
-        // Used for deserialization
+        return new SerializableReleaseListQueryResult
+        {
+            Version = 1,
+            ETagHeaderValue = releaseListQueryResult.ETagHeaderValue,
+            IsWeakETag = releaseListQueryResult.IsWeakETag,
+            Releases = releaseListQueryResult.Releases.Select(SerializableReleaseDescription.FromReleaseDescription).ToArray()
+        };
     }
 
-    public SerializableReleaseListQueryResult(ReleaseListQueryResult releaseListQueryResult)
-    {
-        Version = 1;
-        ETagHeaderValue = releaseListQueryResult.ETagHeaderValue;
-        IsWeakETag = releaseListQueryResult.IsWeakETag;
-        Releases = releaseListQueryResult.Releases.Select(release => new SerializableReleaseDescription(release)).ToArray();
-    }
+    [JsonPropertyName("Version")]
+    public required int Version { get; set; }
 
-    public int? Version { get; set; }
+    [JsonPropertyName("ETagHeaderValue")]
+    public required string ETagHeaderValue { get; set; }
 
-    public string? ETagHeaderValue { get; set; }
+    [JsonPropertyName("IsWeakETag")]
+    public required bool IsWeakETag { get; set; }
 
-    public bool? IsWeakETag { get; set; }
-
-    public SerializableReleaseDescription[]? Releases { get; set; }
+    [JsonPropertyName("Releases")]
+    public required SerializableReleaseDescription[] Releases { get; set; }
 
     public ReleaseListQueryResult ToReleaseListQueryResult()
     {
@@ -34,14 +37,9 @@ internal class SerializableReleaseListQueryResult
             throw new InvalidOperationException($"Unsupported version of serialized data: {Version}");
         }
 
-        if (string.IsNullOrEmpty(ETagHeaderValue) || !IsWeakETag.HasValue)
-        {
-            throw new InvalidOperationException("At least one property has an invalid value");
-        }
-
         return new ReleaseListQueryResult(
             ETagHeaderValue, 
-            IsWeakETag.Value,
-            Releases?.Select(release => release.ToReleaseDescription()).ToList() ?? []);
+            IsWeakETag,
+            Releases.Select(release => release.ToReleaseDescription()).ToArray());
     }
 }

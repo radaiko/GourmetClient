@@ -1,33 +1,32 @@
-﻿using System;
-using GourmetClient.Settings;
+﻿using GourmetClient.Settings;
+using System;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableGourmetSettings
 {
-    public SerializableGourmetSettings()
+    public static SerializableGourmetSettings FromGourmetSettings(GourmetSettings settings)
     {
-        // Used for deserialization
-    }
-
-    public SerializableGourmetSettings(GourmetSettings settings)
-    {
-        Version = 1;
-        UserSettings = new SerializableUserSettings(settings.UserSettings);
-        UpdateSettings = new SerializableUpdateSettings(settings.UpdateSettings);
-
-        if (settings.WindowSettings != null)
+        return new SerializableGourmetSettings
         {
-            WindowSettings = new SerializableWindowSettings(settings.WindowSettings);
-        }
+            Version = 1,
+            UserSettings = SerializableUserSettings.FromUserSettings(settings.UserSettings),
+            UpdateSettings = SerializableUpdateSettings.FromUpdateSettings(settings.UpdateSettings),
+            WindowSettings = settings.WindowSettings != null ? SerializableWindowSettings.FromWindowSettings(settings.WindowSettings) : null
+        };
     }
 
-    public int? Version { get; set; }
+    [JsonPropertyName("Version")]
+    public required int Version { get; set; }
 
+    [JsonPropertyName("UserSettings")]
     public SerializableUserSettings? UserSettings { get; set; }
 
+    [JsonPropertyName("WindowSettings")]
     public SerializableWindowSettings? WindowSettings { get; set; }
 
+    [JsonPropertyName("UpdateSettings")]
     public SerializableUpdateSettings? UpdateSettings { get; set; }
 
     public GourmetSettings ToGourmetSettings()
@@ -43,13 +42,13 @@ internal class SerializableGourmetSettings
         };
 
         var userSettings = UserSettings?.ToUserSettings();
-        if (userSettings != null)
+        if (userSettings is not null)
         {
             settings.UserSettings = userSettings;
         }
 
         var updateSettings = UpdateSettings?.ToUpdateSettings();
-        if (updateSettings != null)
+        if (updateSettings is not null)
         {
             settings.UpdateSettings = updateSettings;
         }

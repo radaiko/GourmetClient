@@ -1,55 +1,54 @@
-﻿using System;
+﻿using GourmetClient.Settings;
+using GourmetClient.Utils;
+using System;
 using System.Security.Cryptography;
 using System.Text;
-using GourmetClient.Settings;
-using GourmetClient.Utils;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableUserSettings
 {
-    public SerializableUserSettings()
+    public static SerializableUserSettings FromUserSettings(UserSettings userSettings)
     {
-        // Used for deserialization
-        CacheValidityMinutes = 0;
-        GourmetLoginUsername = string.Empty;
-        GourmetLoginPassword = string.Empty;
-        VentopayUsername = string.Empty;
-        VentopayPassword = string.Empty;
+        return new SerializableUserSettings
+        {
+            CacheValidityMinutes = (int)userSettings.CacheValidity.TotalMinutes,
+            GourmetLoginUsername = userSettings.GourmetLoginUsername,
+            GourmetLoginPassword = Encrypt(userSettings.GourmetLoginPassword),
+            VentopayUsername = userSettings.VentopayUsername,
+            VentopayPassword = Encrypt(userSettings.VentopayPassword)
+        };
     }
 
-    public SerializableUserSettings(UserSettings userSettings)
-    {
-        CacheValidityMinutes = (int)userSettings.CacheValidity.TotalMinutes;
-        GourmetLoginUsername = userSettings.GourmetLoginUsername;
-        GourmetLoginPassword = Encrypt(userSettings.GourmetLoginPassword);
-        VentopayUsername = userSettings.VentopayUsername;
-        VentopayPassword = Encrypt(userSettings.VentopayPassword);
-    }
+    [JsonPropertyName("CacheValidityMinutes")]
+    public int? CacheValidityMinutes { get; set; }
 
-    public int CacheValidityMinutes { get; set; }
+    [JsonPropertyName("GourmetLoginUsername")]
+    public string? GourmetLoginUsername { get; set; }
 
-    public string GourmetLoginUsername { get; set; }
+    [JsonPropertyName("GourmetLoginPassword")]
+    public string? GourmetLoginPassword { get; set; }
 
-    public string GourmetLoginPassword { get; set; }
+    [JsonPropertyName("VentopayUsername")]
+    public string? VentopayUsername { get; set; }
 
-    public string VentopayUsername { get; set; }
-
-    public string VentopayPassword { get; set; }
+    [JsonPropertyName("VentopayPassword")]
+    public string? VentopayPassword { get; set; }
 
     public UserSettings ToUserSettings()
     {
         var userSettings = new UserSettings
         {
-            GourmetLoginUsername = GourmetLoginUsername,
+            GourmetLoginUsername = GourmetLoginUsername ?? string.Empty,
             GourmetLoginPassword = Decrypt(GourmetLoginPassword),
-            VentopayUsername = VentopayUsername,
+            VentopayUsername = VentopayUsername ?? string.Empty,
             VentopayPassword = Decrypt(VentopayPassword)
         };
 
-        if (CacheValidityMinutes > 0)
+        if (CacheValidityMinutes is > 0)
         {
-            userSettings.CacheValidity = TimeSpan.FromMinutes(CacheValidityMinutes);
+            userSettings.CacheValidity = TimeSpan.FromMinutes(CacheValidityMinutes.Value);
         }
 
         return userSettings;
@@ -60,16 +59,20 @@ internal class SerializableUserSettings
         return EncryptionHelper.Encrypt(value, GetEncryptionKey());
     }
 
-    private static string Decrypt(string encryptedText)
+    private static string Decrypt(string? encryptedText)
     {
-        try
+        if (!string.IsNullOrEmpty(encryptedText))
         {
-            return EncryptionHelper.Decrypt(encryptedText, GetEncryptionKey());
+            try
+            {
+                return EncryptionHelper.Decrypt(encryptedText, GetEncryptionKey());
+            }
+            catch (Exception)
+            {
+            }
         }
-        catch (Exception)
-        {
-            return string.Empty;
-        }
+
+        return string.Empty;
     }
 
     private static string GetEncryptionKey()

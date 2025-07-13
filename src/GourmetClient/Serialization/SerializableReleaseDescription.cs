@@ -1,46 +1,40 @@
-﻿using System;
-using GourmetClient.Update;
+﻿using GourmetClient.Update;
 using Semver;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableReleaseDescription
 {
-    public SerializableReleaseDescription()
+    public static SerializableReleaseDescription FromReleaseDescription(ReleaseDescription releaseDescription)
     {
-        // Used for deserialization
+        return new SerializableReleaseDescription
+        {
+            ReleaseVersion = releaseDescription.Version.ToString(),
+            UpdatePackageDownloadUrl = releaseDescription.UpdatePackageDownloadUrl,
+            UpdatePackageSize = releaseDescription.UpdatePackageSize,
+            ChecksumDownloadUrl = releaseDescription.ChecksumDownloadUrl,
+            ChecksumSize = releaseDescription.ChecksumSize
+        };
     }
 
-    public SerializableReleaseDescription(ReleaseDescription releaseDescription)
-    {
-        ReleaseVersion = releaseDescription.Version.ToString();
-        UpdatePackageDownloadUrl = releaseDescription.UpdatePackageDownloadUrl;
-        UpdatePackageSize = releaseDescription.UpdatePackageSize;
-        ChecksumDownloadUrl = releaseDescription.ChecksumDownloadUrl;
-        ChecksumSize = releaseDescription.ChecksumSize;
-    }
+    [JsonPropertyName("ReleaseVersion")]
+    public required string ReleaseVersion { get; set; }
 
-    public string? ReleaseVersion { get; set; }
+    [JsonPropertyName("UpdatePackageDownloadUrl")]
+    public required string UpdatePackageDownloadUrl { get; set; }
 
-    public string? UpdatePackageDownloadUrl { get; set; }
+    [JsonPropertyName("UpdatePackageSize")]
+    public required long UpdatePackageSize { get; set; }
 
-    public long? UpdatePackageSize { get; set; }
+    [JsonPropertyName("ChecksumDownloadUrl")]
+    public required string ChecksumDownloadUrl { get; set; }
 
-    public string? ChecksumDownloadUrl { get; set; }
-
-    public long? ChecksumSize { get; set; }
+    [JsonPropertyName("ChecksumSize")]
+    public required long ChecksumSize { get; set; }
 
     public ReleaseDescription ToReleaseDescription()
     {
-        if (string.IsNullOrEmpty(ReleaseVersion)
-            || string.IsNullOrEmpty(UpdatePackageDownloadUrl)
-            || !UpdatePackageSize.HasValue
-            || string.IsNullOrEmpty(ChecksumDownloadUrl)
-            || !ChecksumSize.HasValue)
-        {
-            throw new InvalidOperationException("At least one property has an invalid value");
-        }
-
-        return new ReleaseDescription(SemVersion.Parse(ReleaseVersion, SemVersionStyles.Strict), UpdatePackageDownloadUrl, UpdatePackageSize.Value, ChecksumDownloadUrl, ChecksumSize.Value);
+        return new ReleaseDescription(SemVersion.Parse(ReleaseVersion, SemVersionStyles.Strict), UpdatePackageDownloadUrl, UpdatePackageSize, ChecksumDownloadUrl, ChecksumSize);
     }
 }

@@ -1,43 +1,41 @@
 ﻿using GourmetClient.Settings;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableWindowSettings
 {
-    public SerializableWindowSettings()
+    public static SerializableWindowSettings FromWindowSettings(WindowSettings windowSettings)
     {
-        // Used for deserialization
+        return new SerializableWindowSettings
+        {
+            WindowPositionTop = windowSettings.WindowPositionTop,
+            WindowPositionLeft = windowSettings.WindowPositionLeft,
+            WindowWidth = windowSettings.WindowWidth,
+            WindowHeight = windowSettings.WindowHeight
+        };
     }
 
-    public SerializableWindowSettings(WindowSettings windowSettings)
-    {
-        WindowPositionTop = windowSettings.WindowPositionTop;
-        WindowPositionLeft = windowSettings.WindowPositionLeft;
-        WindowWidth = windowSettings.WindowWidth;
-        WindowHeight = windowSettings.WindowHeight;
-    }
+    [JsonPropertyName("WindowPositionTop")]
+    public required int WindowPositionTop { get; set; }
 
-    public int? WindowPositionTop { get; set; }
+    [JsonPropertyName("WindowPositionLeft")]
+    public required int WindowPositionLeft { get; set; }
 
-    public int? WindowPositionLeft { get; set; }
+    [JsonPropertyName("WindowWidth")]
+    public required int WindowWidth { get; set; }
 
-    public int? WindowWidth { get; set; }
-
-    public int? WindowHeight { get; set; }
+    [JsonPropertyName("WindowHeight")]
+    public required int WindowHeight { get; set; }
 
     public WindowSettings? ToWindowSettings()
     {
-        if (WindowPositionTop is null || WindowPositionLeft is null || WindowWidth is null || WindowHeight is null)
-        {
-            return null;
-        }
-
         if (WindowWidth < 1 || WindowHeight < 1)
         {
             // Settings are not valid
             return null;
         }
 
-        return new WindowSettings(WindowPositionTop.Value, WindowPositionLeft.Value, WindowWidth.Value, WindowHeight.Value);
+        return new WindowSettings(WindowPositionTop, WindowPositionLeft, WindowWidth, WindowHeight);
     }
 }

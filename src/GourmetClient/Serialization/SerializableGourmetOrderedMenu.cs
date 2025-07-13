@@ -1,41 +1,40 @@
-﻿using System;
-using GourmetClient.Model;
+﻿using GourmetClient.Model;
+using System;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableGourmetOrderedMenu
 {
-    public SerializableGourmetOrderedMenu()
+    public static SerializableGourmetOrderedMenu FromGourmetOrderedMenu(GourmetOrderedMenu orderedMenu)
     {
-        // Used for deserialization
+        return new SerializableGourmetOrderedMenu
+        {
+            Day = orderedMenu.Day,
+            PositionId = orderedMenu.PositionId,
+            EatingCycleId = orderedMenu.EatingCycleId,
+            MenuName = orderedMenu.MenuName,
+            IsOrderApproved = orderedMenu.IsOrderApproved
+        };
     }
 
-    public SerializableGourmetOrderedMenu(GourmetOrderedMenu orderedMenu)
-    {
-        Day = orderedMenu.Day;
-        PositionId = orderedMenu.PositionId;
-        EatingCycleId = orderedMenu.EatingCycleId;
-        MenuName = orderedMenu.MenuName;
-        IsOrderApproved = orderedMenu.IsOrderApproved;
-    }
+    [JsonPropertyName("Day")]
+    public required DateTime Day { get; set; }
 
-    public DateTime? Day { get; set; }
+    [JsonPropertyName("PositionId")]
+    public required string PositionId { get; set; }
 
-    public string? PositionId { get; set; }
+    [JsonPropertyName("EatingCycleId")]
+    public required string EatingCycleId { get; set; }
 
-    public string? EatingCycleId { get; set; }
+    [JsonPropertyName("MenuName")]
+    public required string MenuName { get; set; }
 
-    public string? MenuName { get; set; }
-
-    public bool? IsOrderApproved { get; set; }
+    [JsonPropertyName("IsOrderApproved")]
+    public required bool IsOrderApproved { get; set; }
 
     public GourmetOrderedMenu ToOrderedGourmetMenu()
     {
-        if (Day is null || PositionId is null || EatingCycleId is null || MenuName is null || IsOrderApproved is null)
-        {
-            throw new InvalidOperationException("Information for the ordered menu is not complete");
-        }
-
-        return new GourmetOrderedMenu(Day.Value, PositionId, EatingCycleId, MenuName, IsOrderApproved.Value);
+        return new GourmetOrderedMenu(Day, PositionId, EatingCycleId, MenuName, IsOrderApproved);
     }
 }

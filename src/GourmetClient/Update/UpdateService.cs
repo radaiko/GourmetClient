@@ -380,7 +380,7 @@ public class UpdateService
 
     private async Task SaveReleaseListQueryResult(ReleaseListQueryResult queryResult)
     {
-        var serializedQueryResult = new SerializableReleaseListQueryResult(queryResult);
+        var serializedQueryResult = SerializableReleaseListQueryResult.FromReleaseListQueryResult(queryResult);
 
         try
         {

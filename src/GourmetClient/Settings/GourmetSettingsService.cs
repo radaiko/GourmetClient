@@ -99,7 +99,7 @@ public class GourmetSettingsService
 
     private void SaveSettings(GourmetSettings settings)
     {
-        var serializedSettings = new SerializableGourmetSettings(settings);
+        var serializedSettings = SerializableGourmetSettings.FromGourmetSettings(settings);
 
         try
         {
@@ -108,7 +108,7 @@ public class GourmetSettingsService
             {
                 Directory.CreateDirectory(settingsDirectory);
             }
-                
+
             using var fileStream = new FileStream(_settingsFileName, FileMode.Create, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(fileStream, serializedSettings, new JsonSerializerOptions { WriteIndented = true });
         }

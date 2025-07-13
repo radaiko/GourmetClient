@@ -166,7 +166,7 @@ public class GourmetCacheService
 
     private async Task SaveCache(GourmetCache menuCache)
     {
-        var serializedCache = new SerializableGourmetCache(menuCache);
+        var serializedCache = SerializableGourmetCache.FromGourmetCache(menuCache);
 
         try
         {

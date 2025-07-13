@@ -1,19 +1,19 @@
 ﻿using GourmetClient.Settings;
+using System.Text.Json.Serialization;
 
 namespace GourmetClient.Serialization;
 
 internal class SerializableUpdateSettings
 {
-    public SerializableUpdateSettings()
+    public static SerializableUpdateSettings FromUpdateSettings(UpdateSettings updateSettings)
     {
-        // Used for deserialization
+        return new SerializableUpdateSettings
+        {
+            CheckForUpdates = updateSettings.CheckForUpdates
+        };
     }
 
-    public SerializableUpdateSettings(UpdateSettings updateSettings)
-    {
-        CheckForUpdates = updateSettings.CheckForUpdates;
-    }
-
+    [JsonPropertyName("CheckForUpdates")]
     public bool? CheckForUpdates { get; set; }
 
     public UpdateSettings ToUpdateSettings()
