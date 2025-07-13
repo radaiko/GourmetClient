@@ -5,7 +5,7 @@ namespace GourmetClient.ViewModels;
 
 public class GourmetMenuDayViewModel
 {
-    public GourmetMenuDayViewModel(DateTime day, IReadOnlyList<GourmetMenuViewModel> menuViewModels)
+    public GourmetMenuDayViewModel(DateTime day, IReadOnlyList<GourmetMenuViewModel?> menuViewModels)
     {
         Date = day;
         Menus = menuViewModels;
@@ -13,5 +13,5 @@ public class GourmetMenuDayViewModel
 
     public DateTime Date { get; }
 
-    public IReadOnlyList<GourmetMenuViewModel> Menus { get; }
+    public IReadOnlyList<GourmetMenuViewModel?> Menus { get; }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
 using GourmetClient.Model;
@@ -15,21 +16,15 @@ namespace GourmetClient.ViewModels;
 public class MenuOrderViewModel : ViewModelBase
 {
     private readonly GourmetCacheService _cacheService;
-
     private readonly GourmetSettingsService _settingsService;
-
     private readonly NotificationService _notificationService;
 
     private bool _showWelcomeMessage;
-
     private IReadOnlyList<GourmetMenuDayViewModel> _menuDays;
-
+    private IReadOnlyList<GourmetMenuCategory> _menuCategories;
     private bool _isMenuUpdating;
-
     private string _nameOfUser;
-
     private DateTime _lastMenuUpdate;
-
     private bool _isSettingsPopupOpened;
 
     public MenuOrderViewModel()
@@ -39,6 +34,7 @@ public class MenuOrderViewModel : ViewModelBase
         _notificationService = InstanceProvider.NotificationService;
 
         _menuDays = [];
+        _menuCategories = [];
         _nameOfUser = string.Empty;
 
         UpdateMenuCommand = new AsyncDelegateCommand(ForceUpdateMenu, () => !IsMenuUpdating);
@@ -73,6 +69,17 @@ public class MenuOrderViewModel : ViewModelBase
         private set
         {
             _menuDays = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public IReadOnlyList<GourmetMenuCategory> MenuCategories
+    {
+        get => _menuCategories;
+
+        private set
+        {
+            _menuCategories = value;
             OnPropertyChanged();
         }
     }
@@ -181,40 +188,114 @@ public class MenuOrderViewModel : ViewModelBase
         LastMenuUpdate = cache.Timestamp;
         NameOfUser = cache.UserInformation.NameOfUser;
 
+        int maxMenuCountPerDay = 0;
         var dayViewModels = new List<GourmetMenuDayViewModel>();
 
-        foreach (var dayGroup in cache.Menus.GroupBy(menu => menu.Day))
+        if (cache.Menus.Count > 0)
         {
-            DateTime day = dayGroup.Key;
-            var menuViewModels = new List<GourmetMenuViewModel>();
+            var dayGroups = cache.Menus.GroupBy(menu => menu.Day).ToArray();
+            maxMenuCountPerDay = dayGroups.Max(dayGroup => dayGroup.Count());
 
-            foreach (var menu in dayGroup.OrderBy(menu => menu.MenuName))
+            foreach (var dayGroup in dayGroups)
             {
-                var menuViewModel = new GourmetMenuViewModel(menu);
-                var orderedMenu = cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
+                DateTime day = dayGroup.Key;
+                GourmetMenuViewModel? menu1ViewModel = null;
+                GourmetMenuViewModel? menu2ViewModel = null;
+                GourmetMenuViewModel? menu3ViewModel = null;
+                GourmetMenuViewModel? menuSoupAndSaladViewModel = null;
+                var additionalMenuViewModels = new List<GourmetMenuViewModel>();
 
-                if (orderedMenu != null)
+                foreach (var menu in dayGroup.OrderBy(menu => menu.MenuName))
                 {
-                    menuViewModel.IsOrdered = true;
-                    menuViewModel.IsOrderApproved = orderedMenu.IsOrderApproved;
-                    menuViewModel.MenuState = GourmetMenuState.Ordered;
+                    var menuViewModel = new GourmetMenuViewModel(menu);
+                    var orderedMenu = cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
 
-                    // TODO: Check if this can be found out somehow
-                    menuViewModel.IsOrderCancelable = true;
+                    if (orderedMenu != null)
+                    {
+                        menuViewModel.IsOrdered = true;
+                        menuViewModel.IsOrderApproved = orderedMenu.IsOrderApproved;
+                        menuViewModel.MenuState = GourmetMenuState.Ordered;
+
+                        // TODO: Check if this can be found out somehow
+                        menuViewModel.IsOrderCancelable = true;
+                    }
+                    else if (!menu.IsAvailable)
+                    {
+                        menuViewModel.MenuState = GourmetMenuState.NotAvailable;
+                    }
+
+                    switch (menu.Category)
+                    {
+                        case GourmetMenuCategory.Menu1:
+                            SetOrAddToAdditionalMenus(menuViewModel, ref menu1ViewModel, additionalMenuViewModels);
+                            break;
+                        case GourmetMenuCategory.Menu2:
+                            SetOrAddToAdditionalMenus(menuViewModel, ref menu2ViewModel, additionalMenuViewModels);
+                            break;
+                        case GourmetMenuCategory.Menu3:
+                            SetOrAddToAdditionalMenus(menuViewModel, ref menu3ViewModel, additionalMenuViewModels);
+                            break;
+                        case GourmetMenuCategory.SoupAndSalad:
+                            SetOrAddToAdditionalMenus(menuViewModel, ref menuSoupAndSaladViewModel, additionalMenuViewModels);
+                            break;
+                        default:
+                            additionalMenuViewModels.Add(menuViewModel);
+                            break;
+                    }
                 }
-                else if (!menu.IsAvailable)
+
+                var menuViewModels = new[]
                 {
-                    menuViewModel.MenuState = GourmetMenuState.NotAvailable;
+                    menu1ViewModel,
+                    menu2ViewModel,
+                    menu3ViewModel,
+                    menuSoupAndSaladViewModel
+                }.Concat(additionalMenuViewModels).ToList();
+
+                while (menuViewModels.Count < maxMenuCountPerDay)
+                {
+                    // Fill up the view models for each day to match the day with the maximum amount of menus
+                    // This is so that all days in the UI have the same amount of columns
+                    menuViewModels.Add(null);
                 }
 
-                menuViewModels.Add(menuViewModel);
+                dayViewModels.Add(new GourmetMenuDayViewModel(day, menuViewModels));
             }
-
-            dayViewModels.Add(new GourmetMenuDayViewModel(day, menuViewModels));
         }
 
-        NotifyAboutConflictingOrderedMenus(cache.OrderedMenus);
+        var categories = new List<GourmetMenuCategory>
+        {
+            GourmetMenuCategory.Menu1,
+            GourmetMenuCategory.Menu2,
+            GourmetMenuCategory.Menu3,
+            GourmetMenuCategory.SoupAndSalad
+        };
+
+        while (categories.Count < maxMenuCountPerDay)
+        {
+            // Add Unknown category for each additional menu so that the header row has the same amount of columns
+            categories.Add(GourmetMenuCategory.Unknown);
+        }
+
         MenuDays = dayViewModels.OrderBy(viewModel => viewModel.Date).ToArray();
+        MenuCategories = categories;
+
+        NotifyAboutConflictingOrderedMenus(cache.OrderedMenus);
+    }
+
+    private void SetOrAddToAdditionalMenus(
+        GourmetMenuViewModel menuViewModel,
+        ref GourmetMenuViewModel? categorizedMenuViewModel,
+        List<GourmetMenuViewModel> additionalMenuViewModels)
+    {
+        if (categorizedMenuViewModel is null)
+        {
+            categorizedMenuViewModel = menuViewModel;
+        }
+        else
+        {
+            additionalMenuViewModels.Add(menuViewModel);
+        }
     }
 
     private void NotifyAboutConflictingOrderedMenus(IReadOnlyCollection<GourmetOrderedMenu> orderedMenus)
@@ -255,7 +336,7 @@ public class MenuOrderViewModel : ViewModelBase
 
             foreach (var dayViewModel in _menuDays)
             {
-                var menuToOrder = dayViewModel.Menus.SingleOrDefault(menu => menu.MenuState == GourmetMenuState.MarkedForOrder);
+                var menuToOrder = dayViewModel.Menus.FirstOrDefault(menu => menu?.MenuState == GourmetMenuState.MarkedForOrder);
 
                 if (menuToOrder != null)
                 {
@@ -278,7 +359,7 @@ public class MenuOrderViewModel : ViewModelBase
             {
                 foreach (var menuViewModel in dayViewModel.Menus)
                 {
-                    if (menuViewModel.MenuState == GourmetMenuState.MarkedForCancel)
+                    if (menuViewModel?.MenuState == GourmetMenuState.MarkedForCancel)
                     {
                         var menuModel = menuViewModel.GetModel();
                         var matchingOrderedMenus = currentData.OrderedMenus.Where(orderedMenu => orderedMenu.MatchesMenu(menuModel));
@@ -375,7 +456,7 @@ public class MenuOrderViewModel : ViewModelBase
         {
             menuViewModel.MenuState = GourmetMenuState.None;
 
-            var orderedMenu = GetDayViewModel(menuViewModel).Menus.FirstOrDefault(menu => menu.IsOrdered);
+            var orderedMenu = GetDayViewModel(menuViewModel).Menus.FirstOrDefault(menu => menu?.IsOrdered ?? false);
 
             if (orderedMenu != null)
             {
@@ -404,7 +485,15 @@ public class MenuOrderViewModel : ViewModelBase
 
     private IEnumerable<GourmetMenuViewModel> GetMenusWhereOrderCanBeChanged(GourmetMenuDayViewModel dayViewModel)
     {
-        return dayViewModel.Menus.Where(menu => menu.MenuState != GourmetMenuState.NotAvailable && (!menu.IsOrdered || menu.IsOrderCancelable));
+        foreach (var menuViewModel in dayViewModel.Menus)
+        {
+            if (menuViewModel is not null
+                && menuViewModel.MenuState != GourmetMenuState.NotAvailable
+                && (!menuViewModel.IsOrdered || menuViewModel.IsOrderCancelable))
+            {
+                yield return menuViewModel;
+            }
+        }
     }
 
     private GourmetMenuDayViewModel GetDayViewModel(GourmetMenuViewModel menuViewModel)
