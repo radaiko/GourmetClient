@@ -36,6 +36,12 @@ if (Test-Path -Path $hashFilePath) {
 }
 
 
+############## Delete publish directory
+if (Test-Path -Path $gourmetClientPublishDirectory) {
+    Remove-Item -Path $gourmetClientPublishDirectory -Recurse
+}
+
+
 ############## Build
 dotnet publish $gourmetSolutionFilePath -c Release -p:PublishProfile=PublishRelease -p:Version=$version
 
