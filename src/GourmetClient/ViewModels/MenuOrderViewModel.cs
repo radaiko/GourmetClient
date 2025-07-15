@@ -51,7 +51,6 @@ public class MenuOrderViewModel : ViewModelBase
     public bool ShowWelcomeMessage
     {
         get => _showWelcomeMessage;
-
         private set
         {
             if (_showWelcomeMessage != value)
@@ -65,7 +64,6 @@ public class MenuOrderViewModel : ViewModelBase
     public IReadOnlyList<GourmetMenuDayViewModel> MenuDays
     {
         get => _menuDays;
-
         private set
         {
             _menuDays = value;
@@ -76,7 +74,6 @@ public class MenuOrderViewModel : ViewModelBase
     public IReadOnlyList<GourmetMenuCategory> MenuCategories
     {
         get => _menuCategories;
-
         private set
         {
             _menuCategories = value;
@@ -87,7 +84,6 @@ public class MenuOrderViewModel : ViewModelBase
     public bool IsMenuUpdating
     {
         get => _isMenuUpdating;
-
         private set
         {
             if (_isMenuUpdating != value)
@@ -102,7 +98,6 @@ public class MenuOrderViewModel : ViewModelBase
     public string NameOfUser
     {
         get => _nameOfUser;
-
         private set
         {
             if (_nameOfUser != value)
@@ -116,7 +111,6 @@ public class MenuOrderViewModel : ViewModelBase
     public DateTime LastMenuUpdate
     {
         get => _lastMenuUpdate;
-
         private set
         {
             if (_lastMenuUpdate != value)
@@ -130,7 +124,6 @@ public class MenuOrderViewModel : ViewModelBase
     public bool IsSettingsPopupOpened
     {
         get => _isSettingsPopupOpened;
-
         set
         {
             if (_isSettingsPopupOpened != value)

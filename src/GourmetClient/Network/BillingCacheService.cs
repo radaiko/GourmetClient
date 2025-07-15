@@ -11,11 +11,8 @@ namespace GourmetClient.Network;
 public class BillingCacheService
 {
     private readonly GourmetSettingsService _settingsService;
-
     private readonly GourmetWebClient _gourmetWebClient;
-
     private readonly VentopayWebClient _ventopayWebClient;
-
     private readonly NotificationService _notificationService;
 
     public BillingCacheService()
@@ -31,14 +28,17 @@ public class BillingCacheService
         var gourmetProgressValue = 0;
         var ventopayProgressValue = 0;
 
-        void UpdateProgress(ref int progressValue, int newValue)
+        var gourmetProgress = new Progress<int>(value =>
         {
-            progressValue = newValue;
-            progress.Report((gourmetProgressValue + ventopayProgressValue) / 2);
-        }
+            gourmetProgressValue = value;
+            UpdateTotalProgress();
+        });
 
-        var gourmetProgress = new Progress<int>(value => UpdateProgress(ref gourmetProgressValue, value));
-        var ventopayProgress = new Progress<int>(value => UpdateProgress(ref ventopayProgressValue, value));
+        var ventopayProgress = new Progress<int>(value =>
+        {
+            ventopayProgressValue = value;
+            UpdateTotalProgress();
+        });
 
         var gourmetTask = GetGourmetBillingPositions(month, year, gourmetProgress);
         var ventopayTask = GetVentopayBillingPositions(month, year, ventopayProgress);
@@ -52,6 +52,11 @@ public class BillingCacheService
         billingPositions.AddRange(ventopayResult);
 
         return billingPositions;
+
+        void UpdateTotalProgress()
+        {
+            progress.Report((gourmetProgressValue + ventopayProgressValue) / 2);
+        }
     }
 
     private async Task<IReadOnlyList<BillingPosition>> GetGourmetBillingPositions(int month, int year, IProgress<int> progress)

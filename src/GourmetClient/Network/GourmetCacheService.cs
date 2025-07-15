@@ -16,11 +16,8 @@ namespace GourmetClient.Network;
 public class GourmetCacheService
 {
     private readonly GourmetWebClient _webClient;
-
     private readonly GourmetSettingsService _settingsService;
-
     private readonly NotificationService _notificationService;
-
     private readonly string _cacheFileName;
 
     private GourmetCache? _cache;

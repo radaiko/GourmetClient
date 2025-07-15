@@ -13,15 +13,10 @@ namespace GourmetClient.Network;
 public class VentopayWebClient : WebClientBase
 {
     private const string WebUrl = "https://my.ventopay.com/mocca.website/";
-
     private const string PageNameLogin = "Login.aspx";
-
     private const string PageNameLogout = "Ausloggen.aspx";
-
     private const string PageNameTransactions = "Transaktionen.aspx";
-
     private const string PageNameTransactionDetails = "Rechnung.aspx";
-
     private const string CompanyIdTrumpf = "0da8d3ec-0178-47d5-9ccd-a996f04acb61";
 
     protected override async Task<bool> LoginImpl(string userName, string password)

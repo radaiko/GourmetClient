@@ -7,9 +7,7 @@ namespace GourmetClient.Behaviors;
 public class AsyncDelegateCommand : ICommand
 {
     private readonly Func<Task> _executeMethod;
-
     private readonly Func<bool> _canExecuteMethod;
-
     private bool _executing;
 
     public AsyncDelegateCommand(Func<Task> executeMethod) : this(executeMethod, () => true)

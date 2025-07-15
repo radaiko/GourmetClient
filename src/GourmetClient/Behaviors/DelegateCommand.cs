@@ -6,7 +6,6 @@ namespace GourmetClient.Behaviors;
 public class DelegateCommand : ICommand
 {
     private readonly Action _executeMethod;
-
     private readonly Func<bool> _canExecuteMethod;
 
     public DelegateCommand(Action executeMethod) : this(executeMethod, () => true)

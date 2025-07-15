@@ -15,11 +15,8 @@ namespace GourmetClient.Network;
 public partial class GourmetWebClient : WebClientBase
 {
     private const string WebUrl = "https://alaclickneu.gourmet.at/";
-
     private const string PageNameStart = "start";
-
     private const string PageNameMenu = "menus";
-
     private const string PageNameOrderedMenu = "bestellungen";
 
     [GeneratedRegex(@"<a href=""https://alaclickneu.gourmet.at/einstellungen/"" class=""navbar-link"">")]

@@ -8,17 +8,11 @@ namespace GourmetClient.Utils;
 public static class InstanceProvider
 {
     private static GourmetWebClient? _gourmetWebClient;
-
     private static VentopayWebClient? _ventopayWebClient;
-
     private static GourmetCacheService? _gourmetCacheService;
-
     private static NotificationService? _notificationService;
-
     private static BillingCacheService? _billingCacheService;
-
     private static GourmetSettingsService? _settingsService;
-
     private static UpdateService? _updateService;
 
     public static GourmetWebClient GourmetWebClient => _gourmetWebClient ??= new GourmetWebClient();

@@ -10,13 +10,9 @@ public class ExecuteUpdateViewModel : ViewModelBase
     private readonly UpdateService _updateService;
 
     private UpdateStepState _createBackupStepState;
-
     private UpdateStepState _removePreviousVersionStepState;
-
     private UpdateStepState _copyNewFilesStepState;
-
     private UpdateStepState _cleanupStepState;
-
     private Task? _updateTask;
 
     public ExecuteUpdateViewModel()

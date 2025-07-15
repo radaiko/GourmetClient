@@ -8,12 +8,9 @@ public class GourmetMenuViewModel : ObservableObject
     private readonly GourmetMenu _menu;
 
     private bool _isOrdered;
-
-    private GourmetMenuState _menuState;
-
     private bool _isOrderApproved;
-
     private bool _isOrderCancelable;
+    private GourmetMenuState _menuState;
 
     public GourmetMenuViewModel(GourmetMenu menu)
     {

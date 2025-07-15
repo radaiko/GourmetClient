@@ -16,25 +16,16 @@ public class BillingViewModel : ViewModelBase
     private const string MenuNameSoupAndSalad = "SUPPE & SALAT";
 
     private readonly BillingCacheService _billingCacheService;
-
     private readonly ObservableCollection<DateTime> _availableMonths;
-
     private readonly ObservableCollection<GroupedBillingPositionsViewModel> _menuBillingPositions;
-
     private readonly ObservableCollection<GroupedBillingPositionsViewModel> _drinkBillingPositions;
-
     private readonly ObservableCollection<GroupedBillingPositionsViewModel> _unknownBillingPositions;
 
     private DateTime _selectedMonth;
-
     private double _sumCostMenuBillingPositions;
-
     private double _sumCostDrinkBillingPositions;
-
     private double _sumCostUnknownBillingPositions;
-
     private bool _updating;
-
     private int _updateProgress;
 
     public BillingViewModel()

@@ -11,13 +11,9 @@ public class SettingsViewModel : ViewModelBase
     private readonly GourmetSettingsService _settingsService;
 
     private string _loginUsername;
-
     private string _loginPassword;
-
     private string _ventopayUsername;
-
     private string _ventopayPassword;
-
     private bool _checkForUpdates;
 
     public SettingsViewModel()

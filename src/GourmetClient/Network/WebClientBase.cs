@@ -14,15 +14,21 @@ namespace GourmetClient.Network;
 
 public abstract class WebClientBase
 {
-    private readonly object _loginLogoutLockObject = new object();
-    private readonly SemaphoreSlim _clientCreationSemaphore = new SemaphoreSlim(1, 1);
-
-    private readonly CookieContainer _cookieContainer = new CookieContainer();
+    private readonly object _loginLogoutLockObject;
+    private readonly SemaphoreSlim _clientCreationSemaphore;
+    private readonly CookieContainer _cookieContainer;
 
     private HttpClient? _client;
     private Task<bool>? _loginTask;
     private Task? _logoutTask;
     private int _loginCounter;
+
+    protected WebClientBase()
+    {
+        _loginLogoutLockObject = new object();
+        _clientCreationSemaphore = new SemaphoreSlim(1, 1);
+        _cookieContainer = new CookieContainer();
+    }
 
     public async Task<LoginHandle> Login(string userName, string password)
     {

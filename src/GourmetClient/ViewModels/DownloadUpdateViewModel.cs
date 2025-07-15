@@ -12,17 +12,12 @@ namespace GourmetClient.ViewModels;
 public class DownloadUpdateViewModel : ViewModelBase
 {
     private readonly UpdateService _updateService;
-
     private readonly NotificationService _notificationService;
 
     private int _downloadProgress;
-
     private UpdateStepState _downloadStepState;
-
     private UpdateStepState _extractStepState;
-
     private Task? _updateTask;
-
     private CancellationTokenSource? _updateCancellationTokenSource;
 
     public DownloadUpdateViewModel()

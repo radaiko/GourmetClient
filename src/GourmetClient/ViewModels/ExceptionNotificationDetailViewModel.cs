@@ -51,7 +51,7 @@ public class ExceptionNotificationDetailViewModel : ObservableObject
             stringBuilder.AppendLine("---------------------------------------------------");
             stringBuilder.AppendLine("HTML:").AppendLine(parseException.ResponseContent);
         }
-        else if (_notification.Exception != null)
+        else
         {
             stringBuilder.AppendLine("Exception:").AppendLine(_notification.Exception.ToString());
         }
