@@ -411,6 +411,11 @@ public partial class GourmetWebClient : WebClientBase
     private static bool HasNoMoreOrdersForTodayErrorMessage(HtmlDocument document)
     {
         var validationNodes = document.DocumentNode.SelectNodes("//div[contains(@class, 'validation-message')]");
+        if (validationNodes is null)
+        {
+            return false;
+        }
+
         return validationNodes.Any(node => node.GetInnerText().Contains("Für heute ist keine Bestellung mehr möglich."));
     }
 
