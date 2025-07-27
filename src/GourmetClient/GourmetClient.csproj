@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<Version>2.3.0</Version>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows7.0</TargetFramework>
+		<TargetFramework>net9.0-windows7.0</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<Nullable>enable</Nullable>
 		<ApplicationIcon>Resources\Icons\AppIcon.ico</ApplicationIcon>
@@ -62,6 +62,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
+		<PackageReference Include="Microsoft.Extensions.Primitives" Version="9.0.7" />
 		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
 		<PackageReference Include="Semver" Version="3.0.0" />
 	</ItemGroup>
