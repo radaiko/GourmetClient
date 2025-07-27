@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using GourmetClient.Model;
 using GourmetClient.Notifications;
@@ -25,108 +27,113 @@ public class BillingCacheService
 
     public async Task<IReadOnlyCollection<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
     {
-        var gourmetProgressValue = 0;
-        var ventopayProgressValue = 0;
+        var gourmetProgress = new Progress<int>();
+        var ventopayProgress = new Progress<int>();
+        using var totalProgressWrapper = new TotalProgressWrapper(progress, [gourmetProgress, ventopayProgress]);
 
-        var gourmetProgress = new Progress<int>(value =>
-        {
-            gourmetProgressValue = value;
-            UpdateTotalProgress();
-        });
+        Task<IReadOnlyList<BillingPosition>> gourmetTask = GetBillingPositions(
+            "Gourmet",
+            userSettings => !string.IsNullOrEmpty(userSettings.GourmetLoginUsername),
+            userSettings => _gourmetWebClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword),
+            () => _gourmetWebClient.GetBillingPositions(month, year, gourmetProgress),
+            gourmetProgress);
 
-        var ventopayProgress = new Progress<int>(value =>
-        {
-            ventopayProgressValue = value;
-            UpdateTotalProgress();
-        });
+        Task<IReadOnlyList<BillingPosition>> ventopayTask = GetBillingPositions(
+            "Ventopay",
+            userSettings => !string.IsNullOrEmpty(userSettings.VentopayUsername),
+            userSettings => _ventopayWebClient.Login(userSettings.VentopayUsername, userSettings.VentopayPassword),
+            () =>
+            {
+                var fromDate = new DateTime(year, month, 1);
+                var toDate = fromDate.AddMonths(1).AddDays(-1);
+                return _ventopayWebClient.GetBillingPositions(fromDate, toDate, ventopayProgress);
+            },
+            ventopayProgress);
 
-        var gourmetTask = GetGourmetBillingPositions(month, year, gourmetProgress);
-        var ventopayTask = GetVentopayBillingPositions(month, year, ventopayProgress);
-
-        var billingPositions = new List<BillingPosition>();
-            
         var gourmetResult = await gourmetTask.ConfigureAwait(false);
         var ventopayResult = await ventopayTask.ConfigureAwait(false);
 
+        var billingPositions = new List<BillingPosition>();
         billingPositions.AddRange(gourmetResult);
         billingPositions.AddRange(ventopayResult);
 
         return billingPositions;
-
-        void UpdateTotalProgress()
-        {
-            progress.Report((gourmetProgressValue + ventopayProgressValue) / 2);
-        }
     }
 
-    private async Task<IReadOnlyList<BillingPosition>> GetGourmetBillingPositions(int month, int year, IProgress<int> progress)
+    private async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(
+        string sourceName,
+        Func<UserSettings, bool> userSettingsValidationFunc,
+        Func<UserSettings, Task<LoginHandle>> loginFunc,
+        Func<Task<IReadOnlyList<BillingPosition>>> getBillingPositionsFunc,
+        IProgress<int> subProgress)
     {
-        var userSettings = _settingsService.GetCurrentUserSettings();
-
-        if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
+        if (!userSettingsValidationFunc.Invoke(userSettings))
         {
-            _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Gourmet sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
-            progress.Report(100);
-
+            _notificationService.Send(new Notification(NotificationType.Warning, $"Zugangsdaten für {sourceName} sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
+            subProgress.Report(100);
             return [];
         }
-            
+
         try
         {
-            await using var loginHandle = await _gourmetWebClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
+            await using var loginHandle = await loginFunc.Invoke(userSettings);
             if (!loginHandle.LoginSuccessful)
             {
-                _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Gourmet konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
+                _notificationService.Send(new Notification(NotificationType.Error, $"Abrechnungsdaten von {sourceName} konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
                 return [];
             }
 
-            return await _gourmetWebClient.GetBillingPositions(month, year, progress);
+            return await getBillingPositionsFunc.Invoke();
         }
         catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
         {
-            _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Gourmet konnten nicht geladen werden", exception));
+            _notificationService.Send(new ExceptionNotification($"Abrechnungsdaten von {sourceName} konnten nicht geladen werden", exception));
             return [];
         }
         finally
         {
-            progress.Report(100);
+            subProgress.Report(100);
         }
     }
 
-    private async Task<IReadOnlyList<BillingPosition>> GetVentopayBillingPositions(int month, int year, IProgress<int> progress)
+    private sealed class TotalProgressWrapper : IDisposable
     {
-        var userSettings = _settingsService.GetCurrentUserSettings();
+        private readonly IProgress<int> _targetProgress;
+        private readonly IList<Progress<int>> _sourceProgresses;
+        private readonly int[] _progressValues;
 
-        if (string.IsNullOrEmpty(userSettings.VentopayUsername))
+        public TotalProgressWrapper(IProgress<int> targetProgress, IList<Progress<int>> sourceProgresses)
         {
-            _notificationService.Send(new Notification(NotificationType.Warning, "Zugangsdaten für Ventopay sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
-            progress.Report(100);
+            _targetProgress = targetProgress;
+            _sourceProgresses = sourceProgresses;
+            _progressValues = new int[sourceProgresses.Count];
 
-            return [];
-        }
-
-        var fromDate = new DateTime(year, month, 1);
-        var toDate = fromDate.AddMonths(1).AddDays(-1);
-            
-        try
-        {
-            await using var loginHandle = await _ventopayWebClient.Login(userSettings.VentopayUsername, userSettings.VentopayPassword);
-            if (!loginHandle.LoginSuccessful)
+            for (int i = 0; i < _sourceProgresses.Count; i++)
             {
-                _notificationService.Send(new Notification(NotificationType.Error, "Abrechnungsdaten von Ventopay konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
-                return [];
+                _progressValues[i] = 0;
+                _sourceProgresses[i].ProgressChanged += OnProgressChanged;
             }
+        }
 
-            return await _ventopayWebClient.GetBillingPositions(fromDate, toDate, progress);
-        }
-        catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
+        public void Dispose()
         {
-            _notificationService.Send(new ExceptionNotification("Abrechnungsdaten von Ventopay konnten nicht geladen werden", exception));
-            return [];
+            foreach (Progress<int> sourceProgress in _sourceProgresses)
+            {
+                sourceProgress.ProgressChanged -= OnProgressChanged;
+            }
         }
-        finally
+
+        private void OnProgressChanged(object? sender, int value)
         {
-            progress.Report(100);
+            Debug.Assert(sender is Progress<int>);
+            Debug.Assert(value is >= 0 and <= 100);
+
+            int index = _sourceProgresses.IndexOf((Progress<int>)sender);
+            _progressValues[index] = value;
+
+            int totalProgress = _progressValues.Sum() / _progressValues.Length;
+            _targetProgress.Report(totalProgress);
         }
     }
 }
