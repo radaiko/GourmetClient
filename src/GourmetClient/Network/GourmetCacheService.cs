@@ -38,7 +38,7 @@ public class GourmetCacheService
 
     public async Task<GourmetCache> GetCache()
     {
-        if (_cache == null)
+        if (_cache is null)
         {
             _cache = await GetCacheFromFile();
         }
@@ -187,7 +187,7 @@ public class GourmetCacheService
             await using var fileStream = new FileStream(_cacheFileName, FileMode.Open, FileAccess.Read, FileShare.None);
             var serializedCache = await JsonSerializer.DeserializeAsync<SerializableGourmetCache>(fileStream);
 
-            if (serializedCache == null)
+            if (serializedCache is null)
             {
                 return new InvalidatedGourmetCache();
             }
@@ -207,7 +207,9 @@ public class GourmetCacheService
         try
         {
             var cacheDirectory = Path.GetDirectoryName(_cacheFileName);
-            if (cacheDirectory != null && !Directory.Exists(cacheDirectory))
+            Debug.Assert(cacheDirectory is not null);
+
+            if (!Directory.Exists(cacheDirectory))
             {
                 Directory.CreateDirectory(cacheDirectory);
             }

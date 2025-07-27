@@ -43,7 +43,7 @@ public class UpdateService
         try
         {
             var latestRelease = await GetLatestRelease(acceptPreReleases);
-            if (latestRelease != null && latestRelease.Version.CompareSortOrderTo(CurrentVersion) > 0)
+            if (latestRelease is not null && latestRelease.Version.CompareSortOrderTo(CurrentVersion) > 0)
             {
                 // Version of latest release is newer than current version
                 return latestRelease;
@@ -324,7 +324,7 @@ public class UpdateService
         IReadOnlyList<ReleaseDescription> releaseDescriptions = [];
 
         var cachedQueryResult = await GetCachedReleaseListQueryResult();
-        if (cachedQueryResult != null)
+        if (cachedQueryResult is not null)
         {
             request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(cachedQueryResult.ETagHeaderValue, cachedQueryResult.IsWeakETag));
             releaseDescriptions = cachedQueryResult.Releases;
@@ -348,7 +348,7 @@ public class UpdateService
 
                 releaseDescriptions = ReleaseEntriesToDescriptions(releases);
 
-                if (response.Headers.ETag != null)
+                if (response.Headers.ETag is not null)
                 {
                     var queryResult = new ReleaseListQueryResult(response.Headers.ETag.Tag, response.Headers.ETag.IsWeak, releaseDescriptions);
                     await SaveReleaseListQueryResult(queryResult);
@@ -403,7 +403,9 @@ public class UpdateService
         try
         {
             var parentDirectory = Path.GetDirectoryName(_releaseListQueryResultFilePath);
-            if (parentDirectory != null && !Directory.Exists(parentDirectory))
+            Debug.Assert(parentDirectory is not null);
+
+            if (!Directory.Exists(parentDirectory))
             {
                 Directory.CreateDirectory(parentDirectory);
             }
@@ -429,7 +431,7 @@ public class UpdateService
                 var updatePackageAsset = entry.Assets.FirstOrDefault(asset => asset.Name == "GourmetClient.zip");
                 var checksumPackageAsset = entry.Assets.FirstOrDefault(asset => asset.Name == "checksum.txt");
 
-                if (updatePackageAsset != null && checksumPackageAsset != null)
+                if (updatePackageAsset is not null && checksumPackageAsset is not null)
                 {
                     releaseDescriptions.Add(new ReleaseDescription(semVersion, updatePackageAsset.DownloadUrl, updatePackageAsset.Size, checksumPackageAsset.DownloadUrl, checksumPackageAsset.Size));
                 }
@@ -457,7 +459,7 @@ public class UpdateService
         }
 
         await using var publicKeyXmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("GourmetClient.Resources.UpdatePackageSignaturePublicKey.xml");
-        if (publicKeyXmlStream == null)
+        if (publicKeyXmlStream is null)
         {
             throw new GourmetUpdateException("Public key for signature of update package could not be found");
         }

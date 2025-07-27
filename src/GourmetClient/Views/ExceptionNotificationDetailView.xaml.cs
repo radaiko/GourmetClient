@@ -14,6 +14,6 @@ public partial class ExceptionNotificationDetailView : UserControl
     public ExceptionNotification? Notification
     {
         get => (DataContext as ExceptionNotificationDetailViewModel)?.GetNotification();
-        set => DataContext = value != null ? new ExceptionNotificationDetailViewModel(value) : null;
+        set => DataContext = value is not null ? new ExceptionNotificationDetailViewModel(value) : null;
     }
 }

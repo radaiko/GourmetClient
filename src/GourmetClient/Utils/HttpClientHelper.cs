@@ -81,7 +81,7 @@ public static class HttpClientHelper
         var requestUri = new Uri(requestUrl);
         var proxyUri = WebRequest.DefaultWebProxy?.GetProxy(requestUri);
 
-        if (proxyUri == null || proxyUri.Authority == requestUri.Authority)
+        if (proxyUri is null || proxyUri.Authority == requestUri.Authority)
         {
             // No proxy required
             return null;

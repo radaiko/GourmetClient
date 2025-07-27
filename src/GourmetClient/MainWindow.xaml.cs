@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     {
         var windowSettings = InstanceProvider.SettingsService.GetCurrentWindowSettings();
 
-        if (windowSettings != null)
+        if (windowSettings is not null)
         {
             Top = windowSettings.WindowPositionTop;
             Left = windowSettings.WindowPositionLeft;

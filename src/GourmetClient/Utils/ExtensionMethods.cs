@@ -15,18 +15,18 @@ public static class ExtensionMethods
     public static bool TryGetSingleNode(this HtmlNode node, string xpath, [NotNullWhen(true)] out HtmlNode? foundNode)
     {
         foundNode = node.SelectSingleNode(xpath);
-        return foundNode != null;
+        return foundNode is not null;
     }
 
     public static bool ContainsNode(this HtmlNode node, string xpath)
     {
-        return node.SelectSingleNode(xpath) != null;
+        return node.SelectSingleNode(xpath) is not null;
     }
 
     public static IEnumerable<HtmlNode> GetNodes(this HtmlNode node, string xpath)
     {
         var nodes = node.SelectNodes(xpath);
-        if (nodes != null)
+        if (nodes is not null)
         {
             return nodes;
         }
@@ -55,9 +55,9 @@ public static class ExtensionMethods
         return node.Attributes[attributeName].Value ?? throw new GourmetHtmlNodeException($"Attribute '{attributeName}' not found on node");
     }
 
-    public static bool TryGetAttributeValue(this HtmlNode node, string attributeName, out string value)
+    public static bool TryGetAttributeValue(this HtmlNode node, string attributeName, [NotNullWhen(true)] out string? value)
     {
         value = node.Attributes[attributeName].Value;
-        return value != null;
+        return value is not null;
     }
 }

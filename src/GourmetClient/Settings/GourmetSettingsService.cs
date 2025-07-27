@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using GourmetClient.Serialization;
@@ -59,7 +60,7 @@ public class GourmetSettingsService
 
     private GourmetClientSettings GetCurrentSettings()
     {
-        if (_currentSettings == null)
+        if (_currentSettings is null)
         {
             _currentSettings = ReadSettingsFromFile();
         }
@@ -104,7 +105,9 @@ public class GourmetSettingsService
         try
         {
             var settingsDirectory = Path.GetDirectoryName(_settingsFileName);
-            if (settingsDirectory != null && !Directory.Exists(settingsDirectory))
+            Debug.Assert(settingsDirectory is not null);
+
+            if (!Directory.Exists(settingsDirectory))
             {
                 Directory.CreateDirectory(settingsDirectory);
             }

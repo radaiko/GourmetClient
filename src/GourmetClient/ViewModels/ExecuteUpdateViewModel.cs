@@ -67,7 +67,7 @@ public class ExecuteUpdateViewModel : ViewModelBase
     public async Task ExecuteUpdate(string targetPath)
     {
         var runningTask = _updateTask;
-        if (runningTask != null)
+        if (runningTask is not null)
         {
             await runningTask;
             return;

@@ -46,7 +46,7 @@ public abstract class WebClientBase
             activeLogoutTask = _logoutTask;
         }
 
-        if (activeLogoutTask != null)
+        if (activeLogoutTask is not null)
         {
             await activeLogoutTask;
         }
@@ -57,7 +57,7 @@ public abstract class WebClientBase
         {
             _loginCounter++;
 
-            if (_loginTask == null)
+            if (_loginTask is null)
             {
                 _loginTask = LoginImpl(userName, password);
             }
@@ -102,7 +102,7 @@ public abstract class WebClientBase
             logoutTask = _logoutTask;
         }
 
-        if (logoutTask != null)
+        if (logoutTask is not null)
         {
             return new ValueTask(logoutTask);
         }
@@ -220,7 +220,7 @@ public abstract class WebClientBase
     protected static string GetRequestUriString(HttpResponseMessage response)
     {
         var requestMessage = response.RequestMessage;
-        if (requestMessage == null)
+        if (requestMessage is null)
         {
             return string.Empty;
         }
@@ -268,7 +268,7 @@ public abstract class WebClientBase
 
             try
             {
-                if (_client == null || resetClient)
+                if (_client is null || resetClient)
                 {
                     _client?.Dispose();
                     _client = null;
@@ -290,7 +290,7 @@ public abstract class WebClientBase
 
     private static string AppendParametersToUrl(string url, IReadOnlyDictionary<string, string>? parameters)
     {
-        if (parameters == null)
+        if (parameters is null)
         {
             return url;
         }

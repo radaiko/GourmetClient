@@ -203,7 +203,7 @@ public class MenuOrderViewModel : ViewModelBase
                     var menuViewModel = new GourmetMenuViewModel(menu);
                     var orderedMenu = cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
 
-                    if (orderedMenu != null)
+                    if (orderedMenu is not null)
                     {
                         menuViewModel.MenuState = GourmetMenuState.Ordered;
                         menuViewModel.IsOrdered = true;
@@ -327,7 +327,7 @@ public class MenuOrderViewModel : ViewModelBase
         {
             var menuToOrder = dayViewModel.Menus.FirstOrDefault(menu => menu?.MenuState == GourmetMenuState.MarkedForOrder);
 
-            if (menuToOrder != null)
+            if (menuToOrder is not null)
             {
                 var menuModel = menuToOrder.GetModel();
                 var actualMenu = currentData.Menus.FirstOrDefault(menu => menu.Equals(menuModel));
@@ -407,7 +407,7 @@ public class MenuOrderViewModel : ViewModelBase
 
     private bool CanToggleMenuOrderedMark(GourmetMenuViewModel? menuViewModel)
     {
-        if (menuViewModel == null)
+        if (menuViewModel is null)
         {
             return false;
         }
@@ -435,7 +435,7 @@ public class MenuOrderViewModel : ViewModelBase
 
     private Task ToggleMenuOrderedMark(GourmetMenuViewModel? menuViewModel)
     {
-        if (menuViewModel == null)
+        if (menuViewModel is null)
         {
             return Task.CompletedTask;
         }
@@ -450,7 +450,7 @@ public class MenuOrderViewModel : ViewModelBase
 
             var orderedMenu = GetDayViewModel(menuViewModel).Menus.FirstOrDefault(menu => menu?.IsOrdered ?? false);
 
-            if (orderedMenu != null)
+            if (orderedMenu is not null)
             {
                 orderedMenu.MenuState = GourmetMenuState.Ordered;
             }

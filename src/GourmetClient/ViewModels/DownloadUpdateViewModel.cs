@@ -25,7 +25,7 @@ public class DownloadUpdateViewModel : ViewModelBase
         _updateService = InstanceProvider.UpdateService;
         _notificationService = InstanceProvider.NotificationService;
 
-        CancelCommand = new AsyncDelegateCommand(CancelUpdate, () => _updateCancellationTokenSource != null);
+        CancelCommand = new AsyncDelegateCommand(CancelUpdate, () => _updateCancellationTokenSource is not null);
     }
 
     public ICommand CancelCommand { get; }
@@ -67,7 +67,7 @@ public class DownloadUpdateViewModel : ViewModelBase
     public async Task StartUpdate(ReleaseDescription updateRelease)
     {
         var runningTask = _updateTask;
-        if (runningTask != null)
+        if (runningTask is not null)
         {
             await runningTask;
             return;

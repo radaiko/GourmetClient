@@ -22,7 +22,7 @@ public class WindowSettings
     {
         var otherWindowSettings = obj as WindowSettings;
 
-        if (otherWindowSettings == null)
+        if (otherWindowSettings is null)
         {
             return false;
         }

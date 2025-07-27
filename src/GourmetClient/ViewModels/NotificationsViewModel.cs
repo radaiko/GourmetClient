@@ -17,8 +17,8 @@ public class NotificationsViewModel : ObservableObject
         _notificationService = InstanceProvider.NotificationService;
 
         DismissNotificationCommand = new AsyncDelegateCommand<Notification>(DismissNotification);
-        StartUpdateCommand = new AsyncDelegateCommand<UpdateNotification>(StartUpdate, p => p?.StartUpdateAction != null);
-        ShowExceptionDetailsCommand = new AsyncDelegateCommand<ExceptionNotification>(ShowExceptionDetails, p => p?.Exception != null);
+        StartUpdateCommand = new AsyncDelegateCommand<UpdateNotification>(StartUpdate, p => p?.StartUpdateAction is not null);
+        ShowExceptionDetailsCommand = new AsyncDelegateCommand<ExceptionNotification>(ShowExceptionDetails, p => p?.Exception is not null);
     }
 
     public ICommand DismissNotificationCommand { get; }
@@ -31,7 +31,7 @@ public class NotificationsViewModel : ObservableObject
 
     private Task DismissNotification(Notification? notification)
     {
-        if (notification != null)
+        if (notification is not null)
         {
             _notificationService.Dismiss(notification);
         }
@@ -41,7 +41,7 @@ public class NotificationsViewModel : ObservableObject
 
     private Task ShowExceptionDetails(ExceptionNotification? notification)
     {
-        if (notification != null)
+        if (notification is not null)
         {
             var window = new ExceptionNotificationDetailWindow
             {
@@ -57,7 +57,7 @@ public class NotificationsViewModel : ObservableObject
 
     private Task StartUpdate(UpdateNotification? notification)
     {
-        if (notification != null)
+        if (notification is not null)
         {
             notification.StartUpdateAction();
         }

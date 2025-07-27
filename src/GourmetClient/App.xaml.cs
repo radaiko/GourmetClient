@@ -46,7 +46,7 @@ public partial class App : Application
 
     private void UnhandledExceptionOccurred(Exception? exception)
     {
-        if (exception == null)
+        if (exception is null)
         {
             MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten. Die Anwendung wird beendet", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -63,7 +63,7 @@ public partial class App : Application
         if (!force)
         {
             var runningInstance = GetRunningInstance();
-            if (runningInstance != null)
+            if (runningInstance is not null)
             {
                 if (runningInstance.MainWindowHandle != IntPtr.Zero)
                 {
@@ -127,7 +127,7 @@ public partial class App : Application
         var maxTries = 50;
         var counter = 0;
 
-        while (GetRunningInstance() != null)
+        while (GetRunningInstance() is not null)
         {
             Thread.Sleep(TimeSpan.FromMilliseconds(100));
             counter++;
@@ -160,7 +160,7 @@ public partial class App : Application
             executeUpdateWindow.Closing -= ExecuteUpdateWindowOnClosing;
         }
 
-        if (updateException != null)
+        if (updateException is not null)
         {
             ShowExceptionNotification("Bei der Durchführung des Updates ist ein Fehler aufgetreten.", updateException);
         }
@@ -193,7 +193,7 @@ public partial class App : Application
     private async void CheckForUpdates(bool checkForPreRelease)
     {
         var updateRelease = await InstanceProvider.UpdateService.CheckForUpdate(checkForPreRelease);
-        if (updateRelease != null)
+        if (updateRelease is not null)
         {
             InstanceProvider.NotificationService.Send(new UpdateNotification("Es ist eine neue Version verfügbar", () => StartUpdate(updateRelease)));
         }

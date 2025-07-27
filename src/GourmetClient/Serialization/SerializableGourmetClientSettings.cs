@@ -13,7 +13,7 @@ internal class SerializableGourmetClientSettings
             Version = 1,
             UserSettings = SerializableUserSettings.FromUserSettings(clientSettings.UserSettings),
             UpdateSettings = SerializableUpdateSettings.FromUpdateSettings(clientSettings.UpdateSettings),
-            WindowSettings = clientSettings.WindowSettings != null ? SerializableWindowSettings.FromWindowSettings(clientSettings.WindowSettings) : null
+            WindowSettings = clientSettings.WindowSettings is not null ? SerializableWindowSettings.FromWindowSettings(clientSettings.WindowSettings) : null
         };
     }
 
