@@ -11,9 +11,6 @@
              d:DesignWidth="800"
              mc:Ignorable="d">
 	<StackPanel Orientation="Vertical">
-		<!--<views:UpdateStepStateControl Margin="5"
-		                              StepState="{Binding CreateBackupStepState}"
-		                              StepText="Erzeuge Sicherung" />-->
 		<views:UpdateStepStateControl Margin="5"
 		                              StepState="{Binding RemovePreviousVersionStepState}"
 		                              StepText="Entferne vorhandene Version" />

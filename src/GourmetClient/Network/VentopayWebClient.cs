@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -21,9 +22,9 @@ public class VentopayWebClient : WebClientBase
 
     protected override async Task<bool> LoginImpl(string userName, string password)
     {
-        var requestUrl = GetWebUrlForPage(PageNameLogin);
-        using var loginPageResponse = await ExecuteGetRequest(requestUrl);
-        var loginPageContent = await ReadResponseContent(loginPageResponse);
+        string requestUrl = GetWebUrlForPage(PageNameLogin);
+        using HttpResponseMessage loginPageResponse = await ExecuteGetRequest(requestUrl);
+        string loginPageContent = await ReadResponseContent(loginPageResponse);
 
         Dictionary<string, string> parameters;
         try
@@ -32,7 +33,8 @@ public class VentopayWebClient : WebClientBase
         }
         catch (Exception exception) when (IsParseException(exception))
         {
-            throw new GourmetParseException("Error parsing the login HTML", GetRequestUriString(loginPageResponse), loginPageContent, exception);
+            throw new GourmetParseException(
+                "Error parsing the login HTML", GetRequestUriString(loginPageResponse), loginPageContent, exception);
         }
 
         parameters.Add("DropDownList1", CompanyIdTrumpf);
@@ -41,19 +43,19 @@ public class VentopayWebClient : WebClientBase
         parameters.Add("BtnLogin", "Login");
         parameters.Add("languageRadio", "DE");
 
-        using var loginResponse = await ExecuteFormPostRequest(requestUrl, parameters);
-        var loginContent = await ReadResponseContent(loginResponse);
+        using HttpResponseMessage loginResponse = await ExecuteFormPostRequest(requestUrl, parameters);
+        string loginContent = await ReadResponseContent(loginResponse);
 
         return Regex.IsMatch(loginContent, "<a\\s+href=\"Ausloggen.aspx\">");
     }
 
     protected override async Task LogoutImpl()
     {
-        var requestUrl = GetWebUrlForPage(PageNameLogout);
+        string requestUrl = GetWebUrlForPage(PageNameLogout);
 
         try
         {
-            using var response = await ExecuteGetRequest(requestUrl);
+            using HttpResponseMessage response = await ExecuteGetRequest(requestUrl);
         }
         catch (GourmetRequestException)
         {
@@ -70,9 +72,9 @@ public class VentopayWebClient : WebClientBase
             { "untilDate", toDate.ToString("dd.MM.yyyy") }
         };
 
-        var requestUrl = GetWebUrlForPage(PageNameTransactions);
-        using var response = await ExecuteGetRequest(requestUrl, parameters);
-        var htmlContent = await ReadResponseContent(response);
+        string requestUrl = GetWebUrlForPage(PageNameTransactions);
+        using HttpResponseMessage response = await ExecuteGetRequest(requestUrl, parameters);
+        string htmlContent = await ReadResponseContent(response);
 
         try
         {
@@ -94,9 +96,9 @@ public class VentopayWebClient : WebClientBase
         var document = new HtmlDocument();
         document.LoadHtml(html);
 
-        var viewStateNode = document.DocumentNode.GetSingleNode("//input[@id='__VIEWSTATE']");
-        var viewStateGeneratorNode = document.DocumentNode.GetSingleNode("//input[@id='__VIEWSTATEGENERATOR']");
-        var eventValidationNode = document.DocumentNode.GetSingleNode("//input[@id='__EVENTVALIDATION']");
+        HtmlNode viewStateNode = document.DocumentNode.GetSingleNode("//input[@id='__VIEWSTATE']");
+        HtmlNode viewStateGeneratorNode = document.DocumentNode.GetSingleNode("//input[@id='__VIEWSTATEGENERATOR']");
+        HtmlNode eventValidationNode = document.DocumentNode.GetSingleNode("//input[@id='__EVENTVALIDATION']");
 
         var parameters = new Dictionary<string, string>
         {
@@ -114,19 +116,18 @@ public class VentopayWebClient : WebClientBase
         document.LoadHtml(html);
 
         var billingPositions = new List<BillingPosition>();
-        var contentNode = document.DocumentNode.GetSingleNode("//div[@class='content']");
-        var rowNodes = contentNode.GetNodes(".//div[@class='transact']").ToArray();
+        HtmlNode contentNode = document.DocumentNode.GetSingleNode("//div[@class='content']");
+        HtmlNode[] rowNodes = contentNode.GetNodes(".//div[@class='transact']").ToArray();
         double rowCounter = 0;
 
         foreach (var rowNode in rowNodes)
         {
-            if (!rowNode.TryGetAttributeValue("id", out string transactionId)
-                || string.IsNullOrEmpty(transactionId))
+            if (!rowNode.TryGetAttributeValue("id", out string? transactionId) || string.IsNullOrEmpty(transactionId))
             {
                 continue;
             }
 
-            var entries = await GetBillingPositionsFromTransaction(transactionId);
+            IReadOnlyList<BillingPosition> entries = await GetBillingPositionsFromTransaction(transactionId);
             billingPositions.AddRange(entries);
 
             rowCounter++;
@@ -143,16 +144,16 @@ public class VentopayWebClient : WebClientBase
             { "id", transactionId }
         };
 
-        var requestUrl = GetWebUrlForPage(PageNameTransactionDetails);
-        using var response = await ExecuteGetRequest(requestUrl, parameters);
-        var htmlContent = await ReadResponseContent(response);
+        string requestUrl = GetWebUrlForPage(PageNameTransactionDetails);
+        using HttpResponseMessage response = await ExecuteGetRequest(requestUrl, parameters);
+        string htmlContent = await ReadResponseContent(response);
 
         var document = new HtmlDocument();
         document.LoadHtml(htmlContent);
 
-        var contentNode = document.DocumentNode.GetSingleNode("//div[@id='rechnung']");
-        var restaurantInfoNode = contentNode.GetSingleNode(".//span[@id='ContentPlaceHolder1_LblRestaurantInfo']");
-        var restaurantInfo = GetRestaurantInfo(restaurantInfoNode.InnerHtml);
+        HtmlNode contentNode = document.DocumentNode.GetSingleNode("//div[@id='rechnung']");
+        HtmlNode restaurantInfoNode = contentNode.GetSingleNode(".//span[@id='ContentPlaceHolder1_LblRestaurantInfo']");
+        RestaurantInfo restaurantInfo = GetRestaurantInfo(restaurantInfoNode.InnerHtml);
 
         if (restaurantInfo.Name.Contains("Gourmet") && !restaurantInfo.Location.Contains("Kaffeeautomat"))
         {
@@ -160,30 +161,30 @@ public class VentopayWebClient : WebClientBase
             return [];
         }
 
-        var dateNode = contentNode.GetSingleNode(".//span[@id='ContentPlaceHolder1_LblTimestamp']");
-        var tableBodyNode = contentNode.GetSingleNode(".//div[@class='rechnungpart']//table//tbody");
+        HtmlNode dateNode = contentNode.GetSingleNode(".//span[@id='ContentPlaceHolder1_LblTimestamp']");
+        HtmlNode tableBodyNode = contentNode.GetSingleNode(".//div[@class='rechnungpart']//table//tbody");
 
-        var dateTime = GetDateTimeFromTransactionDateString(dateNode.GetInnerText());
+        DateTime dateTime = GetDateTimeFromTransactionDateString(dateNode.GetInnerText());
         var billingPositions = new List<BillingPosition>();
 
-        foreach (var rowNode in tableBodyNode.GetNodes(".//tr[not(contains(@class, 'rechnungsdetail'))]"))
+        foreach (HtmlNode rowNode in tableBodyNode.GetNodes(".//tr[not(contains(@class, 'rechnungsdetail'))]"))
         {
-            var columnNodes = rowNode.GetNodes(".//td").ToList();
+            HtmlNode[] columnNodes = rowNode.GetNodes(".//td").ToArray();
 
-            var countNode = columnNodes[0];
-            var positionNameNode = columnNodes[1];
-            var costNode = columnNodes[4];
+            HtmlNode countNode = columnNodes[0];
+            HtmlNode positionNameNode = columnNodes[1];
+            HtmlNode costNode = columnNodes[4];
 
-            var positionName = positionNameNode.GetInnerText();
-            var countString = countNode.GetInnerText().Replace("x", string.Empty).Trim();
-            var costString = costNode.GetInnerText();
+            string positionName = positionNameNode.GetInnerText();
+            string countString = countNode.GetInnerText().Replace("x", string.Empty).Trim();
+            string costString = costNode.GetInnerText();
 
-            if (!int.TryParse(countString, out var count))
+            if (!int.TryParse(countString, out int count))
             {
                 throw new FormatException($"Count '{countString}' has an invalid format");
             }
 
-            if (!double.TryParse(costString, new CultureInfo("de-DE"), out var cost))
+            if (!double.TryParse(costString, new CultureInfo("de-DE"), out double cost))
             {
                 throw new FormatException($"Cost '{costString}' has an invalid format");
             }
@@ -202,25 +203,25 @@ public class VentopayWebClient : WebClientBase
 
     private static DateTime GetDateTimeFromTransactionDateString(string dateString)
     {
-        var match = Regex.Match(dateString, "(\\d+)\\.\\s+([a-zA-z]+)\\s+(\\d+)\\s+-\\s+(\\d+):(\\d+)");
+        Match match = Regex.Match(dateString, "(\\d+)\\.\\s+([a-zA-z]+)\\s+(\\d+)\\s+-\\s+(\\d+):(\\d+)");
 
         if (!match.Success)
         {
             throw new FormatException($"Date string '{dateString}' has an invalid format");
         }
 
-        var dayString = match.Groups[1].Value;
-        var monthString = match.Groups[2].Value;
-        var yearString = match.Groups[3].Value;
-        var hourString = match.Groups[4].Value;
-        var minuteString = match.Groups[5].Value;
+        string dayString = match.Groups[1].Value;
+        string monthString = match.Groups[2].Value;
+        string yearString = match.Groups[3].Value;
+        string hourString = match.Groups[4].Value;
+        string minuteString = match.Groups[5].Value;
 
-        if (!int.TryParse(dayString, out var day))
+        if (!int.TryParse(dayString, out int day))
         {
             throw new FormatException($"Could not parse value '{dayString}' for day as integer");
         }
 
-        var month = monthString switch
+        int month = monthString switch
         {
             "Jan" => 1,
             "Feb" => 2,
@@ -237,17 +238,17 @@ public class VentopayWebClient : WebClientBase
             _ => throw new FormatException($"Invalid month value: '{monthString}'")
         };
 
-        if (!int.TryParse(yearString, out var year))
+        if (!int.TryParse(yearString, out int year))
         {
             throw new FormatException($"Could not parse value '{yearString}' for year as integer");
         }
 
-        if (!int.TryParse(hourString, out var hour))
+        if (!int.TryParse(hourString, out int hour))
         {
             throw new FormatException($"Could not parse value '{hourString}' for hour as integer");
         }
 
-        if (!int.TryParse(minuteString, out var minute))
+        if (!int.TryParse(minuteString, out int minute))
         {
             throw new FormatException($"Could not parse value '{minuteString}' for minute as integer");
         }
@@ -257,8 +258,8 @@ public class VentopayWebClient : WebClientBase
 
     private static RestaurantInfo GetRestaurantInfo(string infoString)
     {
-        var parts = infoString.Split("<br>");
-        return new RestaurantInfo(parts[0], parts[3]);
+        string[] parts = infoString.Split("<br>");
+        return new RestaurantInfo(Name: parts[0], Location: parts[3]);
     }
 
     private static bool IsParseException(Exception exception)

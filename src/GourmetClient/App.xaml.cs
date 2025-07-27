@@ -30,25 +30,29 @@ public partial class App : Application
         }
         else
         {
-            var force = e.Args.Any(arg => arg == "/force");
-            var checkForPreRelease = e.Args.Any(arg => arg == "/checkForPreRelease");
-                
+            bool force = e.Args.Any(arg => arg == "/force");
+            bool checkForPreRelease = e.Args.Any(arg => arg == "/checkForPreRelease");
+
             StartApplication(force, checkForPreRelease || InstanceProvider.UpdateService.CurrentVersion.IsPrerelease);
         }
     }
 
     private void AddExceptionHandlers()
     {
-        AppDomain.CurrentDomain.UnhandledException += (sender, args) => UnhandledExceptionOccurred(args.ExceptionObject as Exception);
-        DispatcherUnhandledException += (sender, args) => UnhandledExceptionOccurred(args.Exception);
-        TaskScheduler.UnobservedTaskException += (sender, args) => UnhandledExceptionOccurred(args.Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, args) => UnhandledExceptionOccurred(args.ExceptionObject as Exception);
+        DispatcherUnhandledException += (_, args) => UnhandledExceptionOccurred(args.Exception);
+        TaskScheduler.UnobservedTaskException += (_, args) => UnhandledExceptionOccurred(args.Exception);
     }
 
     private void UnhandledExceptionOccurred(Exception? exception)
     {
         if (exception is null)
         {
-            MessageBox.Show("Ein unerwarteter Fehler ist aufgetreten. Die Anwendung wird beendet", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(
+                "Ein unerwarteter Fehler ist aufgetreten. Die Anwendung wird beendet",
+                "Fehler",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
         else
         {
@@ -62,7 +66,7 @@ public partial class App : Application
     {
         if (!force)
         {
-            var runningInstance = GetRunningInstance();
+            Process? runningInstance = GetRunningInstance();
             if (runningInstance is not null)
             {
                 if (runningInstance.MainWindowHandle != IntPtr.Zero)
@@ -119,7 +123,12 @@ public partial class App : Application
     {
         if (!Directory.Exists(targetPath))
         {
-            MessageBox.Show("Der Pfad zum Zielverzeichnis ist ungültig. Das Verzeichnis existiert nicht.", "GourmetClient Updater", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(
+                "Der Pfad zum Zielverzeichnis ist ungültig. Das Verzeichnis existiert nicht.",
+                "GourmetClient Updater",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
             Current.Shutdown();
             return;
         }
@@ -134,7 +143,12 @@ public partial class App : Application
 
             if (counter >= maxTries)
             {
-                MessageBox.Show("GourmetClient wurde nicht beendet. Update kann nicht gestartet werden.", "GourmetClient Updater", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    "GourmetClient wurde nicht beendet. Update kann nicht gestartet werden.",
+                    "GourmetClient Updater",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+
                 Current.Shutdown();
                 return;
             }
@@ -146,7 +160,6 @@ public partial class App : Application
         executeUpdateWindow.Show();
 
         Exception? updateException = null;
-
         try
         {
             await executeUpdateWindow.StartUpdate(targetPath);
@@ -186,16 +199,17 @@ public partial class App : Application
 
     private Process? GetRunningInstance()
     {
-        var currentProcess = Process.GetCurrentProcess();
+        Process currentProcess = Process.GetCurrentProcess();
         return Process.GetProcessesByName(currentProcess.ProcessName).FirstOrDefault(process => process.Id != currentProcess.Id);
     }
 
     private async void CheckForUpdates(bool checkForPreRelease)
     {
-        var updateRelease = await InstanceProvider.UpdateService.CheckForUpdate(checkForPreRelease);
+        ReleaseDescription? updateRelease = await InstanceProvider.UpdateService.CheckForUpdate(checkForPreRelease);
         if (updateRelease is not null)
         {
-            InstanceProvider.NotificationService.Send(new UpdateNotification("Es ist eine neue Version verfügbar", () => StartUpdate(updateRelease)));
+            InstanceProvider.NotificationService.Send(
+                new UpdateNotification("Es ist eine neue Version verfügbar", () => StartUpdate(updateRelease)));
         }
     }
 
@@ -211,7 +225,9 @@ public partial class App : Application
         {
             if (task.IsFaulted)
             {
-                Dispatcher.Invoke(() => InstanceProvider.NotificationService.Send(new ExceptionNotification("Aktualisieren der Version ist fehlgeschlagen", task.Exception)));
+                Dispatcher.Invoke(
+                    () => InstanceProvider.NotificationService.Send(
+                        new ExceptionNotification("Aktualisieren der Version ist fehlgeschlagen", task.Exception)));
             }
 
             Dispatcher.Invoke(() => downloadUpdateWindow.Close());

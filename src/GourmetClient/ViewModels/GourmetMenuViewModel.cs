@@ -28,7 +28,6 @@ public class GourmetMenuViewModel : ObservableObject
     public bool IsOrdered
     {
         get => _isOrdered;
-
         set
         {
             if (_isOrdered != value)
@@ -42,7 +41,6 @@ public class GourmetMenuViewModel : ObservableObject
     public bool IsOrderApproved
     {
         get => _isOrderApproved;
-
         set
         {
             if (_isOrderApproved != value)
@@ -56,7 +54,6 @@ public class GourmetMenuViewModel : ObservableObject
     public bool IsOrderCancelable
     {
         get => _isOrderCancelable;
-
         set
         {
             if (_isOrderCancelable != value)
@@ -70,7 +67,6 @@ public class GourmetMenuViewModel : ObservableObject
     public GourmetMenuState MenuState
     {
         get => _menuState;
-
         set
         {
             if (_menuState != value)

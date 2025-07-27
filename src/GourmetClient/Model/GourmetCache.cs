@@ -11,11 +11,11 @@ public record GourmetCache(
 
 public record InvalidatedGourmetCache()
     : GourmetCache(
-        DateTime.MinValue,
-        new GourmetUserInformation(
+        Timestamp: DateTime.MinValue,
+        UserInformation: new GourmetUserInformation(
             NameOfUser: string.Empty,
             ShopModelId: string.Empty,
             EaterId: string.Empty,
             StaffGroupId: string.Empty),
-        [],
-        []);
+        Menus: [],
+        OrderedMenus: []);

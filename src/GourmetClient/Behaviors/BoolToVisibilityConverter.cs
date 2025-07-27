@@ -5,7 +5,7 @@ namespace GourmetClient.Behaviors;
 public class BoolToVisibilityConverter : BoolConverterBase<Visibility>
 {
     public BoolToVisibilityConverter()
-        : base(Visibility.Visible, Visibility.Collapsed)
+        : base(trueValue: Visibility.Visible, falseValue: Visibility.Collapsed)
     {
     }
 }

@@ -9,7 +9,6 @@ public class ExecuteUpdateViewModel : ViewModelBase
 {
     private readonly UpdateService _updateService;
 
-    private UpdateStepState _createBackupStepState;
     private UpdateStepState _removePreviousVersionStepState;
     private UpdateStepState _copyNewFilesStepState;
     private UpdateStepState _cleanupStepState;
@@ -18,16 +17,6 @@ public class ExecuteUpdateViewModel : ViewModelBase
     public ExecuteUpdateViewModel()
     {
         _updateService = InstanceProvider.UpdateService;
-    }
-
-    public UpdateStepState CreateBackupStepState
-    {
-        get => _createBackupStepState;
-        private set
-        {
-            _createBackupStepState = value;
-            OnPropertyChanged();
-        }
     }
 
     public UpdateStepState RemovePreviousVersionStepState
@@ -66,7 +55,7 @@ public class ExecuteUpdateViewModel : ViewModelBase
 
     public async Task ExecuteUpdate(string targetPath)
     {
-        var runningTask = _updateTask;
+        Task? runningTask = _updateTask;
         if (runningTask is not null)
         {
             await runningTask;
@@ -86,19 +75,6 @@ public class ExecuteUpdateViewModel : ViewModelBase
 
     private async Task ExecuteUpdate(string targetPath, CancellationToken cancellationToken)
     {
-        //CreateBackupStepState = UpdateStepState.Running;
-
-        //try
-        //{
-        //    await _updateService.CreateBackup(targetPath, cancellationToken);
-        //}
-        //catch (GourmetUpdateException)
-        //{
-        //    CreateBackupStepState = UpdateStepState.Error;
-        //    throw;
-        //}
-
-        //CreateBackupStepState = UpdateStepState.Finished;
         RemovePreviousVersionStepState = UpdateStepState.Running;
 
         try

@@ -117,6 +117,7 @@ public class BillingViewModel : ViewModelBase
         _availableMonths.Clear();
         _availableMonths.Add(DateTime.MinValue);
 
+        // The Gourmet website only provides information for the last three months.
         for (int i = 0; i <= 3; i++)
         {
             _availableMonths.Add(currentMonth.AddMonths(i * (-1)));
@@ -157,25 +158,25 @@ public class BillingViewModel : ViewModelBase
                 progress.ProgressChanged -= OnUpdateProgressChanged;
             }
 
-            var menuBillingPositions = FindMenusBillingPositions(billingPositions).ToList();
-            var remainingBillingPositions = billingPositions.Except(menuBillingPositions).ToList();
+            BillingPosition[] menuBillingPositions = FindMenusBillingPositions(billingPositions).ToArray();
+            BillingPosition[] remainingBillingPositions = billingPositions.Except(menuBillingPositions).ToArray();
 
-            foreach (var viewModel in GroupMenusBillingPositions(menuBillingPositions))
+            foreach (GroupedBillingPositionsViewModel viewModel in GroupMenusBillingPositions(menuBillingPositions))
             {
                 _menuBillingPositions.Add(viewModel);
             }
 
-            foreach (var viewModel in GroupBillingPositions(BillingPositionType.Menu, remainingBillingPositions))
+            foreach (GroupedBillingPositionsViewModel viewModel in GroupBillingPositions(BillingPositionType.Menu, remainingBillingPositions))
             {
                 _menuBillingPositions.Add(viewModel);
             }
 
-            foreach (var viewModel in GroupBillingPositions(BillingPositionType.Drink, remainingBillingPositions))
+            foreach (GroupedBillingPositionsViewModel viewModel in GroupBillingPositions(BillingPositionType.Drink, remainingBillingPositions))
             {
                 _drinkBillingPositions.Add(viewModel);
             }
 
-            foreach (var viewModel in GroupBillingPositions(BillingPositionType.Unknown, remainingBillingPositions))
+            foreach (GroupedBillingPositionsViewModel viewModel in GroupBillingPositions(BillingPositionType.Unknown, remainingBillingPositions))
             {
                 _unknownBillingPositions.Add(viewModel);
             }
@@ -204,10 +205,10 @@ public class BillingViewModel : ViewModelBase
 
     private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IReadOnlyCollection<BillingPosition> billingPositions)
     {
-        var menu1Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu1);
-        var menu2Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu2);
-        var menu3Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu3);
-        var soupAndSaladPositions = billingPositions.Where(p => p.PositionName == MenuNameSoupAndSalad);
+        IEnumerable<BillingPosition> menu1Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu1);
+        IEnumerable<BillingPosition> menu2Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu2);
+        IEnumerable<BillingPosition> menu3Positions = billingPositions.Where(p => p.PositionName == MenuNameMenu3);
+        IEnumerable<BillingPosition> soupAndSaladPositions = billingPositions.Where(p => p.PositionName == MenuNameSoupAndSalad);
 
         var groupedPositions = new List<GroupedBillingPositionsViewModel>();
 
@@ -219,23 +220,37 @@ public class BillingViewModel : ViewModelBase
         return groupedPositions;
     }
 
-    private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(IEnumerable<BillingPosition> billingPositions, string groupName)
+    private IEnumerable<GroupedBillingPositionsViewModel> GroupMenusBillingPositions(
+        IEnumerable<BillingPosition> billingPositions,
+        string groupName)
     {
-        foreach (var singleCostGroup in billingPositions.GroupBy(position => position.SumCost / position.Count))
+        foreach (IGrouping<double, BillingPosition> singleCostGroup in billingPositions.GroupBy(position => position.SumCost / position.Count))
         {
-            yield return new GroupedBillingPositionsViewModel(BillingPositionType.Menu, groupName, singleCostGroup.Sum(p => p.Count), singleCostGroup.Key, singleCostGroup.Sum(p => p.SumCost));
+            yield return new GroupedBillingPositionsViewModel(
+                PositionType: BillingPositionType.Menu,
+                PositionName: groupName,
+                Count: singleCostGroup.Sum(p => p.Count),
+                SingleCost: singleCostGroup.Key,
+                SumCost: singleCostGroup.Sum(p => p.SumCost));
         }
     }
 
-    private IEnumerable<GroupedBillingPositionsViewModel> GroupBillingPositions(BillingPositionType positionType, IReadOnlyCollection<BillingPosition> billingPositions)
+    private IEnumerable<GroupedBillingPositionsViewModel> GroupBillingPositions(
+        BillingPositionType positionType,
+        IReadOnlyCollection<BillingPosition> billingPositions)
     {
-        var filteredPositions = billingPositions.Where(p => p.PositionType == positionType).ToList();
+        IEnumerable<BillingPosition> filteredPositions = billingPositions.Where(p => p.PositionType == positionType);
 
-        foreach (var nameGroup in filteredPositions.GroupBy(p => p.PositionName))
+        foreach (IGrouping<string, BillingPosition> nameGroup in filteredPositions.GroupBy(p => p.PositionName))
         {
-            foreach (var singleCostGroup in nameGroup.GroupBy(position => position.SumCost / position.Count))
+            foreach (IGrouping<double, BillingPosition> singleCostGroup in nameGroup.GroupBy(position => position.SumCost / position.Count))
             {
-                yield return new GroupedBillingPositionsViewModel(positionType, nameGroup.Key, singleCostGroup.Sum(p => p.Count), singleCostGroup.Key, singleCostGroup.Sum(p => p.SumCost));
+                yield return new GroupedBillingPositionsViewModel(
+                    PositionType: positionType,
+                    PositionName: nameGroup.Key,
+                    Count: singleCostGroup.Sum(p => p.Count),
+                    SingleCost: singleCostGroup.Key,
+                    SumCost: singleCostGroup.Sum(p => p.SumCost));
             }
         }
     }

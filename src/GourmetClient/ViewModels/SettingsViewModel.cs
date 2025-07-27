@@ -91,8 +91,8 @@ public class SettingsViewModel : ViewModelBase
 
     public override void Initialize()
     {
-        var userSettings = _settingsService.GetCurrentUserSettings();
-        var updateSettings = _settingsService.GetCurrentUpdateSettings();
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
+        UpdateSettings updateSettings = _settingsService.GetCurrentUpdateSettings();
 
         LoginUsername = userSettings.GourmetLoginUsername;
         LoginPassword = userSettings.GourmetLoginPassword;
@@ -104,8 +104,8 @@ public class SettingsViewModel : ViewModelBase
 
     private Task SaveSettings()
     {
-        var userSettings = _settingsService.GetCurrentUserSettings();
-        var updateSettings = _settingsService.GetCurrentUpdateSettings();
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
+        UpdateSettings updateSettings = _settingsService.GetCurrentUpdateSettings();
 
         userSettings.GourmetLoginUsername = LoginUsername;
         userSettings.GourmetLoginPassword = LoginPassword;

@@ -2,12 +2,15 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using GourmetClient.Notifications;
 using GourmetClient.Serialization;
+using GourmetClient.Utils;
 
 namespace GourmetClient.Settings;
 
 public class GourmetSettingsService
 {
+    private readonly NotificationService _notificationService;
     private readonly string _settingsFileName;
 
     private GourmetClientSettings? _currentSettings;
@@ -16,6 +19,7 @@ public class GourmetSettingsService
 
     public GourmetSettingsService()
     {
+        _notificationService = InstanceProvider.NotificationService;
         _settingsFileName = Path.Combine(App.LocalAppDataPath, "GourmetClientSettings.json");
     }
 
@@ -26,7 +30,7 @@ public class GourmetSettingsService
 
     public void SaveUserSettings(UserSettings userSettings)
     {
-        var settings = GetCurrentSettings();
+        GourmetClientSettings settings = GetCurrentSettings();
         settings.UserSettings = userSettings;
 
         SaveSettings(settings);
@@ -39,7 +43,7 @@ public class GourmetSettingsService
 
     public void SaveWindowSettings(WindowSettings windowSettings)
     {
-        var settings = GetCurrentSettings();
+        GourmetClientSettings settings = GetCurrentSettings();
         settings.WindowSettings = windowSettings;
 
         SaveSettings(settings);
@@ -52,7 +56,7 @@ public class GourmetSettingsService
 
     public void SaveUpdateSettings(UpdateSettings updateSettings)
     {
-        var settings = GetCurrentSettings();
+        GourmetClientSettings settings = GetCurrentSettings();
         settings.UpdateSettings = updateSettings;
 
         SaveSettings(settings);
@@ -60,12 +64,7 @@ public class GourmetSettingsService
 
     private GourmetClientSettings GetCurrentSettings()
     {
-        if (_currentSettings is null)
-        {
-            _currentSettings = ReadSettingsFromFile();
-        }
-
-        return _currentSettings;
+        return _currentSettings ??= ReadSettingsFromFile();
     }
 
     private GourmetClientSettings ReadSettingsFromFile()
@@ -85,6 +84,8 @@ public class GourmetSettingsService
         }
         catch (Exception exception) when (exception is IOException || exception is JsonException)
         {
+            // Loading the settings failed. Default settings will be used.
+            _notificationService.Send(new ExceptionNotification("Laden der Einstellungen ist fehlgeschlagen.", exception));
         }
 
         try
@@ -100,25 +101,26 @@ public class GourmetSettingsService
 
     private void SaveSettings(GourmetClientSettings settings)
     {
-        var serializedSettings = SerializableGourmetClientSettings.FromGourmetClientSettings(settings);
+        SerializableGourmetClientSettings serializedSettings = SerializableGourmetClientSettings.FromGourmetClientSettings(settings);
 
         try
         {
-            var settingsDirectory = Path.GetDirectoryName(_settingsFileName);
+            string? settingsDirectory = Path.GetDirectoryName(_settingsFileName);
             Debug.Assert(settingsDirectory is not null);
 
-            if (!Directory.Exists(settingsDirectory))
-            {
-                Directory.CreateDirectory(settingsDirectory);
-            }
+            Directory.CreateDirectory(settingsDirectory);
 
             using var fileStream = new FileStream(_settingsFileName, FileMode.Create, FileAccess.Write, FileShare.None);
             JsonSerializer.Serialize(fileStream, serializedSettings, new JsonSerializerOptions { WriteIndented = true });
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            // Saving the settings failed. Default settings will be used on next application start.
+            _notificationService.Send(new ExceptionNotification("Speichern der Einstellungen ist fehlgeschlagen.", exception));
         }
 
+        // This event triggers some updates, even if saving the settings to the file has failed. Since the settings are still available in
+        // memory in this case, they can be used until the application shuts down.
         SettingsSaved?.Invoke(this, EventArgs.Empty);
     }
 }

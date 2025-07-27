@@ -2,4 +2,6 @@
 
 namespace GourmetClient.Model;
 
-public record GourmetOrderedMenuResult(bool IsOrderChangeForTodayPossible, IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);
+public record GourmetOrderedMenuResult(
+    bool IsOrderChangeForTodayPossible,
+    IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);

@@ -18,7 +18,7 @@ public partial class MainWindow : Window
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        var windowSettings = InstanceProvider.SettingsService.GetCurrentWindowSettings();
+        WindowSettings? windowSettings = InstanceProvider.SettingsService.GetCurrentWindowSettings();
 
         if (windowSettings is not null)
         {

@@ -13,7 +13,9 @@ internal class SerializableGourmetClientSettings
             Version = 1,
             UserSettings = SerializableUserSettings.FromUserSettings(clientSettings.UserSettings),
             UpdateSettings = SerializableUpdateSettings.FromUpdateSettings(clientSettings.UpdateSettings),
-            WindowSettings = clientSettings.WindowSettings is not null ? SerializableWindowSettings.FromWindowSettings(clientSettings.WindowSettings) : null
+            WindowSettings = clientSettings.WindowSettings is not null 
+                ? SerializableWindowSettings.FromWindowSettings(clientSettings.WindowSettings)
+                : null
         };
     }
 
@@ -41,13 +43,13 @@ internal class SerializableGourmetClientSettings
             WindowSettings = WindowSettings?.ToWindowSettings()
         };
 
-        var userSettings = UserSettings?.ToUserSettings();
+        UserSettings? userSettings = UserSettings?.ToUserSettings();
         if (userSettings is not null)
         {
             settings.UserSettings = userSettings;
         }
 
-        var updateSettings = UpdateSettings?.ToUpdateSettings();
+        UpdateSettings? updateSettings = UpdateSettings?.ToUpdateSettings();
         if (updateSettings is not null)
         {
             settings.UpdateSettings = updateSettings;

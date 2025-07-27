@@ -12,7 +12,7 @@ public static class HttpClientHelper
         HttpClient? client;
         T requestResult;
 
-        var proxy = GetProxy(requestUrl);
+        WebProxy? proxy = GetProxy(requestUrl);
         if (proxy is null)
         {
             // No proxy required
@@ -66,7 +66,7 @@ public static class HttpClientHelper
 
     public static bool IsProxyRelatedException(string requestUrl, HttpRequestException exception)
     {
-        var proxy = GetProxy(requestUrl);
+        WebProxy? proxy = GetProxy(requestUrl);
         if (proxy is null)
         {
             // No proxy required for request url
@@ -79,7 +79,7 @@ public static class HttpClientHelper
     private static WebProxy? GetProxy(string requestUrl)
     {
         var requestUri = new Uri(requestUrl);
-        var proxyUri = WebRequest.DefaultWebProxy?.GetProxy(requestUri);
+        Uri? proxyUri = WebRequest.DefaultWebProxy?.GetProxy(requestUri);
 
         if (proxyUri is null || proxyUri.Authority == requestUri.Authority)
         {
@@ -93,12 +93,15 @@ public static class HttpClientHelper
     private static bool IsProxyAuthenticationRequiredException(WebProxy proxy, HttpRequestException exception)
     {
         // Exception message is like "The proxy tunnel request to proxy '<proxyUri>' failed with status code '407'."
-        return exception.HttpRequestError == HttpRequestError.ProxyTunnelError && exception.Message.Contains($"'{proxy.Address!.AbsoluteUri}'") && exception.Message.Contains("'407'");
+        return exception.HttpRequestError == HttpRequestError.ProxyTunnelError
+               && exception.Message.Contains($"'{proxy.Address!.AbsoluteUri}'")
+               && exception.Message.Contains("'407'");
     }
 
     private static bool IsProxyConnectionErrorException(WebProxy proxy, HttpRequestException exception)
     {
         // Exception message is like "The remote host (<proxy uri>) is unknown"
-        return exception.HttpRequestError == HttpRequestError.NameResolutionError && exception.Message.Contains(proxy.Address!.Authority);
+        return exception.HttpRequestError == HttpRequestError.NameResolutionError
+               && exception.Message.Contains(proxy.Address!.Authority);
     }
 }

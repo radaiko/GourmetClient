@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
 using GourmetClient.Model;
@@ -38,7 +37,7 @@ public class MenuOrderViewModel : ViewModelBase
         _nameOfUser = string.Empty;
 
         UpdateMenuCommand = new AsyncDelegateCommand(ForceUpdateMenu, () => !IsMenuUpdating);
-        ExecuteSelectedOrderCommand = new AsyncDelegateCommand(ExecuteSelectedOrder, () => !IsMenuUpdating);
+        ExecuteSelectedOrderCommand = new AsyncDelegateCommand(() => ExecuteWithUpdateOverlay(ExecuteSelectedOrder), () => !IsMenuUpdating);
         ToggleMenuOrderedMarkCommand = new AsyncDelegateCommand<GourmetMenuViewModel>(ToggleMenuOrderedMark, CanToggleMenuOrderedMark);
     }
 
@@ -138,20 +137,11 @@ public class MenuOrderViewModel : ViewModelBase
     {
         _settingsService.SettingsSaved += SettingsServiceOnSettingsSaved;
 
-        var userSettings = _settingsService.GetCurrentUserSettings();
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
 
         if (!string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
         {
-            IsMenuUpdating = true;
-
-            try
-            {
-                await UpdateMenu();
-            }
-            finally
-            {
-                IsMenuUpdating = false;
-            }
+            await ExecuteWithUpdateOverlay(UpdateMenu);
         }
         else
         {
@@ -161,17 +151,11 @@ public class MenuOrderViewModel : ViewModelBase
 
     private async Task ForceUpdateMenu()
     {
-        IsMenuUpdating = true;
-
-        try
+        await ExecuteWithUpdateOverlay(async () =>
         {
             _cacheService.InvalidateCache();
             await UpdateMenu();
-        }
-        finally
-        {
-            IsMenuUpdating = false;
-        }
+        });
     }
 
     private async Task UpdateMenu()
@@ -186,10 +170,10 @@ public class MenuOrderViewModel : ViewModelBase
 
         if (cache.Menus.Count > 0)
         {
-            var dayGroups = cache.Menus.GroupBy(menu => menu.Day).ToArray();
+            IGrouping<DateTime, GourmetMenu>[] dayGroups = cache.Menus.GroupBy(menu => menu.Day).ToArray();
             maxMenuCountPerDay = dayGroups.Max(dayGroup => dayGroup.Count());
 
-            foreach (var dayGroup in dayGroups)
+            foreach (IGrouping<DateTime, GourmetMenu> dayGroup in dayGroups)
             {
                 DateTime day = dayGroup.Key;
                 GourmetMenuViewModel? menu1ViewModel = null;
@@ -201,7 +185,7 @@ public class MenuOrderViewModel : ViewModelBase
                 foreach (var menu in dayGroup.OrderBy(menu => menu.MenuName))
                 {
                     var menuViewModel = new GourmetMenuViewModel(menu);
-                    var orderedMenu = cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
+                    GourmetOrderedMenu? orderedMenu = cache.OrderedMenus.FirstOrDefault(orderedMenu => orderedMenu.MatchesMenu(menu));
 
                     if (orderedMenu is not null)
                     {
@@ -235,7 +219,7 @@ public class MenuOrderViewModel : ViewModelBase
                     }
                 }
 
-                var menuViewModels = new[]
+                List<GourmetMenuViewModel?> menuViewModels = new[]
                 {
                     menu1ViewModel,
                     menu2ViewModel,
@@ -301,36 +285,40 @@ public class MenuOrderViewModel : ViewModelBase
             .Where(group => group.Count() > 1)
             .Select(group => group.Key);
 
-        foreach (var duplicateOrderedMenu in duplicateOrderedMenus)
+        foreach (GourmetOrderedMenu duplicateOrderedMenu in duplicateOrderedMenus)
         {
-            _notificationService.Send(new Notification(NotificationType.Warning, $"Das Menü '{duplicateOrderedMenu.MenuName}' am {duplicateOrderedMenu.Day:dd.MM.yyyy} ist mehrfach bestellt"));
+            _notificationService.Send(
+                new Notification(
+                    NotificationType.Warning,
+                    $"Das Menü '{duplicateOrderedMenu.MenuName}' am {duplicateOrderedMenu.Day:dd.MM.yyyy} ist mehrfach bestellt"));
         }
 
-        foreach (var dayWithMultipleOrderedMenus in daysWithMultipleOrderedMenus)
+        foreach (DateTime dayWithMultipleOrderedMenus in daysWithMultipleOrderedMenus)
         {
-            _notificationService.Send(new Notification(NotificationType.Warning, $"Am {dayWithMultipleOrderedMenus:dd.MM.yyyy} sind mehrere Menüs bestellt"));
+            _notificationService.Send(
+                new Notification(
+                    NotificationType.Warning,
+                    $"Am {dayWithMultipleOrderedMenus:dd.MM.yyyy} sind mehrere Menüs bestellt"));
         }
     }
 
     private async Task ExecuteSelectedOrder()
     {
-        IsMenuUpdating = true;
-
         _cacheService.InvalidateCache();
-        var currentData = await _cacheService.GetCache();
+        GourmetCache currentData = await _cacheService.GetCache();
 
         var errorDays = new List<DateTime>();
         var menusToOrder = new List<GourmetMenu>();
         var menusToCancel = new List<GourmetOrderedMenu>();
 
-        foreach (var dayViewModel in _menuDays)
+        foreach (GourmetMenuDayViewModel dayViewModel in _menuDays)
         {
-            var menuToOrder = dayViewModel.Menus.FirstOrDefault(menu => menu?.MenuState == GourmetMenuState.MarkedForOrder);
+            GourmetMenuViewModel? menuToOrder = dayViewModel.Menus.FirstOrDefault(menu => menu?.MenuState == GourmetMenuState.MarkedForOrder);
 
             if (menuToOrder is not null)
             {
-                var menuModel = menuToOrder.GetModel();
-                var actualMenu = currentData.Menus.FirstOrDefault(menu => menu.Equals(menuModel));
+                GourmetMenu menuModel = menuToOrder.GetModel();
+                GourmetMenu? actualMenu = currentData.Menus.FirstOrDefault(menu => menu.Equals(menuModel));
 
                 if (actualMenu is { IsAvailable: true })
                 {
@@ -339,27 +327,34 @@ public class MenuOrderViewModel : ViewModelBase
                 else
                 {
                     errorDays.Add(dayViewModel.Date);
-                    _notificationService.Send(new Notification(NotificationType.Error, $"{menuToOrder.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} ist nicht mehr verfügbar"));
+                    _notificationService.Send(
+                        new Notification(
+                            NotificationType.Error,
+                            $"{menuToOrder.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} ist nicht mehr verfügbar"));
                 }
             }
         }
 
-        foreach (var dayViewModel in _menuDays.Where(day => !errorDays.Contains(day.Date)))
+        foreach (GourmetMenuDayViewModel dayViewModel in _menuDays.Where(day => !errorDays.Contains(day.Date)))
         {
-            foreach (var menuViewModel in dayViewModel.Menus)
+            foreach (GourmetMenuViewModel? menuViewModel in dayViewModel.Menus)
             {
                 if (menuViewModel?.MenuState == GourmetMenuState.MarkedForCancel)
                 {
-                    var menuModel = menuViewModel.GetModel();
-                    var matchingOrderedMenus = currentData.OrderedMenus.Where(orderedMenu => orderedMenu.MatchesMenu(menuModel));
-                    var menusToCancelCount = menusToCancel.Count;
+                    GourmetMenu menuModel = menuViewModel.GetModel();
+                    IEnumerable<GourmetOrderedMenu> matchingOrderedMenus = currentData
+                        .OrderedMenus
+                        .Where(orderedMenu => orderedMenu.MatchesMenu(menuModel));
+
+                    int menusToCancelCount = menusToCancel.Count;
 
                     // Cancel all orders in case the menu has been ordered multiple times
-                    foreach (var actualOrderedMenu in matchingOrderedMenus)
+                    foreach (GourmetOrderedMenu actualOrderedMenu in matchingOrderedMenus)
                     {
                         if (!actualOrderedMenu.IsOrderCancelable)
                         {
-                            // Assume that, in case of multiple orders of the same menu, if one of the order can't be cancelled, then none of the orders can be cancelled
+                            // Assume that in case of multiple orders of the same menu, if one of the order can't be cancelled, then none
+                            // of the orders can be cancelled.
                             break;
                         }
 
@@ -369,7 +364,10 @@ public class MenuOrderViewModel : ViewModelBase
                     if (menusToCancelCount == menusToCancel.Count)
                     {
                         // Nothing was added
-                        _notificationService.Send(new Notification(NotificationType.Error, $"{menuViewModel.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} kann nicht storniert werden"));
+                        _notificationService.Send(
+                            new Notification(
+                                NotificationType.Error,
+                                $"{menuViewModel.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} kann nicht storniert werden"));
                     }
                 }
             }
@@ -383,15 +381,11 @@ public class MenuOrderViewModel : ViewModelBase
         catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
         {
             _notificationService.Send(new ExceptionNotification("Das Ausführen der Bestellung ist fehlgeschlagen", exception));
-            IsMenuUpdating = false;
             return;
         }
 
         NotifyAboutFailedOrders(updateOrderResult);
-
         await UpdateMenu();
-
-        IsMenuUpdating = false;
     }
 
     private void NotifyAboutFailedOrders(GourmetUpdateOrderResult updateOrderResult)
@@ -405,6 +399,20 @@ public class MenuOrderViewModel : ViewModelBase
         }
     }
 
+    private async Task ExecuteWithUpdateOverlay(Func<Task> action)
+    {
+        IsMenuUpdating = true;
+
+        try
+        {
+            await action.Invoke();
+        }
+        finally
+        {
+            IsMenuUpdating = false;
+        }
+    }
+
     private bool CanToggleMenuOrderedMark(GourmetMenuViewModel? menuViewModel)
     {
         if (menuViewModel is null)
@@ -414,7 +422,7 @@ public class MenuOrderViewModel : ViewModelBase
 
         if (!menuViewModel.IsAvailable)
         {
-            if (menuViewModel.IsOrdered && menuViewModel.IsOrderCancelable)
+            if (menuViewModel is { IsOrdered: true, IsOrderCancelable: true })
             {
                 // Menu can no longer be ordered, but it is ordered and the order can be canceled
                 return true;
@@ -424,7 +432,7 @@ public class MenuOrderViewModel : ViewModelBase
             return false;
         }
 
-        if (menuViewModel.IsOrdered && !menuViewModel.IsOrderCancelable)
+        if (menuViewModel is { IsOrdered: true, IsOrderCancelable: false })
         {
             // Menu is ordered and the order cannot be canceled
             return false;
@@ -448,7 +456,7 @@ public class MenuOrderViewModel : ViewModelBase
         {
             menuViewModel.MenuState = GourmetMenuState.None;
 
-            var orderedMenu = GetDayViewModel(menuViewModel).Menus.FirstOrDefault(menu => menu?.IsOrdered ?? false);
+            GourmetMenuViewModel? orderedMenu = GetDayViewModel(menuViewModel).Menus.FirstOrDefault(menu => menu?.IsOrdered ?? false);
 
             if (orderedMenu is not null)
             {
@@ -457,7 +465,7 @@ public class MenuOrderViewModel : ViewModelBase
         }
         else
         {
-            var dayViewModel = GetDayViewModel(menuViewModel);
+            GourmetMenuDayViewModel dayViewModel = GetDayViewModel(menuViewModel);
 
             foreach (var menuOfDay in GetMenusWhereOrderCanBeChanged(dayViewModel))
             {

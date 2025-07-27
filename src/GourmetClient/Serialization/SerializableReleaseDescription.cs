@@ -35,6 +35,11 @@ internal class SerializableReleaseDescription
 
     public ReleaseDescription ToReleaseDescription()
     {
-        return new ReleaseDescription(SemVersion.Parse(ReleaseVersion, SemVersionStyles.Strict), UpdatePackageDownloadUrl, UpdatePackageSize, ChecksumDownloadUrl, ChecksumSize);
+        return new ReleaseDescription(
+            SemVersion.Parse(ReleaseVersion, SemVersionStyles.Strict),
+            UpdatePackageDownloadUrl,
+            UpdatePackageSize,
+            ChecksumDownloadUrl,
+            ChecksumSize);
     }
 }

@@ -38,12 +38,9 @@ public class GourmetCacheService
 
     public async Task<GourmetCache> GetCache()
     {
-        if (_cache is null)
-        {
-            _cache = await GetCacheFromFile();
-        }
+        _cache ??= await GetCacheFromFile();
 
-        var userSettings = _settingsService.GetCurrentUserSettings();
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
 
         if (_cache.Timestamp.Add(userSettings.CacheValidity) < DateTime.Now)
         {
@@ -58,11 +55,11 @@ public class GourmetCacheService
         IReadOnlyList<GourmetMenu> menusToOrder,
         IReadOnlyList<GourmetOrderedMenu> menusToCancel)
     {
-        var userSettings = _settingsService.GetCurrentUserSettings();
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
 
         try
         {
-            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
+            await using LoginHandle loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
 
             if (!loginHandle.LoginSuccessful)
             {
@@ -71,12 +68,12 @@ public class GourmetCacheService
 
             var failedOrders = new List<FailedMenuToOrderInformation>();
 
-            foreach (var orderedMenu in menusToCancel)
+            foreach (GourmetOrderedMenu orderedMenu in menusToCancel)
             {
                 await _webClient.CancelOrder(orderedMenu);
             }
 
-            foreach (var menu in menusToOrder)
+            foreach (GourmetMenu menu in menusToOrder)
             {
                 GourmetApiResult apiResult = await _webClient.AddMenuToOrderedMenu(userInformation, menu);
                 if (!apiResult.Success)
@@ -108,7 +105,7 @@ public class GourmetCacheService
 
     private async Task<GourmetCache> CreateCacheFromServerData()
     {
-        var userSettings = _settingsService.GetCurrentUserSettings();
+        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
 
         if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
         {
@@ -120,11 +117,13 @@ public class GourmetCacheService
 
         try
         {
-            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
+            await using LoginHandle loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
 
             if (!loginHandle.LoginSuccessful)
             {
-                _notificationService.Send(new Notification(NotificationType.Error, "Daten konnten nicht aktualisiert werden. Ursache: Login fehlgeschlagen"));
+                _notificationService.Send(
+                    new Notification(NotificationType.Error, "Daten konnten nicht aktualisiert werden. Ursache: Login fehlgeschlagen"));
+
                 return new InvalidatedGourmetCache();
             }
 
@@ -137,7 +136,7 @@ public class GourmetCacheService
             return new InvalidatedGourmetCache();
         }
 
-        var menus = SetIsAvailableForTodayMenus().ToArray();
+        GourmetMenu[] menus = SetIsAvailableForTodayMenus().ToArray();
         return new GourmetCache(DateTime.Now, menuResult.UserInformation, menus, orderedMenuResult.OrderedMenus);
 
         IEnumerable<GourmetMenu> SetIsAvailableForTodayMenus()
@@ -202,17 +201,14 @@ public class GourmetCacheService
 
     private async Task SaveCache(GourmetCache menuCache)
     {
-        var serializedCache = SerializableGourmetCache.FromGourmetCache(menuCache);
+        SerializableGourmetCache serializedCache = SerializableGourmetCache.FromGourmetCache(menuCache);
 
         try
         {
-            var cacheDirectory = Path.GetDirectoryName(_cacheFileName);
+            string? cacheDirectory = Path.GetDirectoryName(_cacheFileName);
             Debug.Assert(cacheDirectory is not null);
 
-            if (!Directory.Exists(cacheDirectory))
-            {
-                Directory.CreateDirectory(cacheDirectory);
-            }
+            Directory.CreateDirectory(cacheDirectory);
 
             await using var fileStream = new FileStream(_cacheFileName, FileMode.Create, FileAccess.Write, FileShare.None);
             await JsonSerializer.SerializeAsync(fileStream, serializedCache, new JsonSerializerOptions { WriteIndented = true });

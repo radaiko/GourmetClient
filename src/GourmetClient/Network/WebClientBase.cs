@@ -32,7 +32,7 @@ public abstract class WebClientBase
 
     public async Task<LoginHandle> Login(string userName, string password)
     {
-        var loginSuccessful = await RequestLogin(userName, password);
+        bool loginSuccessful = await RequestLogin(userName, password);
 
         return new LoginHandle(loginSuccessful, OnLoginHandleReturned);
     }
@@ -56,12 +56,7 @@ public abstract class WebClientBase
         lock (_loginLogoutLockObject)
         {
             _loginCounter++;
-
-            if (_loginTask is null)
-            {
-                _loginTask = LoginImpl(userName, password);
-            }
-
+            _loginTask ??= LoginImpl(userName, password);
             loginTask = _loginTask;
         }
 
@@ -116,9 +111,9 @@ public abstract class WebClientBase
 
     protected async Task<HttpResponseMessage> ExecuteGetRequest(string url, IReadOnlyDictionary<string, string>? urlParameters = null)
     {
-        var requestUrl = AppendParametersToUrl(url, urlParameters);
-        HttpResponseMessage response;
+        string requestUrl = AppendParametersToUrl(url, urlParameters);
 
+        HttpResponseMessage response;
         try
         {
             response = await ExecuteRequest(requestUrl, client => client.GetAsync(requestUrl));
@@ -142,7 +137,6 @@ public abstract class WebClientBase
         var content = new FormUrlEncodedContent(formParameters);
 
         HttpResponseMessage response;
-
         try
         {
             response = await ExecuteRequest(url, client => client.PostAsync(url, content));
@@ -164,7 +158,6 @@ public abstract class WebClientBase
     protected async Task<HttpResponseMessage> ExecuteJsonPostRequest(string url, object parameters)
     {
         HttpResponseMessage response;
-
         try
         {
             response = await ExecuteRequest(url, client => client.PostAsJsonAsync(url, parameters));
@@ -198,8 +191,8 @@ public abstract class WebClientBase
     protected static async Task<T> ParseJsonResponseObject<T>(HttpResponseMessage response)
     {
         string jsonResponseContent = await ReadResponseContent(response);
-        T? result;
 
+        T? result;
         try
         {
             result = JsonSerializer.Deserialize<T>(jsonResponseContent);
@@ -219,7 +212,7 @@ public abstract class WebClientBase
 
     protected static string GetRequestUriString(HttpResponseMessage response)
     {
-        var requestMessage = response.RequestMessage;
+        HttpRequestMessage? requestMessage = response.RequestMessage;
         if (requestMessage is null)
         {
             return string.Empty;
@@ -230,7 +223,7 @@ public abstract class WebClientBase
 
     private async Task<HttpResponseMessage> ExecuteRequest(string requestUrl, Func<HttpClient, Task<HttpResponseMessage>> requestFunc)
     {
-        var clientResult = await GetOrCreateClient();
+        HttpClientResult<HttpResponseMessage?> clientResult = await GetOrCreateClient();
 
         if (clientResult.ResponseResult is not null)
         {
@@ -244,7 +237,7 @@ public abstract class WebClientBase
         }
         catch (HttpRequestException exception)
         {
-            var isNetworkError = exception.StatusCode is null && exception.InnerException is IOException;
+            bool isNetworkError = exception.StatusCode is null && exception.InnerException is IOException;
 
             if (isNetworkError || HttpClientHelper.IsProxyRelatedException(requestUrl, exception))
             {
@@ -273,7 +266,9 @@ public abstract class WebClientBase
                     _client?.Dispose();
                     _client = null;
 
-                    var result = await HttpClientHelper.CreateHttpClient(requestUrl, requestFunc, _cookieContainer);
+                    HttpClientResult<HttpResponseMessage> result =
+                        await HttpClientHelper.CreateHttpClient(requestUrl, requestFunc, _cookieContainer);
+
                     _client = result.Client;
 
                     return new HttpClientResult<HttpResponseMessage?>(result.Client, result.ResponseResult);
@@ -311,7 +306,8 @@ public abstract class WebClientBase
     {
         if (!response.IsSuccessStatusCode)
         {
-            throw new GourmetRequestException($"Server returned unexpected status code: {response.StatusCode}", GetRequestUriString(response));
+            throw new GourmetRequestException(
+                $"Server returned unexpected status code: {response.StatusCode}", GetRequestUriString(response));
         }
     }
 }

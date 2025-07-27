@@ -50,8 +50,8 @@ public class BillingCacheService
             },
             ventopayProgress);
 
-        var gourmetResult = await gourmetTask.ConfigureAwait(false);
-        var ventopayResult = await ventopayTask.ConfigureAwait(false);
+        IReadOnlyList<BillingPosition> gourmetResult = await gourmetTask.ConfigureAwait(false);
+        IReadOnlyList<BillingPosition> ventopayResult = await ventopayTask.ConfigureAwait(false);
 
         var billingPositions = new List<BillingPosition>();
         billingPositions.AddRange(gourmetResult);
@@ -70,17 +70,23 @@ public class BillingCacheService
         UserSettings userSettings = _settingsService.GetCurrentUserSettings();
         if (!userSettingsValidationFunc.Invoke(userSettings))
         {
-            _notificationService.Send(new Notification(NotificationType.Warning, $"Zugangsdaten für {sourceName} sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
+            _notificationService.Send(
+                new Notification(
+                    NotificationType.Warning,
+                    $"Zugangsdaten für {sourceName} sind nicht konfiguriert. Abrechnungsdaten sind unvollständig"));
             subProgress.Report(100);
             return [];
         }
 
         try
         {
-            await using var loginHandle = await loginFunc.Invoke(userSettings);
+            await using LoginHandle loginHandle = await loginFunc.Invoke(userSettings);
             if (!loginHandle.LoginSuccessful)
             {
-                _notificationService.Send(new Notification(NotificationType.Error, $"Abrechnungsdaten von {sourceName} konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
+                _notificationService.Send(
+                    new Notification(
+                        NotificationType.Error,
+                        $"Abrechnungsdaten von {sourceName} konnten nicht geladen werden. Ursache: Login fehlgeschlagen"));
                 return [];
             }
 

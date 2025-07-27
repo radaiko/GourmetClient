@@ -40,52 +40,37 @@ public class UpdateService
 
     public async Task<ReleaseDescription?> CheckForUpdate(bool acceptPreReleases)
     {
+        ReleaseDescription? latestRelease = null;
         try
         {
-            var latestRelease = await GetLatestRelease(acceptPreReleases);
-            if (latestRelease is not null && latestRelease.Version.CompareSortOrderTo(CurrentVersion) > 0)
-            {
-                // Version of latest release is newer than current version
-                return latestRelease;
-            }
+            latestRelease = await GetLatestRelease(acceptPreReleases);
         }
         catch (GourmetUpdateException)
         {
             // Ignore if the update check failed. The check is executed again during the next start of the application.
         }
 
+        if (latestRelease?.Version.CompareSortOrderTo(CurrentVersion) is > 0)
+        {
+            // Version of latest release is newer than current version.
+            return latestRelease;
+        }
+
         return null;
     }
 
-    public async Task<string> DownloadUpdatePackage(ReleaseDescription updateRelease, IProgress<int> progress, CancellationToken cancellationToken)
+    public async Task<string> DownloadUpdatePackage(
+        ReleaseDescription updateRelease,
+        IProgress<int> progress,
+        CancellationToken cancellationToken)
     {
-        var tempFolderPath = GetTempFolderPath();
-        var packagePath = Path.Combine(GetTempFolderPath(), "GourmetClient.zip");
-        var signedChecksumFilePath = Path.Combine(GetTempFolderPath(), "checksum.txt");
+        string tempFolderPath = GetTempUpdateFolderPath();
+        string packagePath = Path.Combine(tempFolderPath, "GourmetClient.zip");
+        string signedChecksumFilePath = Path.Combine(tempFolderPath, "checksum.txt");
 
         try
         {
-            if (File.Exists(packagePath))
-            {
-                File.Delete(packagePath);
-            }
-
-            if (File.Exists(signedChecksumFilePath))
-            {
-                File.Delete(signedChecksumFilePath);
-            }
-        }
-        catch (IOException exception)
-        {
-            throw new GourmetUpdateException("Could not delete local update package files", exception);
-        }
-
-        try
-        {
-            if (!Directory.Exists(tempFolderPath))
-            {
-                Directory.CreateDirectory(tempFolderPath!);
-            }
+            Directory.CreateDirectory(tempFolderPath);
         }
         catch (IOException exception)
         {
@@ -94,20 +79,36 @@ public class UpdateService
 
         try
         {
+            // No need to check if these files actually exists. 'File.Delete' does nothing if the file does not exist. However, it would
+            // throw a DirectoryNotFoundException if the directory of the file does not exist. Therefore, the parent directory is created
+            // beforehand.
+            File.Delete(packagePath);
+            File.Delete(signedChecksumFilePath);
+        }
+        catch (IOException exception)
+        {
+            throw new GourmetUpdateException("Could not delete local update package files", exception);
+        }
+
+        try
+        {
             await using var packageFileStream = new FileStream(packagePath, FileMode.Create, FileAccess.Write, FileShare.None);
             await using var checksumFileStream = new FileStream(signedChecksumFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
 
-            var totalBytesCount = updateRelease.UpdatePackageSize + updateRelease.ChecksumSize;
-            var totalReadBytes = 0L;
+            long totalBytesCount = updateRelease.UpdatePackageSize + updateRelease.ChecksumSize;
+            long totalReadBytes = 0L;
 
-            var clientResult = await CreateHttpClient(updateRelease.UpdatePackageDownloadUrl, client => client.GetStreamAsync(updateRelease.UpdatePackageDownloadUrl, cancellationToken));
-            using var client = clientResult.Client;
+            HttpClientResult<Stream> clientResult = await CreateHttpClient(
+                updateRelease.UpdatePackageDownloadUrl,
+                client => client.GetStreamAsync(updateRelease.UpdatePackageDownloadUrl, cancellationToken));
 
-            await using var packageSourceStream = clientResult.ResponseResult;
+            using HttpClient client = clientResult.Client;
+
+            await using Stream packageSourceStream = clientResult.ResponseResult;
             await DownloadFile(packageSourceStream, packageFileStream, totalBytesCount, totalReadBytes, progress, cancellationToken);
             totalReadBytes += updateRelease.UpdatePackageSize;
 
-            await using var checksumSourceStream = await client.GetStreamAsync(updateRelease.ChecksumDownloadUrl, cancellationToken);
+            await using Stream checksumSourceStream = await client.GetStreamAsync(updateRelease.ChecksumDownloadUrl, cancellationToken);
             await DownloadFile(checksumSourceStream, checksumFileStream, totalBytesCount, totalReadBytes, progress, cancellationToken);
         }
         catch (TaskCanceledException exception)
@@ -133,8 +134,8 @@ public class UpdateService
 
     public async Task<string> ExtractUpdatePackage(string packagePath, CancellationToken cancellationToken)
     {
-        var tempFolderPath = GetTempFolderPath();
-        var targetLocation = Path.Combine(tempFolderPath, "UpdatePackage");
+        string tempFolderPath = GetTempUpdateFolderPath();
+        string targetLocation = Path.Combine(tempFolderPath, "UpdatePackage");
 
         try
         {
@@ -145,10 +146,9 @@ public class UpdateService
                     Directory.Delete(targetLocation, true);
                 }
 
-                if (!Directory.Exists(tempFolderPath))
-                {
-                    Directory.CreateDirectory(tempFolderPath);
-                }
+                // Only ensure that the parent directory exists. The target location for extracting the ZIP file must not exist, otherwise
+                // an exception is thrown.
+                Directory.CreateDirectory(tempFolderPath);
 
                 ZipFile.ExtractToDirectory(packagePath, targetLocation);
             }, cancellationToken);
@@ -163,44 +163,18 @@ public class UpdateService
 
     public bool StartUpdate(string updateLocation)
     {
-        var gourmetClientExePath = Path.Combine(updateLocation, "GourmetClient.exe");
+        string gourmetClientExePath = Path.Combine(updateLocation, "GourmetClient.exe");
 
         if (File.Exists(gourmetClientExePath))
         {
-            var assemblyLocation = Assembly.GetEntryAssembly()?.Location;
-            var assemblyPath = Path.GetDirectoryName(assemblyLocation);
-
-            Process.Start(gourmetClientExePath, $"/update \"{assemblyPath}\"");
+            string assemblyDirectoryPath = GetEntryAssemblyDirectoryPath();
+            Process.Start(gourmetClientExePath, $"/update \"{assemblyDirectoryPath}\"");
 
             Environment.Exit(0);
             return true;
         }
 
         return false;
-    }
-
-    public async Task CreateBackup(string path, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var backupLocation = GetBackupPath();
-
-            await Task.Run(() =>
-            {
-                if (Directory.Exists(backupLocation))
-                {
-                    Directory.Delete(backupLocation, true);
-                }
-            }, cancellationToken);
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            await CopyDirectory(path, backupLocation, cancellationToken);
-        }
-        catch (IOException exception)
-        {
-            throw new GourmetUpdateException("Could not created backup", exception);
-        }
     }
 
     public async Task RemovePreviousVersion(string path, CancellationToken cancellationToken)
@@ -232,17 +206,10 @@ public class UpdateService
     {
         try
         {
-            var assemblyLocation = Assembly.GetEntryAssembly()?.Location;
-            var assemblyPath = Path.GetDirectoryName(assemblyLocation);
-
-            if (assemblyPath is null)
-            {
-                throw new GourmetUpdateException($"Could not create backup. Directory name of assembly location '{assemblyPath}' is null.");
-            }
-
             cancellationToken.ThrowIfCancellationRequested();
 
-            await CopyDirectory(assemblyPath, targetPath, cancellationToken);
+            string assemblyDirectoryPath = GetEntryAssemblyDirectoryPath();
+            await CopyDirectory(assemblyDirectoryPath, targetPath, cancellationToken);
         }
         catch (IOException exception)
         {
@@ -256,11 +223,11 @@ public class UpdateService
         {
             await Task.Run(() =>
             {
-                var backupPath = GetBackupPath();
+                string tempFolderPath = GetTempUpdateFolderPath();
 
-                if (Directory.Exists(backupPath))
+                if (Directory.Exists(tempFolderPath))
                 {
-                    Directory.Delete(GetBackupPath(), true);
+                    Directory.Delete(tempFolderPath, true);
                 }
             }, cancellationToken);
         }
@@ -272,7 +239,7 @@ public class UpdateService
 
     public bool StartNewVersion(string path)
     {
-        var gourmetClientExePath = Path.Combine(path, "GourmetClient.exe");
+        string gourmetClientExePath = Path.Combine(path, "GourmetClient.exe");
 
         if (File.Exists(gourmetClientExePath))
         {
@@ -285,14 +252,20 @@ public class UpdateService
         return false;
     }
 
-    private async Task DownloadFile(Stream sourceStream, Stream targetStream, long totalBytesCount, long totalReadBytesOffset, IProgress<int> progress, CancellationToken cancellationToken)
+    private async Task DownloadFile(
+        Stream sourceStream,
+        Stream targetStream,
+        long totalBytesCount,
+        long totalReadBytesOffset,
+        IProgress<int> progress,
+        CancellationToken cancellationToken)
     {
         var buffer = new byte[4096];
-        var totalReadBytes = totalReadBytesOffset;
+        long totalReadBytes = totalReadBytesOffset;
 
         while (true)
         {
-            var readBytes = await sourceStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+            int readBytes = await sourceStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
             if (readBytes == 0)
             {
                 break;
@@ -320,10 +293,9 @@ public class UpdateService
     private async Task<IReadOnlyList<ReleaseDescription>> GetAvailableReleases()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, ReleaseListUri);
-
         IReadOnlyList<ReleaseDescription> releaseDescriptions = [];
 
-        var cachedQueryResult = await GetCachedReleaseListQueryResult();
+        ReleaseListQueryResult? cachedQueryResult = await GetCachedReleaseListQueryResult();
         if (cachedQueryResult is not null)
         {
             request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(cachedQueryResult.ETagHeaderValue, cachedQueryResult.IsWeakETag));
@@ -332,25 +304,30 @@ public class UpdateService
 
         try
         {
-            var clientResult = await CreateHttpClient(request.RequestUri!.AbsoluteUri, client => client.SendAsync(request));
+            HttpClientResult<HttpResponseMessage> clientResult =
+                await CreateHttpClient(request.RequestUri!.AbsoluteUri, client => client.SendAsync(request));
 
-            // Not needed anymore
+            // Not needed anymore.
             clientResult.Client.Dispose();
 
-            using var response = clientResult.ResponseResult;
+            using HttpResponseMessage response = clientResult.ResponseResult;
 
             if (response.StatusCode != HttpStatusCode.NotModified)
             {
                 response.EnsureSuccessStatusCode();
 
-                var contentStream = await response.Content.ReadAsStreamAsync();
+                await using Stream contentStream = await response.Content.ReadAsStreamAsync();
                 var releases = await JsonSerializer.DeserializeAsync<ReleaseEntry[]>(contentStream) ?? [];
 
                 releaseDescriptions = ReleaseEntriesToDescriptions(releases);
 
                 if (response.Headers.ETag is not null)
                 {
-                    var queryResult = new ReleaseListQueryResult(response.Headers.ETag.Tag, response.Headers.ETag.IsWeak, releaseDescriptions);
+                    var queryResult = new ReleaseListQueryResult(
+                        response.Headers.ETag.Tag,
+                        response.Headers.ETag.IsWeak,
+                        releaseDescriptions);
+
                     await SaveReleaseListQueryResult(queryResult);
                 }
             }
@@ -388,8 +365,7 @@ public class UpdateService
             }
             catch (Exception exception) when (exception is IOException || exception is JsonException || exception is InvalidOperationException)
             {
-                // Cached result could not be read. Ignore this case, since the latest information will then be read
-                // from the server again.
+                // Cached result could not be read. Ignore this case, since the latest information will then be read from the server again.
             }
         }
 
@@ -398,42 +374,57 @@ public class UpdateService
 
     private async Task SaveReleaseListQueryResult(ReleaseListQueryResult queryResult)
     {
-        var serializedQueryResult = SerializableReleaseListQueryResult.FromReleaseListQueryResult(queryResult);
+        SerializableReleaseListQueryResult serializedQueryResult = SerializableReleaseListQueryResult.FromReleaseListQueryResult(queryResult);
 
         try
         {
-            var parentDirectory = Path.GetDirectoryName(_releaseListQueryResultFilePath);
+            string? parentDirectory = Path.GetDirectoryName(_releaseListQueryResultFilePath);
             Debug.Assert(parentDirectory is not null);
 
-            if (!Directory.Exists(parentDirectory))
-            {
-                Directory.CreateDirectory(parentDirectory);
-            }
+            Directory.CreateDirectory(parentDirectory);
 
             await using var fileStream = new FileStream(_releaseListQueryResultFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
             await JsonSerializer.SerializeAsync(fileStream, serializedQueryResult, new JsonSerializerOptions { WriteIndented = true });
         }
         catch (IOException)
         {
-            // Latest result could not be written to cache file. Ignore this case, since the latest information will
-            // then be read from the server again.
+            // Latest result could not be written to cache file. Ignore this case, since the latest information will then be read from the
+            // server again.
         }
+    }
+
+    private static string GetEntryAssemblyDirectoryPath()
+    {
+        // GetEntryAssembly only returns null if called from unmanaged code.
+        Assembly? entryAssembly = Assembly.GetEntryAssembly();
+        Debug.Assert(entryAssembly is not null);
+
+        string? assemblyDirectoryPath = Path.GetDirectoryName(entryAssembly.Location);
+        Debug.Assert(assemblyDirectoryPath is not null);
+
+        return assemblyDirectoryPath;
     }
 
     private static IReadOnlyList<ReleaseDescription> ReleaseEntriesToDescriptions(IEnumerable<ReleaseEntry> entries)
     {
         var releaseDescriptions = new List<ReleaseDescription>();
 
-        foreach (var entry in entries.Where(entry => !entry.IsDraft))
+        foreach (ReleaseEntry entry in entries.Where(entry => !entry.IsDraft))
         {
-            if (SemVersion.TryParse(entry.Name, SemVersionStyles.AllowLowerV, out var semVersion))
+            if (SemVersion.TryParse(entry.Name, SemVersionStyles.AllowLowerV, out SemVersion? semVersion))
             {
-                var updatePackageAsset = entry.Assets.FirstOrDefault(asset => asset.Name == "GourmetClient.zip");
-                var checksumPackageAsset = entry.Assets.FirstOrDefault(asset => asset.Name == "checksum.txt");
+                ReleaseAsset? updatePackageAsset = entry.Assets.FirstOrDefault(asset => asset.Name == "GourmetClient.zip");
+                ReleaseAsset? checksumPackageAsset = entry.Assets.FirstOrDefault(asset => asset.Name == "checksum.txt");
 
                 if (updatePackageAsset is not null && checksumPackageAsset is not null)
                 {
-                    releaseDescriptions.Add(new ReleaseDescription(semVersion, updatePackageAsset.DownloadUrl, updatePackageAsset.Size, checksumPackageAsset.DownloadUrl, checksumPackageAsset.Size));
+                    releaseDescriptions.Add(
+                        new ReleaseDescription(
+                            semVersion,
+                            updatePackageAsset.DownloadUrl,
+                            updatePackageAsset.Size,
+                            checksumPackageAsset.DownloadUrl,
+                            checksumPackageAsset.Size));
                 }
             }
         }
@@ -448,7 +439,7 @@ public class UpdateService
 
         try
         {
-            var signedChecksumBase64 = await File.ReadAllTextAsync(signedChecksumFilePath, cancellationToken);
+            string signedChecksumBase64 = await File.ReadAllTextAsync(signedChecksumFilePath, cancellationToken);
             signedChecksum = Convert.FromBase64String(signedChecksumBase64);
 
             calculatedChecksum = await CalculateChecksum(packagePath);
@@ -458,16 +449,19 @@ public class UpdateService
             throw new GourmetUpdateException("Could not read/calculate checksum of update package", exception);
         }
 
-        await using var publicKeyXmlStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("GourmetClient.Resources.UpdatePackageSignaturePublicKey.xml");
+        await using Stream? publicKeyXmlStream = Assembly
+            .GetExecutingAssembly()
+            .GetManifestResourceStream("GourmetClient.Resources.UpdatePackageSignaturePublicKey.xml");
+
         if (publicKeyXmlStream is null)
         {
             throw new GourmetUpdateException("Public key for signature of update package could not be found");
         }
 
         using var publicKeyXmlStreamReader = new StreamReader(publicKeyXmlStream);
-        using var rsa = RSA.Create();
+        using RSA rsa = RSA.Create();
 
-        var publicKeyXml = await publicKeyXmlStreamReader.ReadToEndAsync(cancellationToken);
+        string publicKeyXml = await publicKeyXmlStreamReader.ReadToEndAsync(cancellationToken);
         rsa.FromXmlString(publicKeyXml);
 
         var rsaDeformatter = new RSAPKCS1SignatureDeformatter(rsa);
@@ -481,8 +475,8 @@ public class UpdateService
 
     private async Task<byte[]> CalculateChecksum(string path)
     {
-        using var sha256 = SHA256.Create();
-        await using var stream = File.OpenRead(path);
+        using SHA256 sha256 = SHA256.Create();
+        await using FileStream stream = File.OpenRead(path);
 
         return await sha256.ComputeHashAsync(stream);
     }
@@ -493,34 +487,29 @@ public class UpdateService
         {
             Directory.CreateDirectory(targetPath);
 
-            foreach (var filePath in Directory.GetFiles(sourcePath))
+            foreach (string filePath in Directory.GetFiles(sourcePath))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var fileName = Path.GetFileName(filePath);
-                var targetFilePath = Path.Combine(targetPath, fileName);
+                string fileName = Path.GetFileName(filePath);
+                string targetFilePath = Path.Combine(targetPath, fileName);
 
                 File.Copy(filePath, targetFilePath);
             }
         }, cancellationToken);
 
-        foreach (var directoryPath in Directory.GetDirectories(sourcePath))
+        foreach (string directoryPath in Directory.GetDirectories(sourcePath))
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var directoryName = new DirectoryInfo(directoryPath).Name;
-            var targetDirectoryPath = Path.Combine(targetPath, directoryName);
+            string directoryName = new DirectoryInfo(directoryPath).Name;
+            string targetDirectoryPath = Path.Combine(targetPath, directoryName);
 
             await CopyDirectory(directoryPath, targetDirectoryPath, cancellationToken);
         }
     }
 
-    private string GetBackupPath()
-    {
-        return Path.Combine(GetTempFolderPath(), "backup");
-    }
-
-    private string GetTempFolderPath()
+    private string GetTempUpdateFolderPath()
     {
         return Path.Combine(Path.GetTempPath(), "GourmetClientUpdate");
     }
