@@ -123,9 +123,13 @@ public abstract class WebClientBase
         {
             response = await ExecuteRequest(requestUrl, client => client.GetAsync(requestUrl));
         }
-        catch (Exception exception)
+        catch (HttpRequestException exception)
         {
-            throw new GourmetRequestException("Error executing GET request", requestUrl, exception);
+            throw new GourmetRequestException("GET request failed", requestUrl, exception);
+        }
+        catch (OperationCanceledException exception)
+        {
+            throw new GourmetRequestException("GET request was cancelled", requestUrl, exception);
         }
 
         EnsureSuccessStatusCode(response);
@@ -143,9 +147,13 @@ public abstract class WebClientBase
         {
             response = await ExecuteRequest(url, client => client.PostAsync(url, content));
         }
-        catch (Exception exception)
+        catch (HttpRequestException exception)
         {
-            throw new GourmetRequestException("Error executing POST request", url, exception);
+            throw new GourmetRequestException("POST request failed", url, exception);
+        }
+        catch (OperationCanceledException exception)
+        {
+            throw new GourmetRequestException("POST request was cancelled", url, exception);
         }
 
         EnsureSuccessStatusCode(response);
@@ -161,9 +169,13 @@ public abstract class WebClientBase
         {
             response = await ExecuteRequest(url, client => client.PostAsJsonAsync(url, parameters));
         }
-        catch (Exception exception)
+        catch (HttpRequestException exception)
         {
-            throw new GourmetRequestException("Error executing POST request", url, exception);
+            throw new GourmetRequestException("POST request failed", url, exception);
+        }
+        catch (OperationCanceledException exception)
+        {
+            throw new GourmetRequestException("POST request was cancelled", url, exception);
         }
 
         EnsureSuccessStatusCode(response);
@@ -171,28 +183,28 @@ public abstract class WebClientBase
         return response;
     }
 
-    protected static async Task<string> GetResponseContent(HttpResponseMessage response)
+    protected static async Task<string> ReadResponseContent(HttpResponseMessage response)
     {
         try
         {
             return await response.Content.ReadAsStringAsync();
         }
-        catch (Exception exception)
+        catch (HttpRequestException exception)
         {
             throw new GourmetRequestException("Error reading response content", GetRequestUriString(response), exception);
         }
     }
 
-    protected static async Task<T> GetJsonResponseObject<T>(HttpResponseMessage response)
+    protected static async Task<T> ParseJsonResponseObject<T>(HttpResponseMessage response)
     {
-        string jsonResponseContent = await GetResponseContent(response);
+        string jsonResponseContent = await ReadResponseContent(response);
         T? result;
 
         try
         {
             result = JsonSerializer.Deserialize<T>(jsonResponseContent);
         }
-        catch (Exception exception)
+        catch (JsonException exception)
         {
             throw new GourmetParseException("Error parsing response content as JSON", GetRequestUriString(response), jsonResponseContent, exception);
         }

@@ -38,7 +38,7 @@ public partial class GourmetWebClient : WebClientBase
         };
 
         using var response = await ExecuteFormPostRequest(WebUrl, parameters);
-        var httpContent = await GetResponseContent(response);
+        var httpContent = await ReadResponseContent(response);
 
         // Login is successful if link to user settings is received
         return LoginSuccessfulRegex().IsMatch(httpContent);
@@ -46,20 +46,28 @@ public partial class GourmetWebClient : WebClientBase
 
     protected override async Task LogoutImpl()
     {
-        var ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//form[.//button[@id='btnHeaderLogout']]");
-
-        var parameters = new Dictionary<string, string>
+        try
         {
-            {"ufprt", ufprtValue}
-        };
+            var ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//form[.//button[@id='btnHeaderLogout']]");
 
-        using var response = await ExecutePostRequestForPage(PageNameStart, parameters);
+            var parameters = new Dictionary<string, string>
+            {
+                { "ufprt", ufprtValue }
+            };
+
+            using var response = await ExecutePostRequestForPage(PageNameStart, parameters);
+        }
+        catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
+        {
+            // Ignore these exceptions during logout. The session on the server side may be not cleared, but it will
+            // be removed from the server eventually.
+        }
     }
 
     public async Task<GourmetMenuResult> GetMenus()
     {
         // The page contains the menu elements twice (once for the desktop UI and once for the mobile UI).
-        // By using a HashSet with a custom comparer, it is ensured that the same menu is only added once.
+        // By using a HashSet, it is ensured that the same menu is only added once.
         var parsedMenus = new HashSet<GourmetMenu>();
         GourmetUserInformation? userInformation = null;
 
@@ -75,13 +83,13 @@ public partial class GourmetWebClient : WebClientBase
             };
 
             using var response = await ExecuteGetRequestForPage(PageNameMenu, pageParameter);
-            var httpContent = await GetResponseContent(response);
+            var httpContent = await ReadResponseContent(response);
+
+            var document = new HtmlDocument();
+            document.LoadHtml(httpContent);
 
             try
             {
-                var document = new HtmlDocument();
-                document.LoadHtml(httpContent);
-
                 userInformation ??= ParseHtmlForUserInformation(document);
 
                 foreach (GourmetMenu parsedMenu in ParseGourmetMenuHtml(document))
@@ -94,10 +102,9 @@ public partial class GourmetWebClient : WebClientBase
                     break;
                 }
             }
-            catch (Exception exception)
+            catch (Exception exception) when (IsParseException(exception))
             {
-                throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response),
-                    httpContent, exception);
+                throw new GourmetParseException("Error parsing the menu HTML", GetRequestUriString(response), httpContent, exception);
             }
 
             currentPage++;
@@ -109,19 +116,19 @@ public partial class GourmetWebClient : WebClientBase
     public async Task<GourmetOrderedMenuResult> GetOrderedMenus()
     {
         using var response = await ExecuteGetRequestForPage(PageNameOrderedMenu);
-        var httpContent = await GetResponseContent(response);
+        var httpContent = await ReadResponseContent(response);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(httpContent);
 
         try
         {
-            var document = new HtmlDocument();
-            document.LoadHtml(httpContent);
-
             var isOrderChangeForTodayPossible = !HasNoMoreOrdersForTodayErrorMessage(document);
             var orderedMenus = ParseOrderedGourmetMenuHtml(document, isOrderChangeForTodayPossible).ToArray();
 
             return new GourmetOrderedMenuResult(isOrderChangeForTodayPossible, orderedMenus);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (IsParseException(exception))
         {
             throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(response), httpContent, exception);
         }
@@ -141,7 +148,7 @@ public partial class GourmetWebClient : WebClientBase
         };
 
         using var response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaCartApi/AddToMenuesCart", parameter);
-        var responseObject = await GetJsonResponseObject<AddToMenuesCartResponse>(response);
+        var responseObject = await ParseJsonResponseObject<AddToMenuesCartResponse>(response);
 
         return new GourmetApiResult(responseObject.Success, responseObject.Message);
     }
@@ -155,7 +162,7 @@ public partial class GourmetWebClient : WebClientBase
         {
             cancelOrderParameters = GetCancelOrderParameters(document, orderedMenu.PositionId);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (IsParseException(exception))
         {
             throw new GourmetParseException("Error parsing the ordered menu HTML", resultUriInfo, resultHttpContent, exception);
         }
@@ -166,14 +173,14 @@ public partial class GourmetWebClient : WebClientBase
     public async Task ConfirmOrder()
     {
         using var orderedMenuResponse = await ExecuteGetRequestForPage(PageNameOrderedMenu);
-        var orderedMenuHttpContent = await GetResponseContent(orderedMenuResponse);
+        var orderedMenuHttpContent = await ReadResponseContent(orderedMenuResponse);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(orderedMenuHttpContent);
 
         Dictionary<string, string> confirmOrderParameters;
         try
         {
-            var document = new HtmlDocument();
-            document.LoadHtml(orderedMenuHttpContent);
-
             if (!IsOrderedMenuPageEditModeActive(document))
             {
                 // Only needs to be confirmed if edit mode is active
@@ -182,7 +189,7 @@ public partial class GourmetWebClient : WebClientBase
 
             confirmOrderParameters = GetToggleOrderMenuEditModeParameters(document);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (IsParseException(exception))
         {
             throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(orderedMenuResponse), orderedMenuHttpContent, exception);
         }
@@ -193,20 +200,23 @@ public partial class GourmetWebClient : WebClientBase
     public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(int month, int year, IProgress<int> progress)
     {
         using var billingResponse = await ExecuteGetRequestForPage(PageNameStart);
-        var httpContent = await GetResponseContent(billingResponse);
+        var httpContent = await ReadResponseContent(billingResponse);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(httpContent);
 
         GourmetUserInformation userInformation;
         try
         {
-            var document = new HtmlDocument();
-            document.LoadHtml(httpContent);
-
             userInformation = ParseHtmlForUserInformation(document);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (IsParseException(exception))
         {
-            throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(billingResponse), httpContent, exception);
+            throw new GourmetParseException("Error parsing the start page HTML", GetRequestUriString(billingResponse), httpContent, exception);
         }
+
+        // Treat reading the user information as 50%, since it is a separate request.
+        progress.Report(50);
 
         var inputDate = new DateTime(year, month, 1);
         var currentDate = DateTime.Now;
@@ -221,34 +231,28 @@ public partial class GourmetWebClient : WebClientBase
             {"shopModelId", userInformation.ShopModelId}
         };
 
-        try
+        using var apiResponse = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaMyBillingApi/GetMyBillings", parameters);
+        var bills = await ParseJsonResponseObject<Bill[]>(apiResponse);
+
+        var result = new List<BillingPosition>();
+
+        foreach (Bill bill in bills)
         {
-            using var apiResponse = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaMyBillingApi/GetMyBillings", parameters);
-            var bills = await GetJsonResponseObject<Bill[]>(apiResponse);
-
-            var result = new List<BillingPosition>();
-
-            foreach (Bill bill in bills)
+            foreach (BillingItem billingItem in bill.BillingItems)
             {
-                foreach (BillingItem billingItem in bill.BillingItems)
-                {
-                    double cost = billingItem.TotalCost - billingItem.Subsidy;
-                    result.Add(new BillingPosition(bill.BillDate, BillingPositionType.Menu, billingItem.Description, billingItem.Count, cost));
-                }
+                double cost = billingItem.TotalCost - billingItem.Subsidy;
+                result.Add(new BillingPosition(bill.BillDate, BillingPositionType.Menu, billingItem.Description, billingItem.Count, cost));
             }
+        }
 
-            return result;
-        }
-        finally
-        {
-            progress.Report(100);
-        }
+        progress.Report(100);
+        return result;
     }
 
     private async Task<(HtmlDocument Document, string ResultUriInfo, string ResultHttpContent)> EnterOrderedMenuEditMode()
     {
         using var orderedMenuResponse = await ExecuteGetRequestForPage(PageNameOrderedMenu);
-        var orderedMenuHttpContent = await GetResponseContent(orderedMenuResponse);
+        var orderedMenuHttpContent = await ReadResponseContent(orderedMenuResponse);
 
         var orderedMenuDocument = new HtmlDocument();
         orderedMenuDocument.LoadHtml(orderedMenuHttpContent);
@@ -265,18 +269,28 @@ public partial class GourmetWebClient : WebClientBase
 
             enterEditModeParameters = GetToggleOrderMenuEditModeParameters(orderedMenuDocument);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (IsParseException(exception))
         {
             throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(orderedMenuResponse), orderedMenuHttpContent, exception);
         }
 
         using var enterEditModeResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, enterEditModeParameters);
-        var enterEditModeHttpContent = await GetResponseContent(enterEditModeResponse);
+        var enterEditModeHttpContent = await ReadResponseContent(enterEditModeResponse);
 
         var enterEditModeDocument = new HtmlDocument();
         enterEditModeDocument.LoadHtml(enterEditModeHttpContent);
 
-        if (!IsOrderedMenuPageEditModeActive(enterEditModeDocument))
+        bool editModeActivated;
+        try
+        {
+            editModeActivated = IsOrderedMenuPageEditModeActive(enterEditModeDocument);
+        }
+        catch (Exception exception) when (IsParseException(exception))
+        {
+            throw new GourmetParseException("Error parsing the ordered menu HTML", GetRequestUriString(orderedMenuResponse), orderedMenuHttpContent, exception);
+        }
+
+        if (!editModeActivated)
         {
             throw new GourmetRequestException("Cannot enter edit mode of ordered menus", GetRequestUriString(enterEditModeResponse));
         }
@@ -287,19 +301,26 @@ public partial class GourmetWebClient : WebClientBase
     private async Task<string> GetUfprtValueFromPage(string pageName, string formXPath)
     {
         var response = await ExecuteGetRequestForPage(pageName);
-        var httpContent = await GetResponseContent(response);
+        var httpContent = await ReadResponseContent(response);
 
         var document = new HtmlDocument();
         document.LoadHtml(httpContent);
 
-        var formNode = document.DocumentNode.GetSingleNode(formXPath);
-        return ParseUfprtValue(formNode);
+        try
+        {
+            var formNode = document.DocumentNode.GetSingleNode(formXPath);
+            return ParseUfprtValue(formNode);
+        }
+        catch (Exception exception) when (IsParseException(exception))
+        {
+            throw new GourmetParseException("Error parsing the 'ufprt' value", GetRequestUriString(response), httpContent, exception);
+        }
     }
 
     private static string ParseUfprtValue(HtmlNode formNode)
     {
         var ufprtNode = formNode.GetSingleNode(".//input[@name='ufprt']");
-        return ufprtNode.Attributes["value"].Value;
+        return ufprtNode.GetAttributeValue("value");
     }
 
     private Task<HttpResponseMessage> ExecuteGetRequestForPage(string pageName, IReadOnlyDictionary<string, string>? urlParameters = null)
@@ -320,9 +341,9 @@ public partial class GourmetWebClient : WebClientBase
         var staffGroupNode = document.DocumentNode.GetSingleNode("//input[@id='staffGroup']");
 
         var nameOfUser = loginNameNode.GetInnerText();
-        var shopModelId = shopModelNode.Attributes["value"].Value;
-        var eaterId = eaterNode.Attributes["value"].Value;
-        var staffGroupId = staffGroupNode.Attributes["value"].Value;
+        var shopModelId = shopModelNode.GetAttributeValue("value");
+        var eaterId = eaterNode.GetAttributeValue("value");
+        var staffGroupId = staffGroupNode.GetAttributeValue("value");
 
         return new GourmetUserInformation(nameOfUser, shopModelId, eaterId, staffGroupId);
     }
@@ -332,9 +353,9 @@ public partial class GourmetWebClient : WebClientBase
         foreach (var menuNode in document.DocumentNode.GetNodes("//div[@class='meal']"))
         {
             var detailNode = menuNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
-            var positionId = detailNode.Attributes["data-id"].Value;
-            var day = ParseMenuDateString(detailNode.Attributes["data-date"].Value);
-            var title = menuNode.GetSingleNode(".//div[@class='title']").ChildNodes[0].GetInnerText();
+            var positionId = detailNode.GetAttributeValue("data-id");
+            var day = ParseMenuDateString(detailNode.GetAttributeValue("data-date"));
+            var title = menuNode.GetSingleNode(".//div[@class='title']").GetChildNodeAtIndex(0).GetInnerText();
             var subTitle = menuNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
             var allergens = ParseAllergens(menuNode.GetSingleNode(".//li[@class='allergen']").GetInnerText());
             var isAvailable = menuNode.ContainsNode(".//input[@type='checkbox' and @class='menu-clicked']");
@@ -367,7 +388,7 @@ public partial class GourmetWebClient : WebClientBase
         var splitValue = dateString.Split('-');
         if (splitValue.Length != 3)
         {
-            throw new InvalidOperationException($"Expected three values after splitting the date string '{dateString}' but there are {splitValue.Length} value(s)");
+            throw new FormatException($"Expected three values after splitting the date string '{dateString}' but there are {splitValue.Length} value(s)");
         }
 
         var monthString = splitValue[0];
@@ -376,17 +397,17 @@ public partial class GourmetWebClient : WebClientBase
 
         if (!int.TryParse(dayString, out var day))
         {
-            throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
+            throw new FormatException($"Could not parse value '{dayString}' for day as integer");
         }
 
         if (!int.TryParse(monthString, out var month))
         {
-            throw new InvalidOperationException($"Could not parse value '{monthString}' for month as integer");
+            throw new FormatException($"Could not parse value '{monthString}' for month as integer");
         }
 
         if (!int.TryParse(yearString, out var year))
         {
-            throw new InvalidOperationException($"Could not parse value '{yearString}' for year as integer");
+            throw new FormatException($"Could not parse value '{yearString}' for year as integer");
         }
 
         return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
@@ -419,21 +440,20 @@ public partial class GourmetWebClient : WebClientBase
         foreach (var orderItemNode in document.DocumentNode.GetNodes("//div[contains(@class, 'order-item')]"))
         {
             var formNode = orderItemNode.GetSingleNode(".//form[contains(@class, 'form-info-orders')]");
-            var positionId = formNode.GetSingleNode(".//input[@name='cp_PositionId']").Attributes["value"].Value;
+            var positionId = formNode.GetSingleNode(".//input[@name='cp_PositionId']").GetAttributeValue("value");
 
             var eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='cp_EatingCycleId_{positionId}') and @type='hidden']");
             var dateInputNode = formNode.GetSingleNode($".//input[(@name='cp_Date_{positionId}') and @type='hidden']");
 
-            var eatingCycleId = eatingCycleIdInputNode.Attributes["value"].Value;
-            var day = ParseOrderedMenuDateString(dateInputNode.Attributes["value"].Value);
+            var eatingCycleId = eatingCycleIdInputNode.GetAttributeValue("value");
+            var day = ParseOrderedMenuDateString(dateInputNode.GetAttributeValue("value"));
             var title = formNode.GetSingleNode(".//div[@class='title']").GetInnerText();
             bool isOrderApproved;
 
             // This <input> node is only available if the web page is currently in edit mode.
-            var orderApprovedInputNode = orderItemNode.SelectSingleNode($".//input[@name='cec_NewEatingCycleId_{positionId}' and @type='radio']");
-            if (orderApprovedInputNode != null)
+            if (orderItemNode.TryGetSingleNode($".//input[@name='cec_NewEatingCycleId_{positionId}' and @type='radio']", out HtmlNode? orderApprovedInputNode))
             {
-                isOrderApproved = orderApprovedInputNode.Attributes["class"].Value.Contains("confirmed");
+                isOrderApproved = orderApprovedInputNode.GetAttributeValue("class").Contains("confirmed");
             }
             else
             {
@@ -460,13 +480,13 @@ public partial class GourmetWebClient : WebClientBase
         var spaceSplitValue = dateString.Split(' ');
         if (spaceSplitValue.Length != 2)
         {
-            throw new InvalidOperationException($"Expected two values after splitting the date node value '{dateString}' but there are {spaceSplitValue.Length} value(s)");
+            throw new FormatException($"Expected two values after splitting the date node value '{dateString}' but there are {spaceSplitValue.Length} value(s)");
         }
 
         var dateSplitValue = spaceSplitValue[0].Split('.');
         if (dateSplitValue.Length != 3)
         {
-            throw new InvalidOperationException($"Expected three values after splitting the date node value '{dateString}' but there are {spaceSplitValue.Length} value(s)");
+            throw new FormatException($"Expected three values after splitting the date node value '{dateString}' but there are {spaceSplitValue.Length} value(s)");
         }
 
         var dayString = dateSplitValue[0];
@@ -475,17 +495,17 @@ public partial class GourmetWebClient : WebClientBase
 
         if (!int.TryParse(dayString, out var day))
         {
-            throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
+            throw new FormatException($"Could not parse value '{dayString}' for day as integer");
         }
 
         if (!int.TryParse(monthString, out var month))
         {
-            throw new InvalidOperationException($"Could not parse value '{monthString}' for month as integer");
+            throw new FormatException($"Could not parse value '{monthString}' for month as integer");
         }
 
         if (!int.TryParse(yearString, out var year))
         {
-            throw new InvalidOperationException($"Could not parse value '{year}' for year as integer");
+            throw new FormatException($"Could not parse value '{year}' for year as integer");
         }
 
         return new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
@@ -496,7 +516,7 @@ public partial class GourmetWebClient : WebClientBase
         var toggleEditModeParameterNode = document.DocumentNode.GetSingleNode("//form[@id='form_toggleEditMode']//input[@name='editMode' and @type='hidden']");
 
         // Edit mode is active if value is "False", because when submitting this value would disable the edit mode
-        return toggleEditModeParameterNode.Attributes["value"].Value == "False";
+        return toggleEditModeParameterNode.GetAttributeValue("value") == "False";
     }
 
     private static Dictionary<string, string> GetToggleOrderMenuEditModeParameters(HtmlDocument document)
@@ -504,7 +524,7 @@ public partial class GourmetWebClient : WebClientBase
         var formNode = document.DocumentNode.GetSingleNode("//form[@id='form_toggleEditMode']");
         var editModeNode = formNode.GetSingleNode(".//input[@name='editMode' and @type='hidden']");
 
-        string editModeValue = editModeNode.Attributes["value"].Value;
+        string editModeValue = editModeNode.GetAttributeValue("value");
         string ufprtValue = ParseUfprtValue(formNode);
 
         return new Dictionary<string, string>
@@ -523,8 +543,8 @@ public partial class GourmetWebClient : WebClientBase
         var eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='{eatingCycleIdNodeName}') and @type='hidden']");
         var dateInputNode = formNode.GetSingleNode($".//input[(@name='{dateNodeName}') and @type='hidden']");
 
-        var eatingCycleIdValue = eatingCycleIdInputNode.Attributes["value"].Value;
-        var dateValue = dateInputNode.Attributes["value"].Value;
+        var eatingCycleIdValue = eatingCycleIdInputNode.GetAttributeValue("value");
+        var dateValue = dateInputNode.GetAttributeValue("value");
         var ufprtValue = ParseUfprtValue(formNode);
 
         return new Dictionary<string, string>
@@ -534,5 +554,10 @@ public partial class GourmetWebClient : WebClientBase
             {dateNodeName, dateValue},
             {"ufprt", ufprtValue}
         };
+    }
+
+    private static bool IsParseException(Exception exception)
+    {
+        return exception is GourmetHtmlNodeException || exception is FormatException;
     }
 }

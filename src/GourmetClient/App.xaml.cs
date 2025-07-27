@@ -104,7 +104,15 @@ public partial class App : Application
 
         releaseNotesWindow.Show();
 
-        File.Create(GetReleaseNotesTokenFilePath()).Dispose();
+        try
+        {
+            File.Create(GetReleaseNotesTokenFilePath()).Dispose();
+        }
+        catch (IOException)
+        {
+            // Ignore the case that the file could not have been created. This only means that the release notes
+            // windows is shown again at the next start of the application.
+        }
     }
 
     private async void StartUpdater(string targetPath)
@@ -143,9 +151,6 @@ public partial class App : Application
         {
             await executeUpdateWindow.StartUpdate(targetPath);
         }
-        catch (OperationCanceledException)
-        {
-        }
         catch (GourmetUpdateException exception)
         {
             updateException = exception;
@@ -157,7 +162,7 @@ public partial class App : Application
 
         if (updateException != null)
         {
-            ShowExceptionNotification("Bei der Durchführung des Updates ist ein Fehler aufgetreten", updateException);
+            ShowExceptionNotification("Bei der Durchführung des Updates ist ein Fehler aufgetreten.", updateException);
         }
 
         executeUpdateWindow.Close();

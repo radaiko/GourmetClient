@@ -316,80 +316,82 @@ public class MenuOrderViewModel : ViewModelBase
     {
         IsMenuUpdating = true;
 
+        _cacheService.InvalidateCache();
+        var currentData = await _cacheService.GetCache();
+
+        var errorDays = new List<DateTime>();
+        var menusToOrder = new List<GourmetMenu>();
+        var menusToCancel = new List<GourmetOrderedMenu>();
+
+        foreach (var dayViewModel in _menuDays)
+        {
+            var menuToOrder = dayViewModel.Menus.FirstOrDefault(menu => menu?.MenuState == GourmetMenuState.MarkedForOrder);
+
+            if (menuToOrder != null)
+            {
+                var menuModel = menuToOrder.GetModel();
+                var actualMenu = currentData.Menus.FirstOrDefault(menu => menu.Equals(menuModel));
+
+                if (actualMenu is { IsAvailable: true })
+                {
+                    menusToOrder.Add(menuToOrder.GetModel());
+                }
+                else
+                {
+                    errorDays.Add(dayViewModel.Date);
+                    _notificationService.Send(new Notification(NotificationType.Error, $"{menuToOrder.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} ist nicht mehr verfügbar"));
+                }
+            }
+        }
+
+        foreach (var dayViewModel in _menuDays.Where(day => !errorDays.Contains(day.Date)))
+        {
+            foreach (var menuViewModel in dayViewModel.Menus)
+            {
+                if (menuViewModel?.MenuState == GourmetMenuState.MarkedForCancel)
+                {
+                    var menuModel = menuViewModel.GetModel();
+                    var matchingOrderedMenus = currentData.OrderedMenus.Where(orderedMenu => orderedMenu.MatchesMenu(menuModel));
+                    var menusToCancelCount = menusToCancel.Count;
+
+                    // Cancel all orders in case the menu has been ordered multiple times
+                    foreach (var actualOrderedMenu in matchingOrderedMenus)
+                    {
+                        if (!actualOrderedMenu.IsOrderCancelable)
+                        {
+                            // Assume that, in case of multiple orders of the same menu, if one of the order can't be cancelled, then none of the orders can be cancelled
+                            break;
+                        }
+
+                        menusToCancel.Add(actualOrderedMenu);
+                    }
+
+                    if (menusToCancelCount == menusToCancel.Count)
+                    {
+                        // Nothing was added
+                        _notificationService.Send(new Notification(NotificationType.Error, $"{menuViewModel.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} kann nicht storniert werden"));
+                    }
+                }
+            }
+        }
+
+        GourmetUpdateOrderResult updateOrderResult;
         try
         {
-            _cacheService.InvalidateCache();
-            var currentData = await _cacheService.GetCache();
-
-            var errorDays = new List<DateTime>();
-            var menusToOrder = new List<GourmetMenu>();
-            var menusToCancel = new List<GourmetOrderedMenu>();
-
-            foreach (var dayViewModel in _menuDays)
-            {
-                var menuToOrder = dayViewModel.Menus.FirstOrDefault(menu => menu?.MenuState == GourmetMenuState.MarkedForOrder);
-
-                if (menuToOrder != null)
-                {
-                    var menuModel = menuToOrder.GetModel();
-                    var actualMenu = currentData.Menus.FirstOrDefault(menu => menu.Equals(menuModel));
-
-                    if (actualMenu is { IsAvailable: true })
-                    {
-                        menusToOrder.Add(menuToOrder.GetModel());
-                    }
-                    else
-                    {
-                        errorDays.Add(dayViewModel.Date);
-                        _notificationService.Send(new Notification(NotificationType.Error, $"{menuToOrder.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} ist nicht mehr verfügbar"));
-                    }
-                }
-            }
-
-            foreach (var dayViewModel in _menuDays.Where(day => !errorDays.Contains(day.Date)))
-            {
-                foreach (var menuViewModel in dayViewModel.Menus)
-                {
-                    if (menuViewModel?.MenuState == GourmetMenuState.MarkedForCancel)
-                    {
-                        var menuModel = menuViewModel.GetModel();
-                        var matchingOrderedMenus = currentData.OrderedMenus.Where(orderedMenu => orderedMenu.MatchesMenu(menuModel));
-                        var menusToCancelCount = menusToCancel.Count;
-
-                        // Cancel all orders in case the menu has been ordered multiple times
-                        foreach (var actualOrderedMenu in matchingOrderedMenus)
-                        {
-                            if (!actualOrderedMenu.IsOrderCancelable)
-                            {
-                                // Assume that, in case of multiple orders of the same menu, if one of the order can't be cancelled, then none of the orders can be cancelled
-                                break;
-                            }
-
-                            menusToCancel.Add(actualOrderedMenu);
-                        }
-
-                        if (menusToCancelCount == menusToCancel.Count)
-                        {
-                            // Nothing was added
-                            _notificationService.Send(new Notification(NotificationType.Error, $"{menuViewModel.MenuName} für den {dayViewModel.Date:dd.MM.yyyy} kann nicht storniert werden"));
-                        }
-                    }
-                }
-            }
-
-            GourmetUpdateOrderResult updateOrderResult = await _cacheService.UpdateOrderedMenu(currentData.UserInformation, menusToOrder, menusToCancel);
-            NotifyAboutFailedOrders(updateOrderResult);
-
-            await UpdateMenu();
+            updateOrderResult = await _cacheService.UpdateOrderedMenu(currentData.UserInformation, menusToOrder, menusToCancel);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is GourmetRequestException || exception is GourmetParseException)
         {
             _notificationService.Send(new ExceptionNotification("Das Ausführen der Bestellung ist fehlgeschlagen", exception));
-        }
-        finally
-        {
             IsMenuUpdating = false;
+            return;
         }
+
+        NotifyAboutFailedOrders(updateOrderResult);
+
+        await UpdateMenu();
+
+        IsMenuUpdating = false;
     }
 
     private void NotifyAboutFailedOrders(GourmetUpdateOrderResult updateOrderResult)

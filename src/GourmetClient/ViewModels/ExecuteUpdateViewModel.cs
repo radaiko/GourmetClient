@@ -144,8 +144,6 @@ public class ExecuteUpdateViewModel : ViewModelBase
             return;
         }
 
-        if (!_updateService.StartNewVersion(targetPath))
-        {
-        }
+        _updateService.StartNewVersion(targetPath);
     }
 }

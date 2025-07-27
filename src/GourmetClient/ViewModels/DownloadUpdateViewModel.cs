@@ -108,6 +108,7 @@ public class DownloadUpdateViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
+            // Update was cancelled.
             return;
         }
         catch (GourmetUpdateException exception)
@@ -131,6 +132,7 @@ public class DownloadUpdateViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
+            // Update was cancelled.
             return;
         }
         catch (GourmetUpdateException exception)
@@ -144,6 +146,7 @@ public class DownloadUpdateViewModel : ViewModelBase
 
         if (cancellationToken.IsCancellationRequested)
         {
+            // Update was cancelled.
             return;
         }
 

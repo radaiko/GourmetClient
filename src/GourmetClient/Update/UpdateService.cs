@@ -27,7 +27,11 @@ public class UpdateService
 
     public UpdateService()
     {
-        CurrentVersion = SemVersion.Parse(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion, SemVersionStyles.Strict);
+        AssemblyInformationalVersionAttribute? assemblyInformationalVersionAttribute =
+            Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+
+        Debug.Assert(assemblyInformationalVersionAttribute is not null);
+        CurrentVersion = SemVersion.Parse(assemblyInformationalVersionAttribute.InformationalVersion, SemVersionStyles.Strict);
 
         _releaseListQueryResultFilePath = Path.Combine(App.LocalAppDataPath, "ReleaseListQueryResult.json");
     }
@@ -47,6 +51,7 @@ public class UpdateService
         }
         catch (GourmetUpdateException)
         {
+            // Ignore if the update check failed. The check is executed again during the next start of the application.
         }
 
         return null;
@@ -81,7 +86,14 @@ public class UpdateService
             {
                 Directory.CreateDirectory(tempFolderPath!);
             }
+        }
+        catch (IOException exception)
+        {
+            throw new GourmetUpdateException("Could not create temporary update directory", exception);
+        }
 
+        try
+        {
             await using var packageFileStream = new FileStream(packagePath, FileMode.Create, FileAccess.Write, FileShare.None);
             await using var checksumFileStream = new FileStream(signedChecksumFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
 
@@ -102,10 +114,14 @@ public class UpdateService
         {
             if (exception.InnerException is TimeoutException)
             {
+                // Timeout occurred
                 throw new GourmetUpdateException("Could not download update package files", exception);
             }
+
+            // Exception was caused by the cancellation token, so rethrow it
+            throw;
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is IOException || exception is HttpRequestException)
         {
             throw new GourmetUpdateException("Could not download update package files", exception);
         }
@@ -339,7 +355,7 @@ public class UpdateService
                 }
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is HttpRequestException || exception is JsonException)
         {
             throw new GourmetUpdateException("Error while trying to receive the list of releases", exception);
         }
@@ -372,6 +388,8 @@ public class UpdateService
             }
             catch (Exception exception) when (exception is IOException || exception is JsonException || exception is InvalidOperationException)
             {
+                // Cached result could not be read. Ignore this case, since the latest information will then be read
+                // from the server again.
             }
         }
 
@@ -395,6 +413,8 @@ public class UpdateService
         }
         catch (IOException)
         {
+            // Latest result could not be written to cache file. Ignore this case, since the latest information will
+            // then be read from the server again.
         }
     }
 

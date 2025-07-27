@@ -64,7 +64,19 @@ public static class HttpClientHelper
         }
     }
 
-    public static WebProxy? GetProxy(string requestUrl)
+    public static bool IsProxyRelatedException(string requestUrl, HttpRequestException exception)
+    {
+        var proxy = GetProxy(requestUrl);
+        if (proxy is null)
+        {
+            // No proxy required for request url
+            return false;
+        }
+
+        return IsProxyAuthenticationRequiredException(proxy, exception) || IsProxyConnectionErrorException(proxy, exception);
+    }
+
+    private static WebProxy? GetProxy(string requestUrl)
     {
         var requestUri = new Uri(requestUrl);
         var proxyUri = WebRequest.DefaultWebProxy?.GetProxy(requestUri);
@@ -78,25 +90,13 @@ public static class HttpClientHelper
         return new WebProxy(proxyUri, true);
     }
 
-    public static bool IsProxyRelatedException(string requestUrl, HttpRequestException exception)
-    {
-        var proxy = GetProxy(requestUrl);
-        if (proxy is null)
-        {
-            // No proxy required for request url
-            return false;
-        }
-
-        return IsProxyAuthenticationRequiredException(proxy, exception) || IsProxyConnectionErrorException(proxy, exception);
-    }
-
-    public static bool IsProxyAuthenticationRequiredException(WebProxy proxy, HttpRequestException exception)
+    private static bool IsProxyAuthenticationRequiredException(WebProxy proxy, HttpRequestException exception)
     {
         // Exception message is like "The proxy tunnel request to proxy '<proxyUri>' failed with status code '407'."
         return exception.HttpRequestError == HttpRequestError.ProxyTunnelError && exception.Message.Contains($"'{proxy.Address!.AbsoluteUri}'") && exception.Message.Contains("'407'");
     }
 
-    public static bool IsProxyConnectionErrorException(WebProxy proxy, HttpRequestException exception)
+    private static bool IsProxyConnectionErrorException(WebProxy proxy, HttpRequestException exception)
     {
         // Exception message is like "The remote host (<proxy uri>) is unknown"
         return exception.HttpRequestError == HttpRequestError.NameResolutionError && exception.Message.Contains(proxy.Address!.Authority);

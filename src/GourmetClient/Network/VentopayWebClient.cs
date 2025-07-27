@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
+﻿using GourmetClient.Model;
 using GourmetClient.Utils;
-using System.Text.RegularExpressions;
-using GourmetClient.Model;
 using HtmlAgilityPack;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace GourmetClient.Network;
 
@@ -23,9 +23,18 @@ public class VentopayWebClient : WebClientBase
     {
         var requestUrl = GetWebUrlForPage(PageNameLogin);
         using var loginPageResponse = await ExecuteGetRequest(requestUrl);
-        var loginPageContent = await GetResponseContent(loginPageResponse);
+        var loginPageContent = await ReadResponseContent(loginPageResponse);
 
-        var parameters = ParseAspxParameters(loginPageContent);
+        Dictionary<string, string> parameters;
+        try
+        {
+            parameters = ParseAspxParameters(loginPageContent);
+        }
+        catch (Exception exception) when (IsParseException(exception))
+        {
+            throw new GourmetParseException("Error parsing the login HTML", GetRequestUriString(loginPageResponse), loginPageContent, exception);
+        }
+
         parameters.Add("DropDownList1", CompanyIdTrumpf);
         parameters.Add("TxtUsername", userName);
         parameters.Add("TxtPassword", password);
@@ -33,7 +42,7 @@ public class VentopayWebClient : WebClientBase
         parameters.Add("languageRadio", "DE");
 
         using var loginResponse = await ExecuteFormPostRequest(requestUrl, parameters);
-        var loginContent = await GetResponseContent(loginResponse);
+        var loginContent = await ReadResponseContent(loginResponse);
 
         return Regex.IsMatch(loginContent, "<a\\s+href=\"Ausloggen.aspx\">");
     }
@@ -41,7 +50,16 @@ public class VentopayWebClient : WebClientBase
     protected override async Task LogoutImpl()
     {
         var requestUrl = GetWebUrlForPage(PageNameLogout);
-        using var response = await ExecuteGetRequest(requestUrl);
+
+        try
+        {
+            using var response = await ExecuteGetRequest(requestUrl);
+        }
+        catch (GourmetRequestException)
+        {
+            // Ignore this exception during logout. The session on the server side may be not cleared, but it will be
+            // removed from the server eventually.
+        }
     }
 
     public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(DateTime fromDate, DateTime toDate, IProgress<int> progress)
@@ -54,13 +72,13 @@ public class VentopayWebClient : WebClientBase
 
         var requestUrl = GetWebUrlForPage(PageNameTransactions);
         using var response = await ExecuteGetRequest(requestUrl, parameters);
-        var htmlContent = await GetResponseContent(response);
-            
+        var htmlContent = await ReadResponseContent(response);
+
         try
         {
             return await GetBillingPositionsFromHtml(htmlContent, progress);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (IsParseException(exception))
         {
             throw new GourmetParseException("Error parsing the billing HTML", GetRequestUriString(response), htmlContent, exception);
         }
@@ -82,9 +100,9 @@ public class VentopayWebClient : WebClientBase
 
         var parameters = new Dictionary<string, string>
         {
-            { viewStateNode.Attributes["id"].Value, viewStateNode.Attributes["value"].Value },
-            { viewStateGeneratorNode.Attributes["id"].Value, viewStateGeneratorNode.Attributes["value"].Value },
-            { eventValidationNode.Attributes["id"].Value, eventValidationNode.Attributes["value"].Value }
+            { viewStateNode.GetAttributeValue("id"), viewStateNode.GetAttributeValue("value") },
+            { viewStateGeneratorNode.GetAttributeValue("id"), viewStateGeneratorNode.GetAttributeValue("value") },
+            { eventValidationNode.GetAttributeValue("id"), eventValidationNode.GetAttributeValue("value") }
         };
 
         return parameters;
@@ -97,13 +115,13 @@ public class VentopayWebClient : WebClientBase
 
         var billingPositions = new List<BillingPosition>();
         var contentNode = document.DocumentNode.GetSingleNode("//div[@class='content']");
-        var rowNodes = contentNode.GetNodes(".//div[@class='transact']").ToList();
+        var rowNodes = contentNode.GetNodes(".//div[@class='transact']").ToArray();
         double rowCounter = 0;
 
         foreach (var rowNode in rowNodes)
         {
-            var transactionId = rowNode.Attributes["id"]?.Value;
-            if (string.IsNullOrEmpty(transactionId))
+            if (!rowNode.TryGetAttributeValue("id", out string transactionId)
+                || string.IsNullOrEmpty(transactionId))
             {
                 continue;
             }
@@ -112,7 +130,7 @@ public class VentopayWebClient : WebClientBase
             billingPositions.AddRange(entries);
 
             rowCounter++;
-            progress.Report((int)((rowCounter / rowNodes.Count) * 100));
+            progress.Report((int)((rowCounter / rowNodes.Length) * 100));
         }
 
         return billingPositions;
@@ -127,11 +145,11 @@ public class VentopayWebClient : WebClientBase
 
         var requestUrl = GetWebUrlForPage(PageNameTransactionDetails);
         using var response = await ExecuteGetRequest(requestUrl, parameters);
-        var htmlContent = await GetResponseContent(response);
+        var htmlContent = await ReadResponseContent(response);
 
         var document = new HtmlDocument();
         document.LoadHtml(htmlContent);
-            
+
         var contentNode = document.DocumentNode.GetSingleNode("//div[@id='rechnung']");
         var restaurantInfoNode = contentNode.GetSingleNode(".//span[@id='ContentPlaceHolder1_LblRestaurantInfo']");
         var restaurantInfo = GetRestaurantInfo(restaurantInfoNode.InnerHtml);
@@ -162,12 +180,12 @@ public class VentopayWebClient : WebClientBase
 
             if (!int.TryParse(countString, out var count))
             {
-                throw new InvalidOperationException($"Count '{countString}' has an invalid format");
+                throw new FormatException($"Count '{countString}' has an invalid format");
             }
 
             if (!double.TryParse(costString, new CultureInfo("de-DE"), out var cost))
             {
-                throw new InvalidOperationException($"Cost '{costString}' has an invalid format");
+                throw new FormatException($"Cost '{costString}' has an invalid format");
             }
 
             var positionType = positionName switch
@@ -188,7 +206,7 @@ public class VentopayWebClient : WebClientBase
 
         if (!match.Success)
         {
-            throw new InvalidOperationException($"Date string '{dateString}' has an invalid format");
+            throw new FormatException($"Date string '{dateString}' has an invalid format");
         }
 
         var dayString = match.Groups[1].Value;
@@ -199,7 +217,7 @@ public class VentopayWebClient : WebClientBase
 
         if (!int.TryParse(dayString, out var day))
         {
-            throw new InvalidOperationException($"Could not parse value '{dayString}' for day as integer");
+            throw new FormatException($"Could not parse value '{dayString}' for day as integer");
         }
 
         var month = monthString switch
@@ -216,22 +234,22 @@ public class VentopayWebClient : WebClientBase
             "Okt" => 10,
             "Nov" => 11,
             "Dez" => 12,
-            _ => throw new InvalidOperationException($"Invalid month value: '{monthString}'")
+            _ => throw new FormatException($"Invalid month value: '{monthString}'")
         };
 
         if (!int.TryParse(yearString, out var year))
         {
-            throw new InvalidOperationException($"Could not parse value '{yearString}' for year as integer");
+            throw new FormatException($"Could not parse value '{yearString}' for year as integer");
         }
 
         if (!int.TryParse(hourString, out var hour))
         {
-            throw new InvalidOperationException($"Could not parse value '{hourString}' for hour as integer");
+            throw new FormatException($"Could not parse value '{hourString}' for hour as integer");
         }
 
         if (!int.TryParse(minuteString, out var minute))
         {
-            throw new InvalidOperationException($"Could not parse value '{minuteString}' for minute as integer");
+            throw new FormatException($"Could not parse value '{minuteString}' for minute as integer");
         }
 
         return new DateTime(year, month, day, hour, minute, 0, DateTimeKind.Local).ToUniversalTime();
@@ -241,6 +259,11 @@ public class VentopayWebClient : WebClientBase
     {
         var parts = infoString.Split("<br>");
         return new RestaurantInfo(parts[0], parts[3]);
+    }
+
+    private static bool IsParseException(Exception exception)
+    {
+        return exception is GourmetHtmlNodeException || exception is FormatException;
     }
 
     private record RestaurantInfo(string Name, string Location);

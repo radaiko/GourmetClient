@@ -60,17 +60,17 @@ public class GourmetCacheService
     {
         var userSettings = _settingsService.GetCurrentUserSettings();
 
-        await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
-
-        if (!loginHandle.LoginSuccessful)
-        {
-            return FailAllMenusWithMessage("Login fehlgeschlagen");
-        }
-
-        var failedOrders = new List<FailedMenuToOrderInformation>();
-
         try
         {
+            await using var loginHandle = await _webClient.Login(userSettings.GourmetLoginUsername, userSettings.GourmetLoginPassword);
+
+            if (!loginHandle.LoginSuccessful)
+            {
+                return FailAllMenusWithMessage("Login fehlgeschlagen");
+            }
+
+            var failedOrders = new List<FailedMenuToOrderInformation>();
+
             foreach (var orderedMenu in menusToCancel)
             {
                 await _webClient.CancelOrder(orderedMenu);
@@ -86,13 +86,13 @@ public class GourmetCacheService
             }
 
             await _webClient.ConfirmOrder();
+
+            return new GourmetUpdateOrderResult(failedOrders);
         }
         finally
         {
             InvalidateCache();
         }
-
-        return new GourmetUpdateOrderResult(failedOrders);
 
         GourmetUpdateOrderResult FailAllMenusWithMessage(string message)
         {
@@ -194,7 +194,7 @@ public class GourmetCacheService
 
             return serializedCache.ToGourmetMenuCache();
         }
-        catch
+        catch (IOException)
         {
             return new InvalidatedGourmetCache();
         }
@@ -215,7 +215,7 @@ public class GourmetCacheService
             await using var fileStream = new FileStream(_cacheFileName, FileMode.Create, FileAccess.Write, FileShare.None);
             await JsonSerializer.SerializeAsync(fileStream, serializedCache, new JsonSerializerOptions { WriteIndented = true });
         }
-        catch
+        catch (IOException)
         {
             InvalidateCache();
         }
