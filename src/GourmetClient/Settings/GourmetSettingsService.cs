@@ -94,6 +94,7 @@ public class GourmetSettingsService
         }
         catch (InvalidOperationException)
         {
+            // Settings could not be converted to model. Use default settings instead.
         }
 
         return settings ?? new GourmetClientSettings();

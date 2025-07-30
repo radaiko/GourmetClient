@@ -359,7 +359,8 @@ public class UpdateService
 
                 return serializedResult?.ToReleaseListQueryResult();
             }
-            catch (Exception exception) when (exception is IOException || exception is JsonException || exception is InvalidOperationException)
+            catch (Exception exception)
+                when (exception is IOException || exception is JsonException || exception is InvalidOperationException)
             {
                 // Cached result could not be read. Ignore this case, since the latest information will then be read from the server again.
             }
