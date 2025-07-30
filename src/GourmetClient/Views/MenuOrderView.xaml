@@ -42,162 +42,171 @@
 
 		<DataTemplate x:Key="CategoryHeaderTemplate"
 		              DataType="{x:Type models:GourmetMenuCategory}">
-			<TextBlock Margin="12,0,0,0"
-			           VerticalAlignment="Center"
-			           FontSize="20"
-			           TextTrimming="CharacterEllipsis">
-				<TextBlock.Style>
-					<Style TargetType="{x:Type TextBlock}">
-						<Setter Property="Text" Value="" />
-						<Style.Triggers>
-							<DataTrigger Binding="{Binding}"
-							             Value="{x:Static models:GourmetMenuCategory.Menu1}">
-								<Setter Property="Text" Value="Menü 1" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding}"
-							             Value="{x:Static models:GourmetMenuCategory.Menu2}">
-								<Setter Property="Text" Value="Menü 2" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding}"
-							             Value="{x:Static models:GourmetMenuCategory.Menu3}">
-								<Setter Property="Text" Value="Menü 3" />
-							</DataTrigger>
-							<DataTrigger Binding="{Binding}"
-							             Value="{x:Static models:GourmetMenuCategory.SoupAndSalad}">
-								<Setter Property="Text" Value="Suppe &amp; Salat" />
-							</DataTrigger>
-						</Style.Triggers>
-					</Style>
-				</TextBlock.Style>
-			</TextBlock>
+			<Border BorderBrush="{StaticResource DayBackgroundBrush}"
+			        BorderThickness="2,0,0,0">
+				<TextBlock Margin="12,0,0,0"
+				           VerticalAlignment="Center"
+				           FontSize="20"
+				           TextTrimming="CharacterEllipsis">
+					<TextBlock.Style>
+						<Style TargetType="{x:Type TextBlock}">
+							<Setter Property="Text" Value="" />
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding}"
+								             Value="{x:Static models:GourmetMenuCategory.Menu1}">
+									<Setter Property="Text" Value="Menü 1" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding}"
+								             Value="{x:Static models:GourmetMenuCategory.Menu2}">
+									<Setter Property="Text" Value="Menü 2" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding}"
+								             Value="{x:Static models:GourmetMenuCategory.Menu3}">
+									<Setter Property="Text" Value="Menü 3" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding}"
+								             Value="{x:Static models:GourmetMenuCategory.SoupAndSalad}">
+									<Setter Property="Text" Value="Suppe &amp; Salat" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</TextBlock.Style>
+				</TextBlock>
+			</Border>
 		</DataTemplate>
 
 		<DataTemplate x:Key="MenuTemplate"
 		              DataType="{x:Type viewModels:GourmetMenuViewModel}">
-			<Border Height="120"
-			        Background="White"
-			        BorderBrush="{StaticResource DayBackgroundBrush}"
-			        BorderThickness="0,2">
-				<Button Margin="10,0"
-				        HorizontalAlignment="Stretch"
-				        VerticalAlignment="Stretch"
-				        HorizontalContentAlignment="Stretch"
-				        VerticalContentAlignment="Top"
-				        Command="{Binding DataContext.ToggleMenuOrderedMarkCommand, ElementName=Root, Mode=OneTime}"
-				        CommandParameter="{Binding}"
-				        Cursor="Hand"
-				        Focusable="False"
-				        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
-					<Grid Margin="0,10,0,0">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition />
-							<ColumnDefinition Width="Auto" />
-						</Grid.ColumnDefinitions>
-						<Grid.RowDefinitions>
-							<RowDefinition />
-							<RowDefinition Height="Auto" />
-						</Grid.RowDefinitions>
-						<TextBlock Grid.Row="0"
-						           Grid.Column="0"
-						           FontSize="14"
-						           Text="{Binding MenuDescription}"
-						           TextTrimming="CharacterEllipsis"
-						           TextWrapping="Wrap"
-						           ToolTipService.ShowOnDisabled="True">
-							<TextBlock.Style>
-								<Style TargetType="{x:Type TextBlock}">
-									<Style.Triggers>
-										<DataTrigger Binding="{Binding Path=(behaviors:IsTextTrimmedBehavior.IsTextTrimmed), RelativeSource={RelativeSource Self}}"
-										             Value="True">
-											<Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=Text}" />
-										</DataTrigger>
-									</Style.Triggers>
-								</Style>
-							</TextBlock.Style>
-							<b:Interaction.Behaviors>
-								<behaviors:IsTextTrimmedBehavior />
-							</b:Interaction.Behaviors>
-						</TextBlock>
-						<TextBlock Grid.Row="1"
-						           Grid.Column="0"
-						           Margin="0,5,0,0"
-						           FontStyle="Italic"
-						           Text="{Binding Allergens, Converter={StaticResource AllergensToStringConverter}}" />
-						<StackPanel Grid.Row="0"
-						            Grid.RowSpan="2"
-						            Grid.Column="1"
-						            Margin="5,0"
-						            Orientation="Vertical">
-							<Image Width="16"
-							       Height="16"
-							       ToolTipService.ShowOnDisabled="True">
-								<Image.Style>
-									<Style TargetType="{x:Type Image}">
+			<DockPanel LastChildFill="True">
+				<Border Width="2"
+				        Margin="0,-2"
+				        Background="{StaticResource DayBackgroundBrush}"
+				        DockPanel.Dock="Left" />
+				<Border Height="120"
+				        Background="White"
+				        BorderBrush="{StaticResource DayBackgroundBrush}"
+				        BorderThickness="0,2">
+					<Button Margin="10,0"
+					        HorizontalAlignment="Stretch"
+					        VerticalAlignment="Stretch"
+					        HorizontalContentAlignment="Stretch"
+					        VerticalContentAlignment="Top"
+					        Command="{Binding DataContext.ToggleMenuOrderedMarkCommand, ElementName=Root, Mode=OneTime}"
+					        CommandParameter="{Binding}"
+					        Cursor="Hand"
+					        Focusable="False"
+					        Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+						<Grid Margin="0,10,0,0">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition />
+								<ColumnDefinition Width="Auto" />
+							</Grid.ColumnDefinitions>
+							<Grid.RowDefinitions>
+								<RowDefinition />
+								<RowDefinition Height="Auto" />
+							</Grid.RowDefinitions>
+							<TextBlock Grid.Row="0"
+							           Grid.Column="0"
+							           FontSize="14"
+							           Text="{Binding MenuDescription}"
+							           TextTrimming="CharacterEllipsis"
+							           TextWrapping="Wrap"
+							           ToolTipService.ShowOnDisabled="True">
+								<TextBlock.Style>
+									<Style TargetType="{x:Type TextBlock}">
 										<Style.Triggers>
-											<DataTrigger Binding="{Binding MenuState}"
-											             Value="{x:Static viewModels:GourmetMenuState.None}">
-												<Setter Property="Visibility" Value="Hidden" />
+											<DataTrigger Binding="{Binding Path=(behaviors:IsTextTrimmedBehavior.IsTextTrimmed), RelativeSource={RelativeSource Self}}"
+											             Value="True">
+												<Setter Property="ToolTip" Value="{Binding RelativeSource={x:Static RelativeSource.Self}, Path=Text}" />
 											</DataTrigger>
-											<DataTrigger Binding="{Binding MenuState}"
-											             Value="{x:Static viewModels:GourmetMenuState.NotAvailable}">
-												<Setter Property="Source" Value="/Resources/Icons/MenuNotAvailable.png" />
-												<Setter Property="ToolTip" Value="Menü kann nicht bestellt werden" />
-											</DataTrigger>
-											<DataTrigger Binding="{Binding MenuState}"
-											             Value="{x:Static viewModels:GourmetMenuState.MarkedForOrder}">
-												<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForOrder.png" />
-												<Setter Property="ToolTip" Value="Menü wird bestellt" />
-											</DataTrigger>
-											<DataTrigger Binding="{Binding MenuState}"
-											             Value="{x:Static viewModels:GourmetMenuState.MarkedForCancel}">
-												<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForCancel.png" />
-												<Setter Property="ToolTip" Value="Menü wird abbestellt" />
-											</DataTrigger>
-											<MultiDataTrigger>
-												<MultiDataTrigger.Conditions>
-													<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
-													<Condition Binding="{Binding IsOrderCancelable}" Value="True" />
-												</MultiDataTrigger.Conditions>
-												<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
-												<Setter Property="ToolTip" Value="Menü ist bestellt" />
-											</MultiDataTrigger>
-											<MultiDataTrigger>
-												<MultiDataTrigger.Conditions>
-													<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
-													<Condition Binding="{Binding IsOrderCancelable}" Value="False" />
-												</MultiDataTrigger.Conditions>
-												<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
-												<Setter Property="ToolTip" Value="Menü ist bestellt und kann nicht storniert werden" />
-											</MultiDataTrigger>
 										</Style.Triggers>
 									</Style>
-								</Image.Style>
-							</Image>
-							<Image Width="16"
-							       Height="16"
-							       Margin="0,5,0,0"
-							       Source="/Resources/Icons/Warning.png"
-							       ToolTip="Bestellung ist nicht bestätigt"
-							       ToolTipService.ShowOnDisabled="True">
-								<Image.Style>
-									<Style TargetType="{x:Type Image}">
-										<Setter Property="Visibility" Value="Hidden" />
-										<Style.Triggers>
-											<MultiDataTrigger>
-												<MultiDataTrigger.Conditions>
-													<Condition Binding="{Binding IsOrdered}" Value="True" />
-													<Condition Binding="{Binding IsOrderApproved}" Value="False" />
-												</MultiDataTrigger.Conditions>
-												<Setter Property="Visibility" Value="Visible" />
-											</MultiDataTrigger>
-										</Style.Triggers>
-									</Style>
-								</Image.Style>
-							</Image>
-						</StackPanel>
-					</Grid>
-				</Button>
-			</Border>
+								</TextBlock.Style>
+								<b:Interaction.Behaviors>
+									<behaviors:IsTextTrimmedBehavior />
+								</b:Interaction.Behaviors>
+							</TextBlock>
+							<TextBlock Grid.Row="1"
+							           Grid.Column="0"
+							           Margin="0,5,0,0"
+							           FontStyle="Italic"
+							           Text="{Binding Allergens, Converter={StaticResource AllergensToStringConverter}}" />
+							<StackPanel Grid.Row="0"
+							            Grid.RowSpan="2"
+							            Grid.Column="1"
+							            Margin="5,0"
+							            Orientation="Vertical">
+								<Image Width="16"
+								       Height="16"
+								       ToolTipService.ShowOnDisabled="True">
+									<Image.Style>
+										<Style TargetType="{x:Type Image}">
+											<Style.Triggers>
+												<DataTrigger Binding="{Binding MenuState}"
+												             Value="{x:Static viewModels:GourmetMenuState.None}">
+													<Setter Property="Visibility" Value="Hidden" />
+												</DataTrigger>
+												<DataTrigger Binding="{Binding MenuState}"
+												             Value="{x:Static viewModels:GourmetMenuState.NotAvailable}">
+													<Setter Property="Source" Value="/Resources/Icons/MenuNotAvailable.png" />
+													<Setter Property="ToolTip" Value="Menü kann nicht bestellt werden" />
+												</DataTrigger>
+												<DataTrigger Binding="{Binding MenuState}"
+												             Value="{x:Static viewModels:GourmetMenuState.MarkedForOrder}">
+													<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForOrder.png" />
+													<Setter Property="ToolTip" Value="Menü wird bestellt" />
+												</DataTrigger>
+												<DataTrigger Binding="{Binding MenuState}"
+												             Value="{x:Static viewModels:GourmetMenuState.MarkedForCancel}">
+													<Setter Property="Source" Value="/Resources/Icons/MenuMarkedForCancel.png" />
+													<Setter Property="ToolTip" Value="Menü wird abbestellt" />
+												</DataTrigger>
+												<MultiDataTrigger>
+													<MultiDataTrigger.Conditions>
+														<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
+														<Condition Binding="{Binding IsOrderCancelable}" Value="True" />
+													</MultiDataTrigger.Conditions>
+													<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
+													<Setter Property="ToolTip" Value="Menü ist bestellt" />
+												</MultiDataTrigger>
+												<MultiDataTrigger>
+													<MultiDataTrigger.Conditions>
+														<Condition Binding="{Binding MenuState}" Value="{x:Static viewModels:GourmetMenuState.Ordered}" />
+														<Condition Binding="{Binding IsOrderCancelable}" Value="False" />
+													</MultiDataTrigger.Conditions>
+													<Setter Property="Source" Value="/Resources/Icons/MenuOrdered.png" />
+													<Setter Property="ToolTip" Value="Menü ist bestellt und kann nicht storniert werden" />
+												</MultiDataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Image.Style>
+								</Image>
+								<Image Width="16"
+								       Height="16"
+								       Margin="0,5,0,0"
+								       Source="/Resources/Icons/Warning.png"
+								       ToolTip="Bestellung ist nicht bestätigt"
+								       ToolTipService.ShowOnDisabled="True">
+									<Image.Style>
+										<Style TargetType="{x:Type Image}">
+											<Setter Property="Visibility" Value="Hidden" />
+											<Style.Triggers>
+												<MultiDataTrigger>
+													<MultiDataTrigger.Conditions>
+														<Condition Binding="{Binding IsOrdered}" Value="True" />
+														<Condition Binding="{Binding IsOrderApproved}" Value="False" />
+													</MultiDataTrigger.Conditions>
+													<Setter Property="Visibility" Value="Visible" />
+												</MultiDataTrigger>
+											</Style.Triggers>
+										</Style>
+									</Image.Style>
+								</Image>
+							</StackPanel>
+						</Grid>
+					</Button>
+				</Border>
+			</DockPanel>
 		</DataTemplate>
 
 		<DataTemplate x:Key="MenuDayTemplate"
