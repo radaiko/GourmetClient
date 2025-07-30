@@ -363,12 +363,12 @@
 		<Popup Grid.Row="0"
 		       Width="300"
 		       AllowsTransparency="True"
-		       HorizontalOffset="20"
+		       HorizontalOffset="-8"
 		       IsOpen="{Binding IsChecked, ElementName=AboutButton}"
 		       PlacementTarget="{Binding ElementName=AboutButton}"
 		       PopupAnimation="Fade"
 		       StaysOpen="False"
-		       VerticalOffset="2">
+		       VerticalOffset="5">
 			<Grid>
 				<Border Margin="10,9,20,20"
 				        Background="White"
@@ -379,8 +379,8 @@
 					</Border.Effect>
 					<views:AboutView />
 				</Border>
-				<Polyline Margin="0,0,28,0"
-				          HorizontalAlignment="Right"
+				<Polyline Margin="28,0,0,0"
+				          HorizontalAlignment="Left"
 				          Fill="White"
 				          Points="-10,10 0,0 10,10"
 				          Stroke="Black"
@@ -391,12 +391,12 @@
 		<Popup Grid.Row="0"
 		       Width="320"
 		       AllowsTransparency="True"
-		       HorizontalOffset="20"
+		       HorizontalOffset="-8"
 		       IsOpen="{Binding IsSettingsPopupOpened}"
 		       PlacementTarget="{Binding ElementName=SettingsButton}"
 		       PopupAnimation="Fade"
 		       StaysOpen="False"
-		       VerticalOffset="2">
+		       VerticalOffset="5">
 			<Grid>
 				<Border Margin="10,9,20,20"
 				        Background="White"
@@ -407,8 +407,8 @@
 					</Border.Effect>
 					<views:SettingsView />
 				</Border>
-				<Polyline Margin="0,0,28,0"
-				          HorizontalAlignment="Right"
+				<Polyline Margin="28,0,0,0"
+				          HorizontalAlignment="Left"
 				          Fill="White"
 				          Points="-10,10 0,0 10,10"
 				          Stroke="Black"
