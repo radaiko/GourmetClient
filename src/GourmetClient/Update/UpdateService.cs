@@ -65,8 +65,8 @@ public class UpdateService
         CancellationToken cancellationToken)
     {
         string tempFolderPath = GetTempUpdateFolderPath();
-        string packagePath = Path.Combine(tempFolderPath, "GourmetClient.zip");
-        string signedChecksumFilePath = Path.Combine(tempFolderPath, "checksum.txt");
+        string packagePath = GetLocalUpdatePackageFilePath();
+        string signedChecksumFilePath = GetLocalSignedChecksumFilePath();
 
         try
         {
@@ -223,17 +223,13 @@ public class UpdateService
         {
             await Task.Run(() =>
             {
-                string tempFolderPath = GetTempUpdateFolderPath();
-
-                if (Directory.Exists(tempFolderPath))
-                {
-                    Directory.Delete(tempFolderPath, true);
-                }
+                File.Delete(GetLocalUpdatePackageFilePath());
+                File.Delete(GetLocalSignedChecksumFilePath());
             }, cancellationToken);
         }
-        catch (IOException exception)
+        catch (IOException)
         {
-            throw new GourmetUpdateException("Could not created backup", exception);
+            // Ignore errors at this stage of the update. The files will be removed by the next update.
         }
     }
 
@@ -509,8 +505,18 @@ public class UpdateService
         }
     }
 
-    private string GetTempUpdateFolderPath()
+    private static string GetTempUpdateFolderPath()
     {
         return Path.Combine(Path.GetTempPath(), "GourmetClientUpdate");
+    }
+
+    private static string GetLocalUpdatePackageFilePath()
+    {
+        return Path.Combine(GetTempUpdateFolderPath(), "GourmetClient.zip");
+    }
+
+    private static string GetLocalSignedChecksumFilePath()
+    {
+        return Path.Combine(GetTempUpdateFolderPath(), "checksum.txt");
     }
 }
