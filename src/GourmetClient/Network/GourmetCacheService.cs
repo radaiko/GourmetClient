@@ -193,8 +193,10 @@ public class GourmetCacheService
 
             return serializedCache.ToGourmetMenuCache();
         }
-        catch (IOException)
+        catch (Exception exception) when (exception is IOException || exception is JsonException)
         {
+            // Loading the saved cache failed.
+            // Use an invalidated cache so that the data will be requested from the server again.
             return new InvalidatedGourmetCache();
         }
     }
@@ -215,6 +217,8 @@ public class GourmetCacheService
         }
         catch (IOException)
         {
+            // Saving the cache failed.
+            // Invalidated the current cache so that the data will be requested from the server again.
             InvalidateCache();
         }
     }
