@@ -136,18 +136,21 @@ public partial class GourmetWebClient : WebClientBase
 
     public async Task<GourmetApiResult> AddMenuToOrderedMenu(GourmetUserInformation userInformation, GourmetMenu menu)
     {
-        object parameter = new
+        var requestDate = new AddToMenuesCartDate
         {
-            dates = new[]
-            {
-                new { date = menu.Day.ToString("MM-dd-yyyy"), menuIds = new string[] { menu.MenuId }}
-            },
-            eaterId = userInformation.EaterId,
-            shopModelId = userInformation.ShopModelId,
-            staffgroupId = userInformation.StaffGroupId
+            DateString = menu.Day.ToString("MM-dd-yyyy"),
+            MenuIds = [menu.MenuId]
         };
 
-        using HttpResponseMessage response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaCartApi/AddToMenuesCart", parameter);
+        var requestObject = new AddToMenuesCartRequest
+        {
+            EaterId = userInformation.EaterId,
+            ShopModelId = userInformation.ShopModelId,
+            StaffGroupId = userInformation.StaffGroupId,
+            Dates = [requestDate]
+        };
+
+        using HttpResponseMessage response = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaCartApi/AddToMenuesCart", requestObject);
         var responseObject = await ParseJsonResponseObject<AddToMenuesCartResponse>(response);
 
         return new GourmetApiResult(responseObject.Success, responseObject.Message);
@@ -223,16 +226,14 @@ public partial class GourmetWebClient : WebClientBase
         var currentDate = DateTime.Now;
         int monthsDifference = (currentDate.Year - inputDate.Year) * 12 + currentDate.Month - inputDate.Month;
 
-        var parameters = new Dictionary<string, string>
+        var billingRequest = new BillingRequest
         {
-            // checkLastMonthNumber describes the target month by specifying how many months back the report should be generated
-            // This value starts at zero, i.e., "0" means the current month, "1" means one month back, etc.
-            {"checkLastMonthNumber", (monthsDifference).ToString()},
-            {"eaterId", userInformation.EaterId},
-            {"shopModelId", userInformation.ShopModelId}
+            EaterId = userInformation.EaterId,
+            ShopModelId = userInformation.ShopModelId,
+            CheckLastMonthNumber = monthsDifference.ToString()
         };
 
-        using HttpResponseMessage apiResponse = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaMyBillingApi/GetMyBillings", parameters);
+        using HttpResponseMessage apiResponse = await ExecuteJsonPostRequest($"{WebUrl}umbraco/api/AlaMyBillingApi/GetMyBillings", billingRequest);
         var bills = await ParseJsonResponseObject<Bill[]>(apiResponse);
 
         var result = new List<BillingPosition>();
