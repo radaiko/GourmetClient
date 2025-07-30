@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace GourmetClient.Network;
 
-public class VentopayWebClient : WebClientBase
+public partial class VentopayWebClient : WebClientBase
 {
     private const string WebUrl = "https://my.ventopay.com/mocca.website/";
     private const string PageNameLogin = "Login.aspx";
@@ -19,6 +19,12 @@ public class VentopayWebClient : WebClientBase
     private const string PageNameTransactions = "Transaktionen.aspx";
     private const string PageNameTransactionDetails = "Rechnung.aspx";
     private const string CompanyIdTrumpf = "0da8d3ec-0178-47d5-9ccd-a996f04acb61";
+
+    [GeneratedRegex(@"<a\s+href=""Ausloggen.aspx"">")]
+    private static partial Regex LoginSuccessfulRegex();
+
+    [GeneratedRegex(@"(\d+)\.\s+([a-zA-z]+)\s+(\d+)\s+-\s+(\d+):(\d+)")]
+    private static partial Regex TransactionDateTimeRegex();
 
     protected override async Task<bool> LoginImpl(string userName, string password)
     {
@@ -46,7 +52,7 @@ public class VentopayWebClient : WebClientBase
         using HttpResponseMessage loginResponse = await ExecuteFormPostRequest(requestUrl, parameters);
         string loginContent = await ReadResponseContent(loginResponse);
 
-        return Regex.IsMatch(loginContent, "<a\\s+href=\"Ausloggen.aspx\">");
+        return LoginSuccessfulRegex().IsMatch(loginContent);
     }
 
     protected override async Task LogoutImpl()
@@ -203,8 +209,7 @@ public class VentopayWebClient : WebClientBase
 
     private static DateTime GetDateTimeFromTransactionDateString(string dateString)
     {
-        Match match = Regex.Match(dateString, "(\\d+)\\.\\s+([a-zA-z]+)\\s+(\\d+)\\s+-\\s+(\\d+):(\\d+)");
-
+        Match match = TransactionDateTimeRegex().Match(dateString);
         if (!match.Success)
         {
             throw new FormatException($"Date string '{dateString}' has an invalid format");
