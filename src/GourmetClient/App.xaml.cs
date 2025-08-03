@@ -209,31 +209,8 @@ public partial class App : Application
         if (updateRelease is not null)
         {
             InstanceProvider.NotificationService.Send(
-                new UpdateNotification("Es ist eine neue Version verfügbar", () => StartUpdate(updateRelease)));
+                new UpdateNotification("Es ist eine neue Version verfügbar", () => UpdateHelper.StartUpdate(updateRelease)));
         }
-    }
-
-    private void StartUpdate(ReleaseDescription updateRelease)
-    {
-        var downloadUpdateWindow = new DownloadUpdateWindow
-        {
-            Owner = Current.MainWindow,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-
-        downloadUpdateWindow.StartUpdate(updateRelease).ContinueWith(task =>
-        {
-            if (task.IsFaulted)
-            {
-                Dispatcher.Invoke(
-                    () => InstanceProvider.NotificationService.Send(
-                        new ExceptionNotification("Aktualisieren der Version ist fehlgeschlagen", task.Exception)));
-            }
-
-            Dispatcher.Invoke(() => downloadUpdateWindow.Close());
-        });
-
-        downloadUpdateWindow.ShowDialog();
     }
 
     private static string GetReleaseNotesTokenFilePath()

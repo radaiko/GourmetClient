@@ -24,6 +24,9 @@ public class UpdateService
     private const string ReleaseListUri = "https://api.github.com/repos/patrickl92/GourmetClient/releases";
 
     private readonly string _releaseListQueryResultFilePath;
+    private readonly SemaphoreSlim _availableReleasesSemaphore;
+
+    private IReadOnlyList<ReleaseDescription>? _availableReleases;
 
     public UpdateService()
     {
@@ -34,6 +37,7 @@ public class UpdateService
         CurrentVersion = SemVersion.Parse(assemblyInformationalVersionAttribute.InformationalVersion, SemVersionStyles.Strict);
 
         _releaseListQueryResultFilePath = Path.Combine(App.LocalAppDataPath, "ReleaseListQueryResult.json");
+        _availableReleasesSemaphore = new SemaphoreSlim(1, 1);
     }
 
     public SemVersion CurrentVersion { get; }
@@ -57,6 +61,12 @@ public class UpdateService
         }
 
         return null;
+    }
+
+    public async Task<bool> CanJoinNextPreReleaseVersion()
+    {
+        ReleaseDescription? latestRelease = await CheckForUpdate(true);
+        return latestRelease is { Version.IsPrerelease: true } && !CurrentVersion.IsPrerelease;
     }
 
     public async Task<string> DownloadUpdatePackage(
@@ -287,6 +297,21 @@ public class UpdateService
     }
 
     private async Task<IReadOnlyList<ReleaseDescription>> GetAvailableReleases()
+    {
+        await _availableReleasesSemaphore.WaitAsync();
+
+        try
+        {
+            // Only query the available releases once.
+            return _availableReleases ??= await QueryAvailableReleases();
+        }
+        finally
+        {
+            _availableReleasesSemaphore.Release();
+        }
+    }
+
+    private async Task<IReadOnlyList<ReleaseDescription>> QueryAvailableReleases()
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, ReleaseListUri);
         IReadOnlyList<ReleaseDescription> releaseDescriptions = [];

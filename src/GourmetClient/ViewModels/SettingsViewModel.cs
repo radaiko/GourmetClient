@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
+using GourmetClient.Notifications;
 using GourmetClient.Settings;
+using GourmetClient.Update;
 using GourmetClient.Utils;
 
 namespace GourmetClient.ViewModels;
@@ -9,16 +11,21 @@ namespace GourmetClient.ViewModels;
 public class SettingsViewModel : ViewModelBase
 {
     private readonly GourmetSettingsService _settingsService;
+    private readonly UpdateService _updateService;
+    private readonly NotificationService _notificationService;
 
     private string _loginUsername;
     private string _loginPassword;
     private string _ventopayUsername;
     private string _ventopayPassword;
     private bool _checkForUpdates;
+    private bool _canJoinNextPreReleaseVersion;
 
     public SettingsViewModel()
     {
         _settingsService = InstanceProvider.SettingsService;
+        _updateService = InstanceProvider.UpdateService;
+        _notificationService = InstanceProvider.NotificationService;
 
         _loginUsername = string.Empty;
         _loginPassword = string.Empty;
@@ -26,9 +33,12 @@ public class SettingsViewModel : ViewModelBase
         _ventopayPassword = string.Empty;
 
         SaveSettingsCommand = new AsyncDelegateCommand(SaveSettings);
+        JoinNextPreReleaseVersionCommand = new AsyncDelegateCommand(JoinNextPreReleaseVersion, () => _canJoinNextPreReleaseVersion);
     }
 
     public ICommand SaveSettingsCommand { get; }
+
+    public ICommand JoinNextPreReleaseVersionCommand { get; }
 
     public string LoginUsername
     {
@@ -48,8 +58,11 @@ public class SettingsViewModel : ViewModelBase
         private get => _loginPassword;
         set
         {
-            _loginPassword = value;
-            OnPropertyChanged();
+            if (_loginPassword != value)
+            {
+                _loginPassword = value;
+                OnPropertyChanged();
+            }
         }
     }
 
@@ -71,8 +84,11 @@ public class SettingsViewModel : ViewModelBase
         private get => _ventopayPassword;
         set
         {
-            _ventopayPassword = value;
-            OnPropertyChanged();
+            if (_ventopayPassword != value)
+            {
+                _ventopayPassword = value;
+                OnPropertyChanged();
+            }
         }
     }
 
@@ -100,6 +116,11 @@ public class SettingsViewModel : ViewModelBase
         VentopayPassword = userSettings.VentopayPassword;
 
         CheckForUpdates = updateSettings.CheckForUpdates;
+
+        if (updateSettings.CheckForUpdates)
+        {
+            _updateService.CanJoinNextPreReleaseVersion().ContinueWith(OnCanJoinNextPreReleaseVersionTaskFinished);
+        }
     }
 
     private Task SaveSettings()
@@ -121,5 +142,34 @@ public class SettingsViewModel : ViewModelBase
         }
 
         return Task.CompletedTask;
+    }
+
+    private void OnCanJoinNextPreReleaseVersionTaskFinished(Task<bool> task)
+    {
+        if (task.IsCanceled)
+        {
+            return;
+        }
+
+        if (task.IsFaulted)
+        {
+            _notificationService.Send(new ExceptionNotification("Fehler beim Prüfen auf Vorab-Version", task.Exception));
+            return;
+        }
+
+        _canJoinNextPreReleaseVersion = task.Result;
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private async Task JoinNextPreReleaseVersion()
+    {
+        ReleaseDescription? preReleaseDescription = await _updateService.CheckForUpdate(true);
+        if (preReleaseDescription is null)
+        {
+            _notificationService.Send(new Notification(NotificationType.Error, "Vorab-Version ist nicht mehr verfügbar"));
+            return;
+        }
+
+        UpdateHelper.StartUpdate(preReleaseDescription);
     }
 }
