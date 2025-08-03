@@ -66,12 +66,9 @@ public class GourmetCacheService
                 return FailAllMenusWithMessage("Login fehlgeschlagen");
             }
 
-            var failedOrders = new List<FailedMenuToOrderInformation>();
+            await _webClient.CancelOrders(menusToCancel);
 
-            foreach (GourmetOrderedMenu orderedMenu in menusToCancel)
-            {
-                await _webClient.CancelOrder(orderedMenu);
-            }
+            var failedOrders = new List<FailedMenuToOrderInformation>();
 
             foreach (GourmetMenu menu in menusToOrder)
             {

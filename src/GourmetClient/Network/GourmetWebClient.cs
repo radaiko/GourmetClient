@@ -156,21 +156,34 @@ public partial class GourmetWebClient : WebClientBase
         return new GourmetApiResult(responseObject.Success, responseObject.Message);
     }
 
-    public async Task CancelOrder(GourmetOrderedMenu orderedMenu)
+    public async Task CancelOrders(IReadOnlyList<GourmetOrderedMenu> orderedMenus)
     {
+        if (orderedMenus.Count == 0)
+        {
+            return;
+        }
+
         (HtmlDocument document, string resultUriInfo, string resultHttpContent) = await EnterOrderedMenuEditMode();
 
-        Dictionary<string, string> cancelOrderParameters;
-        try
+        foreach (GourmetOrderedMenu orderedMenu in orderedMenus)
         {
-            cancelOrderParameters = GetCancelOrderParameters(document, orderedMenu.PositionId);
-        }
-        catch (Exception exception) when (IsParseException(exception))
-        {
-            throw new GourmetParseException("Error parsing the ordered menu HTML", resultUriInfo, resultHttpContent, exception);
-        }
+            Dictionary<string, string> cancelOrderParameters;
+            try
+            {
+                cancelOrderParameters = GetCancelOrderParameters(document, orderedMenu.PositionId);
+            }
+            catch (Exception exception) when (IsParseException(exception))
+            {
+                throw new GourmetParseException("Error parsing the ordered menu HTML", resultUriInfo, resultHttpContent, exception);
+            }
 
-        using HttpResponseMessage cancelOrderResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, cancelOrderParameters);
+            using HttpResponseMessage cancelOrderResponse = await ExecutePostRequestForPage(PageNameOrderedMenu, cancelOrderParameters);
+
+            // Reuse response HTML to cancel next order
+            resultHttpContent = await ReadResponseContent(cancelOrderResponse);
+            resultUriInfo = GetRequestUriString(cancelOrderResponse);
+            document.LoadHtml(resultHttpContent);
+        }
     }
 
     public async Task ConfirmOrder()
