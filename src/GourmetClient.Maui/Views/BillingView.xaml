@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView x:Class="GourmetClient.Maui.Views.BillingView"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="clr-namespace:GourmetClient.Maui.Behaviors"
+             xmlns:viewModels="clr-namespace:GourmetClient.ViewModels">
+
+    <ContentView.Resources>
+        <behaviors:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </ContentView.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" BackgroundColor="#F0F0F0" Padding="10">
+            <Label Text="Billing Overview" FontSize="18" FontAttributes="Bold" />
+        </Grid>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1">
+            <StackLayout Padding="10">
+                <!-- Available Months -->
+                <Label Text="Select Month:" FontAttributes="Bold" />
+                <Picker ItemsSource="{Binding AvailableMonths}" 
+                        SelectedItem="{Binding SelectedMonth}"
+                        ItemDisplayBinding="{Binding ., StringFormat='{0:MMMM yyyy}'}"
+                        Margin="0,5,0,15" />
+
+                <!-- Menu Billing -->
+                <Label Text="Menu Orders" FontAttributes="Bold" />
+                <CollectionView ItemsSource="{Binding MenuBillingPositions}" 
+                                IsVisible="{Binding MenuBillingPositions.Count, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:GroupedBillingPositionsViewModel">
+                            <Grid Padding="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <Label Grid.Column="0" Text="{Binding Description}" />
+                                <Label Grid.Column="1" Text="{Binding Quantity}" />
+                                <Label Grid.Column="2" Text="{Binding TotalCost, StringFormat='{0:C}'}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Drink Billing -->
+                <Label Text="Drinks" FontAttributes="Bold" Margin="0,15,0,0" />
+                <CollectionView ItemsSource="{Binding DrinkBillingPositions}"
+                                IsVisible="{Binding DrinkBillingPositions.Count, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="viewModels:GroupedBillingPositionsViewModel">
+                            <Grid Padding="5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <Label Grid.Column="0" Text="{Binding Description}" />
+                                <Label Grid.Column="1" Text="{Binding Quantity}" />
+                                <Label Grid.Column="2" Text="{Binding TotalCost, StringFormat='{0:C}'}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Loading indicator -->
+                <Grid IsVisible="{Binding IsUpdating}" Margin="0,20,0,0">
+                    <ActivityIndicator IsRunning="{Binding IsUpdating}" />
+                    <Label Text="Loading billing data..." 
+                           HorizontalOptions="Center" 
+                           VerticalOptions="Center" 
+                           Margin="0,40,0,0" />
+                </Grid>
+            </StackLayout>
+        </ScrollView>
+
+        <!-- Summary -->
+        <Grid Grid.Row="2" BackgroundColor="#F0F0F0" Padding="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            
+            <Label Grid.Row="0" Text="{Binding SumCostMenuBillingPositions, StringFormat='Menu Total: {0:C}'}" />
+            <Label Grid.Row="1" Text="{Binding SumCostDrinkBillingPositions, StringFormat='Drink Total: {0:C}'}" />
+            <Label Grid.Row="2" Text="{Binding SumCostUnknownBillingPositions, StringFormat='Other Total: {0:C}'}" FontAttributes="Bold" />
+        </Grid>
+    </Grid>
+</ContentView>

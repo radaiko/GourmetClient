@@ -34,6 +34,7 @@ public class GourmetMenuViewModel : ObservableObject
             {
                 _isOrdered = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(ShowWarning));
             }
         }
     }
@@ -47,6 +48,7 @@ public class GourmetMenuViewModel : ObservableObject
             {
                 _isOrderApproved = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(ShowWarning));
             }
         }
     }
@@ -76,6 +78,11 @@ public class GourmetMenuViewModel : ObservableObject
             }
         }
     }
+
+    /// <summary>
+    /// Shows warning when the menu is ordered but not approved
+    /// </summary>
+    public bool ShowWarning => IsOrdered && !IsOrderApproved;
 
     public GourmetMenu GetModel()
     {

@@ -1,8 +1,97 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView x:Class="GourmetClient.Maui.Views.NotificationsView"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="clr-namespace:GourmetClient.Maui.Behaviors"
+             xmlns:viewModels="clr-namespace:GourmetClient.ViewModels">
 
-    <!-- Simple placeholder for notifications -->
-    <Label Text="" x:Name="NotificationLabel" />
+    <ContentView.Resources>
+        <behaviors:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <behaviors:NotificationButtonTemplateSelector x:Key="NotificationButtonTemplateSelector" />
+    </ContentView.Resources>
+
+    <CollectionView ItemsSource="{Binding Notifications}" 
+                    IsVisible="{Binding Notifications.Count, Converter={StaticResource BoolToVisibilityConverter}}">
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <Grid Padding="10,5" BackgroundColor="LightYellow">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Notification Icon -->
+                    <Label Grid.Column="0" 
+                           FontSize="16" 
+                           VerticalOptions="Center"
+                           Margin="0,0,10,0">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding NotificationType}" Value="0">
+                                <Setter Property="Text" Value="ℹ️" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding NotificationType}" Value="1">
+                                <Setter Property="Text" Value="⚠️" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding NotificationType}" Value="2">
+                                <Setter Property="Text" Value="❌" />
+                            </DataTrigger>
+                            <DataTrigger TargetType="Label" Binding="{Binding NotificationType}" Value="3">
+                                <Setter Property="Text" Value="🔄" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+
+                    <!-- Notification Message -->
+                    <Label Grid.Column="1" 
+                           Text="{Binding Message}" 
+                           VerticalOptions="Center"
+                           LineBreakMode="WordWrap" />
+
+                    <!-- Action Button (if applicable) -->
+                    <Button Grid.Column="2" 
+                            Text="Action"
+                            FontSize="12"
+                            Padding="10,5"
+                            Margin="5,0"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentView}}, Path=BindingContext.StartUpdateCommand}"
+                            CommandParameter="{Binding .}"
+                            IsVisible="False">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding NotificationType}" Value="3">
+                                <Setter Property="IsVisible" Value="True" />
+                                <Setter Property="Text" Value="Update" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <!-- Details Button (for exceptions) -->
+                    <Button Grid.Column="2" 
+                            Text="Details"
+                            FontSize="12"
+                            Padding="10,5"
+                            Margin="5,0"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentView}}, Path=BindingContext.ShowExceptionDetailsCommand}"
+                            CommandParameter="{Binding .}"
+                            IsVisible="False">
+                        <Button.Triggers>
+                            <DataTrigger TargetType="Button" Binding="{Binding NotificationType}" Value="2">
+                                <Setter Property="IsVisible" Value="True" />
+                            </DataTrigger>
+                        </Button.Triggers>
+                    </Button>
+
+                    <!-- Dismiss Button -->
+                    <Button Grid.Column="3" 
+                            Text="✖"
+                            FontSize="12"
+                            Padding="5"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentView}}, Path=BindingContext.DismissNotificationCommand}"
+                            CommandParameter="{Binding .}"
+                            BackgroundColor="Transparent" />
+                </Grid>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 </ContentView>

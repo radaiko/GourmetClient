@@ -2,6 +2,8 @@
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Maui.Hosting;
 using CommunityToolkit.Maui;
+using GourmetClient.Core.Utils;
+using GourmetClient.Maui.Services;
 
 namespace GourmetClient.Maui;
 
@@ -19,8 +21,8 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
-		// TODO: Initialize Core services when ready
-		// InstanceProvider.Initialize(new MauiFilePathProvider());
+		// Initialize Core services
+		InstanceProvider.Initialize(new MauiFilePathProvider());
 
 #if DEBUG
 		builder.Logging.AddDebug();

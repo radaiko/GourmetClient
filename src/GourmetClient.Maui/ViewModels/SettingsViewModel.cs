@@ -7,6 +7,7 @@ using GourmetClient.Maui.Utils;
 using GourmetClient.Maui.Services;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System;
 
 namespace GourmetClient.ViewModels;
 
@@ -22,6 +23,8 @@ public class SettingsViewModel : ViewModelBase
     private string _ventopayPassword;
     private bool _checkForUpdates;
     private bool _canJoinNextPreReleaseVersion;
+
+    public event EventHandler? SettingsSaved;
 
     public SettingsViewModel()
     {
@@ -125,25 +128,36 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    private Task SaveSettings()
+    private async Task SaveSettings()
     {
-        UserSettings userSettings = _settingsService.GetCurrentUserSettings();
-        UpdateSettings updateSettings = _settingsService.GetCurrentUpdateSettings();
-
-        userSettings.GourmetLoginUsername = LoginUsername;
-        userSettings.GourmetLoginPassword = LoginPassword;
-        userSettings.VentopayUsername = VentopayUsername;
-        userSettings.VentopayPassword = VentopayPassword;
-
-        _settingsService.SaveUserSettings(userSettings);
-
-        if (updateSettings.CheckForUpdates != CheckForUpdates)
+        try
         {
-            updateSettings.CheckForUpdates = CheckForUpdates;
-            _settingsService.SaveUpdateSettings(updateSettings);
-        }
+            UserSettings userSettings = _settingsService.GetCurrentUserSettings();
+            UpdateSettings updateSettings = _settingsService.GetCurrentUpdateSettings();
 
-        return Task.CompletedTask;
+            userSettings.GourmetLoginUsername = LoginUsername;
+            userSettings.GourmetLoginPassword = LoginPassword;
+            userSettings.VentopayUsername = VentopayUsername;
+            userSettings.VentopayPassword = VentopayPassword;
+
+            _settingsService.SaveUserSettings(userSettings);
+
+            if (updateSettings.CheckForUpdates != CheckForUpdates)
+            {
+                updateSettings.CheckForUpdates = CheckForUpdates;
+                _settingsService.SaveUpdateSettings(updateSettings);
+            }
+
+            // Notify that settings were saved
+            SettingsSaved?.Invoke(this, EventArgs.Empty);
+
+            // Show success message
+            _notificationService.Send(new Notification(NotificationType.Information, "Settings saved successfully"));
+        }
+        catch (Exception ex)
+        {
+            _notificationService.Send(new ExceptionNotification("Failed to save settings", ex));
+        }
     }
 
     private void OnCanJoinNextPreReleaseVersionTaskFinished(Task<bool> task)
