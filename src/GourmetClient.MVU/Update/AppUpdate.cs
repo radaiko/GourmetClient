@@ -58,7 +58,7 @@ namespace GourmetClient.MVU.Update
             {
                 Menus = day.Menus.Select(menu =>
                 {
-                    if (menu.MenuId == toggleOrder.MenuId)
+                    if (menu.MenuDescription == toggleOrder.MenuTitle)
                     {
                         var newState = menu.MenuState switch
                         {

@@ -15,7 +15,8 @@ public record SelectMonth(DateTime Month) : Msg;
 public record LoadMenus : Msg;
 public record MenusLoaded(ImmutableList<GourmetMenuDayViewModel> MenuDays) : Msg;
 public record UpdateMenu : Msg;
-public record ToggleMenuOrder(int MenuId) : Msg;
+public record ToggleMenuOrder(string MenuTitle) : Msg;
+public record ExecuteOrder : Msg;
 public record ExecuteSelectedOrder : Msg;
 
 // Billing Messages
