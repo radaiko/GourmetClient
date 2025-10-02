@@ -5,6 +5,7 @@ namespace GourmetClient.MVU.Models;
 
 public record AppState(
   bool IsLoading = false
+  , bool IsLoadingBilling = false
   , bool IsBillingVisible = false
   , bool IsSettingsVisible = false
   , bool IsAboutVisible = false
@@ -17,9 +18,20 @@ public record AppState(
   , decimal SumCostDrinkBillingPositions = 0
   , decimal SumCostUnknownBillingPositions = 0
   , string? ErrorMessage = null
+  , AppSettings? Settings = null
 ) {
-  public static AppState Initial => new();
+  public static AppState Initial => new(Settings: new AppSettings());
 }
+
+public record AppSettings(
+  string Username = ""
+  , string Password = ""
+  , string VentoPayUsername = ""
+  , string VentoPayPassword = ""
+  , bool AutoUpdate = true
+  , bool StartWithWindows = false
+  , string Theme = "System"
+);
 
 public record GourmetMenuDayViewModel(
   DateTime Date

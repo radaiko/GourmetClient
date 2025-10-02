@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using GourmetClient.MVU.Core;
 using GourmetClient.MVU.Models;
 using GourmetClient.MVU.Views;
+using GourmetClient.MVU.Messages;
 
 namespace GourmetClient.MVU;
 
@@ -24,6 +25,9 @@ public class MainWindow : HostWindow {
 
     // Initialize the view with current state
     UpdateView(_dispatcher.CurrentState);
+    
+    // Load settings at startup
+    _dispatcher.Dispatch(new InitializeApp());
   }
 
   private void OnStateChanged(AppState newState) {

@@ -69,6 +69,25 @@ public static class MainView {
     Grid.SetRow(mainContent, 2);
     mainGrid.Children.Add(mainContent);
 
+    // Overlay panels for About, Settings, and Billing views
+    if (state.IsAboutVisible) {
+      var aboutOverlay = CreateOverlay(AboutView.Create(state, dispatch), dispatch, new ToggleAbout());
+      Grid.SetRowSpan(aboutOverlay, 4);
+      mainGrid.Children.Add(aboutOverlay);
+    }
+
+    if (state.IsSettingsVisible) {
+      var settingsOverlay = CreateOverlay(SettingsView.Create(state, dispatch), dispatch, new ToggleSettings());
+      Grid.SetRowSpan(settingsOverlay, 4);
+      mainGrid.Children.Add(settingsOverlay);
+    }
+
+    if (state.IsBillingVisible) {
+      var billingOverlay = CreateOverlay(BillingView.Create(state, dispatch), dispatch, new ToggleBilling());
+      Grid.SetRowSpan(billingOverlay, 4);
+      mainGrid.Children.Add(billingOverlay);
+    }
+
     return mainGrid;
   }
 
@@ -410,5 +429,59 @@ public static class MainView {
     dockPanel.Children.Add(menuBorder);
 
     return dockPanel;
+  }
+
+  private static Control CreateOverlay(Control content, Action<Msg> dispatch, Msg closeMessage) {
+    // Create a Grid for better layout control
+    var overlayGrid = new Grid {
+      HorizontalAlignment = HorizontalAlignment.Stretch,
+      VerticalAlignment = VerticalAlignment.Stretch,
+      Background = new SolidColorBrush(Colors.Black, 0.3) // Lighter background to be less intrusive
+    };
+
+    // Add close button in top-right corner
+    var closeButton = new Button {
+      Content = "✕",
+      FontSize = 16,
+      Width = 30,
+      Height = 30,
+      HorizontalAlignment = HorizontalAlignment.Right,
+      VerticalAlignment = VerticalAlignment.Top,
+      Margin = new Thickness(0, 10, 10, 0),
+      Background = new SolidColorBrush(Colors.Red),
+      Foreground = new SolidColorBrush(Colors.White),
+      CornerRadius = new CornerRadius(15)
+    };
+    closeButton.Click += (_, _) => dispatch(closeMessage);
+
+    // Content container
+    var contentContainer = new Border {
+      HorizontalAlignment = HorizontalAlignment.Center,
+      VerticalAlignment = VerticalAlignment.Center,
+      CornerRadius = new CornerRadius(8),
+      Margin = new Thickness(20),
+      BoxShadow = new BoxShadows(new BoxShadow {
+        Color = Colors.Black,
+        Blur = 10,
+        OffsetX = 0,
+        OffsetY = 3,
+        Spread = 0
+      }),
+      Child = content
+    };
+
+    // Add both elements to the grid
+    overlayGrid.Children.Add(contentContainer);
+    overlayGrid.Children.Add(closeButton);
+
+    // Only close on background click, not anywhere
+    overlayGrid.PointerPressed += (_, e) => {
+      // Only close if clicking directly on the overlay background, not on child controls
+      if (e.Source == overlayGrid) {
+        dispatch(closeMessage);
+      }
+    };
+
+    return overlayGrid;
   }
 }
