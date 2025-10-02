@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
-using System.Windows.Input;
-using GourmetClient.Maui.Behaviors;
+﻿using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Settings;
-using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Update;
 using GourmetClient.Core.Utils;
-using GourmetClient.Update;
+using GourmetClient.Maui.Behaviors;
+using GourmetClient.Maui.Utils;
+using GourmetClient.Maui.Services;
+using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace GourmetClient.ViewModels;
 
@@ -171,6 +172,6 @@ public class SettingsViewModel : ViewModelBase
             return;
         }
 
-        UpdateHelper.StartUpdate(preReleaseDescription);
+        await Core.Update.UpdateHelper.StartUpdateAsync(preReleaseDescription, new MauiUpdateHandler());
     }
 }

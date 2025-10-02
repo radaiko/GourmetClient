@@ -3,7 +3,6 @@ using GourmetClient.Core.Network;
 using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Settings;
 using GourmetClient.Core.Update;
-using GourmetClient.Update;
 
 namespace GourmetClient.Core.Utils;
 

@@ -1,7 +1,9 @@
 ﻿using GourmetClient.Core.Utils;
 using GourmetClient.Maui.Behaviors;
+using Microsoft.Maui.ApplicationModel;
+using Microsoft.Maui.Controls;
+using System;
 using System.Diagnostics;
-using System.Windows;
 using System.Windows.Input;
 
 namespace GourmetClient.ViewModels;
@@ -29,19 +31,22 @@ public class AboutViewModel : ViewModelBase
     {
     }
 
-    private void ShowReleaseNotes()
+    private async void ShowReleaseNotes()
     {
-        var releaseNotesWindow = new ReleaseNotesWindow
-        {
-            Owner = Application.Current.MainWindow,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner
-        };
-
-        releaseNotesWindow.ShowDialog();
+        // Navigate to release notes page instead of opening a window
+        await Shell.Current.GoToAsync("//releasenotes");
     }
 
-    private void OpenUrlInBrowser(string url)
+    private async void OpenUrlInBrowser(string url)
     {
-        Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
+        try
+        {
+            await Browser.OpenAsync(url, BrowserLaunchMode.SystemPreferred);
+        }
+        catch (Exception ex)
+        {
+            // Handle exception if browser fails to open
+            Debug.WriteLine($"Failed to open browser: {ex.Message}");
+        }
     }
 }

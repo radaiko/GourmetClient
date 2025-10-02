@@ -13,12 +13,11 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using GourmetClient.Core.Serialization;
-using GourmetClient.Core.Update;
 using GourmetClient.Core.Update.GitHubApi;
 using GourmetClient.Core.Utils;
 using Semver;
 
-namespace GourmetClient.Update;
+namespace GourmetClient.Core.Update;
 
 public class UpdateService
 {
@@ -281,7 +280,7 @@ public class UpdateService
             await targetStream.WriteAsync(buffer, 0, readBytes, cancellationToken);
 
             totalReadBytes += readBytes;
-            progress.Report((int)((totalReadBytes * 100) / totalBytesCount));
+            progress.Report((int)(totalReadBytes * 100 / totalBytesCount));
         }
     }
 

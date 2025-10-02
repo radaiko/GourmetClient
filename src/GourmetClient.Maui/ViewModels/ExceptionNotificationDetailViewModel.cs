@@ -5,6 +5,8 @@ using System.Windows.Input;
 using GourmetClient.Core.Network;
 using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Utils;
+using GourmetClient.Maui.Behaviors;
+using GourmetClient.Maui.Services;
 
 namespace GourmetClient.ViewModels;
 
@@ -27,7 +29,7 @@ public class ExceptionNotificationDetailViewModel : ObservableObject
 
     public ExceptionNotification GetNotification() => _notification;
 
-    private Task CopyInformationToClipboard()
+    private async Task CopyInformationToClipboard()
     {
         var stringBuilder = new StringBuilder();
 
@@ -54,8 +56,6 @@ public class ExceptionNotificationDetailViewModel : ObservableObject
             stringBuilder.AppendLine("Exception:").AppendLine(_notification.Exception.ToString());
         }
 
-        Clipboard.SetText(stringBuilder.ToString());
-
-        return Task.CompletedTask;
+        await Clipboard.SetText(stringBuilder.ToString());
     }
 }

@@ -4,6 +4,8 @@ using System.Windows.Input;
 using GourmetClient.Maui.Behaviors;
 using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Utils;
+using GourmetClient.Maui.Views;
+using Microsoft.Maui.Controls;
 
 namespace GourmetClient.ViewModels;
 
@@ -38,20 +40,16 @@ public class NotificationsViewModel : ObservableObject
         return Task.CompletedTask;
     }
 
-    private Task ShowExceptionDetails(ExceptionNotification? notification)
+    private async Task ShowExceptionDetails(ExceptionNotification? notification)
     {
         if (notification is not null)
         {
-            var window = new ExceptionNotificationDetailWindow
+            var page = new ExceptionNotificationDetailPage
             {
-                Owner = Application.Current.MainWindow,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Notification = notification
+                BindingContext = new ExceptionNotificationDetailViewModel(notification)
             };
-            window.ShowDialog();
+            await Application.Current.MainPage.Navigation.PushModalAsync(page);
         }
-
-        return Task.CompletedTask;
     }
 
     private Task StartUpdate(UpdateNotification? notification)

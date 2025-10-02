@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="GourmetClient.Maui.Views.ExceptionNotificationDetailPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Title="Exception Details">
+    <ScrollView>
+        <StackLayout Padding="20">
+            <Label Text="Exception Details" 
+                   FontSize="24" 
+                   FontAttributes="Bold" 
+                   Margin="0,0,0,20" />
+            
+            <Label Text="{Binding Message}"
+                   FontSize="16"
+                   Margin="0,0,0,10" />
+            
+            <Label Text="Exception Information:"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   Margin="0,10,0,5" />
+            
+            <Label Text="{Binding Exception}"
+                   FontSize="12"
+                   FontFamily="Courier"
+                   Margin="0,0,0,20" />
+            
+            <Button Text="Copy to Clipboard"
+                    Command="{Binding CopyDetailsToClipboardCommand}" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

@@ -8,6 +8,8 @@ using GourmetClient.Core.Network;
 using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Settings;
 using GourmetClient.Core.Utils;
+using GourmetClient.Maui.Behaviors;
+using GourmetClient.Maui.Services;
 
 namespace GourmetClient.ViewModels;
 

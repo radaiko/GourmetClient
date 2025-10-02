@@ -5,8 +5,6 @@ using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Settings;
 using GourmetClient.Core.Update;
 using GourmetClient.Core.Utils;
-using GourmetClient.Update;
-using GourmetClient.Utils;
 
 namespace GourmetClient.ViewModels;
 
@@ -172,6 +170,6 @@ public class SettingsViewModel : ViewModelBase
             return;
         }
 
-        UpdateHelper.StartUpdate(preReleaseDescription);
+        await UpdateHelper.StartUpdateAsync(preReleaseDescription, new Utils.WpfUpdateHandler());
     }
 }

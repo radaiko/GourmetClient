@@ -6,6 +6,7 @@ using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Update;
 using GourmetClient.Core.Utils;
 using GourmetClient.Maui.Behaviors;
+using GourmetClient.Maui.Services;
 using GourmetClient.Update;
 
 namespace GourmetClient.ViewModels;

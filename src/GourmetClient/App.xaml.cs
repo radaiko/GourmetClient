@@ -213,7 +213,9 @@ public partial class App : Application
         if (updateRelease is not null)
         {
             InstanceProvider.NotificationService.Send(
-                new UpdateNotification("Es ist eine neue Version verfügbar", () => UpdateHelper.StartUpdate(updateRelease)));
+                new UpdateNotification(
+                    "Es ist eine neue Version verfügbar",
+                    async () => await UpdateHelper.StartUpdateAsync(updateRelease, new Utils.WpfUpdateHandler())));
         }
     }
 
