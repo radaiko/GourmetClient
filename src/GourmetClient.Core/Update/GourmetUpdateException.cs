@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GourmetClient.Update;
+namespace GourmetClient.Core.Update;
 
 public class GourmetUpdateException : Exception
 {

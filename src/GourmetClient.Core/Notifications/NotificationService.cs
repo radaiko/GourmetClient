@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 
-namespace GourmetClient.Notifications;
+namespace GourmetClient.Core.Notifications;
 
 public class NotificationService
 {

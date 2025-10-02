@@ -1,11 +1,11 @@
-﻿using GourmetClient.Settings;
-using GourmetClient.Utils;
+﻿using GourmetClient.Core.Settings;
+using GourmetClient.Core.Utils;
 using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Serialization;
+namespace GourmetClient.Core.Serialization;
 
 internal class SerializableUserSettings
 {

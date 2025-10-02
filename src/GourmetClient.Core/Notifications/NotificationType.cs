@@ -1,4 +1,4 @@
-﻿namespace GourmetClient.Notifications;
+﻿namespace GourmetClient.Core.Notifications;
 
 public enum NotificationType
 {

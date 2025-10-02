@@ -1,7 +1,7 @@
-﻿using GourmetClient.Model;
+﻿using GourmetClient.Core.Model;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Serialization;
+namespace GourmetClient.Core.Serialization;
 
 internal class SerializableGourmetUserInformation
 {

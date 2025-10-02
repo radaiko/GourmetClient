@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GourmetClient.Settings;
+namespace GourmetClient.Core.Settings;
 
 public class UserSettings
 {

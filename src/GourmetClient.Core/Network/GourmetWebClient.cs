@@ -1,6 +1,6 @@
-﻿using GourmetClient.Model;
-using GourmetClient.Network.GourmetApi;
-using GourmetClient.Utils;
+﻿using GourmetClient.Core.Model;
+using GourmetClient.Core.Network.GourmetApi;
+using GourmetClient.Core.Utils;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace GourmetClient.Network;
+namespace GourmetClient.Core.Network;
 
 public partial class GourmetWebClient : WebClientBase
 {
@@ -369,12 +369,20 @@ public partial class GourmetWebClient : WebClientBase
         foreach (HtmlNode menuNode in document.DocumentNode.GetNodes("//div[@class='meal']"))
         {
             HtmlNode detailNode = menuNode.GetSingleNode(".//div[@class='open_info menu-article-detail']");
+
+            // Avoid crash if detail node is not found
+            if (detailNode == null)
+            {
+                continue;
+            }
+
             string positionId = detailNode.GetAttributeValue("data-id");
             DateTime day = ParseMenuDateString(detailNode.GetAttributeValue("data-date"));
             string title = menuNode.GetSingleNode(".//div[@class='title']").GetChildNodeAtIndex(0).GetInnerText();
             string subTitle = menuNode.GetSingleNode(".//div[@class='subtitle']").GetInnerText();
             char[] allergens = ParseAllergens(menuNode.GetSingleNode(".//li[@class='allergen']").GetInnerText());
             bool isAvailable = menuNode.ContainsNode(".//input[@type='checkbox' and @class='menu-clicked']");
+
             var category = GourmetMenuCategory.Unknown;
             string upperTitle = title.ToUpperInvariant();
 
@@ -443,13 +451,16 @@ public partial class GourmetWebClient : WebClientBase
 
     private static bool HasNextPageButton(HtmlDocument document)
     {
-        return document.DocumentNode.ContainsNode("//a[contains(@class, 'menues-next')]");
-    }
+        return document.DocumentNode.ContainsNode("//a[contains(@class, 'menues-next')]");    }
 
     private static bool HasNoMoreOrdersForTodayErrorMessage(HtmlDocument document)
     {
         IEnumerable<HtmlNode> validationNodes = document.DocumentNode.GetNodes("//div[contains(@class, 'validation-message')]");
-        return validationNodes.Any(node => node.GetInnerText().Contains("Für heute ist keine Bestellung mehr möglich."));
+
+        // Check for both German and English error messages
+        return validationNodes.Any(node =>
+            node.GetInnerText().Contains("Für heute ist keine Bestellung mehr möglich.") ||
+            node.GetInnerText().Contains("No more orders can be accepted for today."));
     }
 
     private static IEnumerable<GourmetOrderedMenu> ParseOrderedGourmetMenuHtml(HtmlDocument document, bool isOrderChangeForTodayPossible)
@@ -457,6 +468,13 @@ public partial class GourmetWebClient : WebClientBase
         foreach (HtmlNode orderItemNode in document.DocumentNode.GetNodes("//div[contains(@class, 'order-item')]"))
         {
             HtmlNode formNode = orderItemNode.GetSingleNode(".//form[contains(@class, 'form-info-orders')]");
+
+            // Avoid crash if form node is not found
+            if (formNode == null)
+            {
+                continue;
+            }
+
             string positionId = formNode.GetSingleNode(".//input[@name='cp_PositionId']").GetAttributeValue("value");
 
             HtmlNode eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='cp_EatingCycleId_{positionId}') and @type='hidden']");
@@ -541,6 +559,13 @@ public partial class GourmetWebClient : WebClientBase
     private static Dictionary<string, string> GetToggleOrderMenuEditModeParameters(HtmlDocument document)
     {
         HtmlNode formNode = document.DocumentNode.GetSingleNode("//form[@id='form_toggleEditMode']");
+
+        // Avoid crash if form node is not found
+        if (formNode == null)
+        {
+            throw new GourmetRequestException("Toggle edit mode form not found", "");
+        }
+
         HtmlNode editModeNode = formNode.GetSingleNode(".//input[@name='editMode' and @type='hidden']");
 
         string editModeValue = editModeNode.GetAttributeValue("value");
@@ -556,7 +581,7 @@ public partial class GourmetWebClient : WebClientBase
     private static Dictionary<string, string> GetCancelOrderParameters(HtmlDocument document, string positionId)
     {
         string eatingCycleIdNodeName = $"cp_EatingCycleId_{positionId}";
-        string dateNodeName = $"cp_Date_{positionId}";
+        string dateNodeName = $"cp_Date_{positionId}"";
 
         HtmlNode formNode = document.DocumentNode.GetSingleNode($"//form[@id='form_{positionId}_cp']");
         HtmlNode eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='{eatingCycleIdNodeName}') and @type='hidden']");

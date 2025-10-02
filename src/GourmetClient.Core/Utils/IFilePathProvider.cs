@@ -1,4 +1,4 @@
-namespace GourmetClient.Utils;
+namespace GourmetClient.Core.Utils;
 
 /// <summary>
 /// Provides access to application-specific file paths

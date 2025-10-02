@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace GourmetClient.Utils;
+namespace GourmetClient.Core.Utils;
 
 public abstract class ObservableObject : INotifyPropertyChanged
 {

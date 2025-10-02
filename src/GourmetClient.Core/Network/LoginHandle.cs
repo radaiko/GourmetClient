@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace GourmetClient.Network;
+namespace GourmetClient.Core.Network;
 
 public class LoginHandle : IAsyncDisposable
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GourmetClient.Network;
+namespace GourmetClient.Core.Network;
 
 public class GourmetRequestException : Exception
 {

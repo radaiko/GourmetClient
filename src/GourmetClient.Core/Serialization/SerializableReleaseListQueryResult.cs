@@ -1,9 +1,9 @@
-﻿using GourmetClient.Update;
+﻿using GourmetClient.Core.Update;
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Serialization;
+namespace GourmetClient.Core.Serialization;
 
 internal class SerializableReleaseListQueryResult
 {

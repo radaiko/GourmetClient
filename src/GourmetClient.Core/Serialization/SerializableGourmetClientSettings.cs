@@ -1,8 +1,8 @@
-﻿using GourmetClient.Settings;
+﻿using GourmetClient.Core.Settings;
 using System;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Serialization;
+namespace GourmetClient.Core.Serialization;
 
 internal class SerializableGourmetClientSettings
 {

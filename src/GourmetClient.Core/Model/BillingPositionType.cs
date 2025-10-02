@@ -1,4 +1,4 @@
-﻿namespace GourmetClient.Model;
+﻿namespace GourmetClient.Core.Model;
 
 public enum BillingPositionType
 {

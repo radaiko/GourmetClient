@@ -1,4 +1,4 @@
-﻿namespace GourmetClient.Settings;
+﻿namespace GourmetClient.Core.Settings;
 
 public record UpdateSettings
 {

@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using GourmetClient.Core.Model;
 
-namespace GourmetClient.Model;
+namespace GourmetClient.Core.Model;
 
-public record GourmetMenuResult(GourmetUserInformation UserInformation, IReadOnlyCollection<GourmetMenu> Menus);
+public record GourmetOrderedMenuResult(
+    bool IsOrderChangeForTodayPossible,
+    IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);

@@ -1,6 +1,7 @@
-﻿using Semver;
+﻿using System;
+using Semver;
 
-namespace GourmetClient.Update;
+namespace GourmetClient.Core.Update;
 
 public record ReleaseDescription(
     SemVersion Version,

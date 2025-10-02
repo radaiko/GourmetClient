@@ -1,8 +1,8 @@
-﻿using GourmetClient.Update;
+﻿using GourmetClient.Core.Update;
 using Semver;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Serialization;
+namespace GourmetClient.Core.Serialization;
 
 internal class SerializableReleaseDescription
 {

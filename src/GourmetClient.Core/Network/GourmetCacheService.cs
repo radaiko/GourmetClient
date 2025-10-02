@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
-using GourmetClient.Model;
-using GourmetClient.Notifications;
-using GourmetClient.Serialization;
-using GourmetClient.Settings;
-using GourmetClient.Utils;
+using GourmetClient.Core.Model;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Serialization;
+using GourmetClient.Core.Settings;
+using GourmetClient.Core.Utils;
 
-namespace GourmetClient.Network;
+namespace GourmetClient.Core.Network;
 
 public class GourmetCacheService
 {

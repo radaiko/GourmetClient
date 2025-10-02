@@ -1,9 +1,9 @@
-﻿using GourmetClient.Model;
+﻿using GourmetClient.Core.Model;
 using System;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Serialization;
+namespace GourmetClient.Core.Serialization;
 
 internal class SerializableGourmetCache
 {

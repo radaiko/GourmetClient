@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GourmetClient.Notifications;
+namespace GourmetClient.Core.Notifications;
 
 public class ExceptionNotification : Notification
 {

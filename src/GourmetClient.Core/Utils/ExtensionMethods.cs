@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using GourmetClient.Network;
+using GourmetClient.Core.Network;
 
-namespace GourmetClient.Utils;
+namespace GourmetClient.Core.Utils;
 
 public static class ExtensionMethods
 {

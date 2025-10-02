@@ -12,8 +12,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using GourmetClient.Core.Update.GitHubApi;
 using GourmetClient.Serialization;
-using GourmetClient.Update.GitHubApi;
 using GourmetClient.Utils;
 using Semver;
 

@@ -8,7 +8,7 @@ using GourmetClient.Notifications;
 using GourmetClient.Settings;
 using GourmetClient.Utils;
 
-namespace GourmetClient.Network;
+namespace GourmetClient.Core.Network;
 
 public class BillingCacheService
 {

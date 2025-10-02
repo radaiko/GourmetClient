@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
-using GourmetClient.Notifications;
-using GourmetClient.Serialization;
-using GourmetClient.Utils;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Serialization;
+using GourmetClient.Core.Utils;
 
-namespace GourmetClient.Settings;
+namespace GourmetClient.Core.Settings;
 
 public class GourmetSettingsService
 {

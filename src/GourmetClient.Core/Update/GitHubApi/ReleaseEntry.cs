@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GourmetClient.Update.GitHubApi;
+namespace GourmetClient.Core.Update.GitHubApi;
 
 internal class ReleaseEntry
 {

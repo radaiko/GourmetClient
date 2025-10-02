@@ -3,7 +3,7 @@ using System.Net;
 using System;
 using System.Threading.Tasks;
 
-namespace GourmetClient.Utils;
+namespace GourmetClient.Core.Utils;
 
 public static class HttpClientHelper
 {

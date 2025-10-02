@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GourmetClient.Model;
+namespace GourmetClient.Core.Model;
 
 public record GourmetOrderedMenu(
     DateTime Day,

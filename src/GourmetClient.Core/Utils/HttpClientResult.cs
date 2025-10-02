@@ -1,5 +1,5 @@
 ﻿using System.Net.Http;
 
-namespace GourmetClient.Utils;
+namespace GourmetClient.Core.Utils;
 
 public record HttpClientResult<T>(HttpClient Client, T ResponseResult);

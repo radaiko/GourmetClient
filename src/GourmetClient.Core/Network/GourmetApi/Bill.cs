@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json.Serialization;
 
-namespace GourmetClient.Network.GourmetApi;
+namespace GourmetClient.Core.Network.GourmetApi;
 
 internal class Bill
 {

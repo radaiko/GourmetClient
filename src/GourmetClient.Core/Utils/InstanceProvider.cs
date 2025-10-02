@@ -1,10 +1,10 @@
 ﻿using System;
-using GourmetClient.Network;
-using GourmetClient.Notifications;
-using GourmetClient.Settings;
-using GourmetClient.Update;
+using GourmetClient.Core.Network;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Settings;
+using GourmetClient.Core.Update;
 
-namespace GourmetClient.Utils;
+namespace GourmetClient.Core.Utils;
 
 public static class InstanceProvider
 {
