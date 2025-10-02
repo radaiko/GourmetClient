@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 			 xmlns:viewModels="clr-namespace:GourmetClient.ViewModels"
-			 xmlns:network="clr-namespace:GourmetClient.Network"
+			 xmlns:network="clr-namespace:GourmetClient.Network;assembly=GourmetClient.Core"
 			 xmlns:behaviors="clr-namespace:GourmetClient.Behaviors"
 			 xmlns:system="clr-namespace:System;assembly=System.Runtime"
 			 d:DataContext="{d:DesignInstance viewModels:ExceptionNotificationDetailViewModel,

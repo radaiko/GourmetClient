@@ -28,7 +28,7 @@ public class UpdateService
 
     private IReadOnlyList<ReleaseDescription>? _availableReleases;
 
-    public UpdateService()
+    public UpdateService(IFilePathProvider filePathProvider)
     {
         AssemblyInformationalVersionAttribute? assemblyInformationalVersionAttribute =
             Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
@@ -36,7 +36,7 @@ public class UpdateService
         Debug.Assert(assemblyInformationalVersionAttribute is not null);
         CurrentVersion = SemVersion.Parse(assemblyInformationalVersionAttribute.InformationalVersion, SemVersionStyles.Strict);
 
-        _releaseListQueryResultFilePath = Path.Combine(App.LocalAppDataPath, "ReleaseListQueryResult.json");
+        _releaseListQueryResultFilePath = Path.Combine(filePathProvider.LocalAppDataPath, "ReleaseListQueryResult.json");
         _availableReleasesSemaphore = new SemaphoreSlim(1, 1);
     }
 

@@ -22,6 +22,9 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Initialize the Core library with platform-specific services
+        InstanceProvider.Initialize(new WpfFilePathProvider());
+        
         AddExceptionHandlers();
 
         if (e.Args.Length > 1 && e.Args[0] == "/update")

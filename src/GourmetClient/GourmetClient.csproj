@@ -30,7 +30,6 @@
 		<None Remove="Resources\ReleaseNotes\v2.2.0\BillingView.png" />
 		<None Remove="Resources\ReleaseNotes\v2.2.0\UpdateAvailableNotification.png" />
 		<None Remove="Resources\ReleaseNotes\v2.3.0\MultipleOrdersOnSameDay.png" />
-		<None Remove="Resources\UpdatePackageSignaturePublicKey.xml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -57,14 +56,14 @@
 		<Resource Include="Resources\ReleaseNotes\v2.2.0\BillingView.png" />
 		<Resource Include="Resources\ReleaseNotes\v2.2.0\UpdateAvailableNotification.png" />
 		<Resource Include="Resources\ReleaseNotes\v2.3.0\MultipleOrdersOnSameDay.png" />
-		<EmbeddedResource Include="Resources\UpdatePackageSignaturePublicKey.xml" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="HtmlAgilityPack" Version="1.12.2" />
-		<PackageReference Include="Microsoft.Extensions.Primitives" Version="9.0.7" />
 		<PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
-		<PackageReference Include="Semver" Version="3.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GourmetClient.Core\GourmetClient.Core.csproj" />
 	</ItemGroup>
 
 </Project>

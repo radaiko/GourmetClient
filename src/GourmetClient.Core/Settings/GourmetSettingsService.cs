@@ -17,10 +17,10 @@ public class GourmetSettingsService
 
     public event EventHandler? SettingsSaved;
 
-    public GourmetSettingsService()
+    public GourmetSettingsService(IFilePathProvider filePathProvider)
     {
         _notificationService = InstanceProvider.NotificationService;
-        _settingsFileName = Path.Combine(App.LocalAppDataPath, "GourmetClientSettings.json");
+        _settingsFileName = Path.Combine(filePathProvider.LocalAppDataPath, "GourmetClientSettings.json");
     }
 
     public UserSettings GetCurrentUserSettings()

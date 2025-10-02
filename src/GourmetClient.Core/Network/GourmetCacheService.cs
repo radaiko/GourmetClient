@@ -22,13 +22,13 @@ public class GourmetCacheService
 
     private GourmetCache? _cache;
 
-    public GourmetCacheService()
+    public GourmetCacheService(IFilePathProvider filePathProvider)
     {
         _webClient = InstanceProvider.GourmetWebClient;
         _settingsService = InstanceProvider.SettingsService;
         _notificationService = InstanceProvider.NotificationService;
 
-        _cacheFileName = Path.Combine(App.LocalAppDataPath, "GourmetCache.json");
+        _cacheFileName = Path.Combine(filePathProvider.LocalAppDataPath, "GourmetCache.json");
     }
 
     public void InvalidateCache()

@@ -1,7 +1,7 @@
-﻿using GourmetClient.Update;
 using System.Windows;
-using System.Windows.Threading;
 using GourmetClient.Notifications;
+using GourmetClient.Update;
+using GourmetClient.Utils;
 
 namespace GourmetClient.Utils;
 

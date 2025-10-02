@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:GourmetClient.ViewModels"
-             xmlns:notifications="clr-namespace:GourmetClient.Notifications"
+             xmlns:notifications="clr-namespace:GourmetClient.Notifications;assembly=GourmetClient.Core"
              xmlns:behaviors="clr-namespace:GourmetClient.Behaviors"
              x:Name="Root"
              d:DataContext="{d:DesignInstance viewModels:NotificationsViewModel,
