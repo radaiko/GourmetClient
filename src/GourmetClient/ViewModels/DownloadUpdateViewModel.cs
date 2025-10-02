@@ -3,9 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
-using GourmetClient.Notifications;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Update;
+using GourmetClient.Core.Utils;
 using GourmetClient.Update;
-using GourmetClient.Utils;
 
 namespace GourmetClient.ViewModels;
 

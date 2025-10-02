@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
+using GourmetClient.Core.Utils;
 using GourmetClient.Utils;
 
 namespace GourmetClient.ViewModels;

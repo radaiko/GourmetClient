@@ -1,6 +1,7 @@
 ﻿using GourmetClient.Core.Model;
 using GourmetClient.Core.Network.GourmetApi;
 using GourmetClient.Core.Utils;
+using GourmetClient.Network;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
@@ -581,7 +582,7 @@ public partial class GourmetWebClient : WebClientBase
     private static Dictionary<string, string> GetCancelOrderParameters(HtmlDocument document, string positionId)
     {
         string eatingCycleIdNodeName = $"cp_EatingCycleId_{positionId}";
-        string dateNodeName = $"cp_Date_{positionId}"";
+        string dateNodeName = $"cp_Date_{positionId}";
 
         HtmlNode formNode = document.DocumentNode.GetSingleNode($"//form[@id='form_{positionId}_cp']");
         HtmlNode eatingCycleIdInputNode = formNode.GetSingleNode($".//input[(@name='{eatingCycleIdNodeName}') and @type='hidden']");

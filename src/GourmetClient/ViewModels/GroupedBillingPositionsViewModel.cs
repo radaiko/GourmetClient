@@ -1,4 +1,4 @@
-﻿using GourmetClient.Model;
+﻿using GourmetClient.Core.Model;
 
 namespace GourmetClient.ViewModels;
 

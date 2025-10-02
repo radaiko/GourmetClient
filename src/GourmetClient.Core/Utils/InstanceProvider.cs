@@ -3,6 +3,7 @@ using GourmetClient.Core.Network;
 using GourmetClient.Core.Notifications;
 using GourmetClient.Core.Settings;
 using GourmetClient.Core.Update;
+using GourmetClient.Update;
 
 namespace GourmetClient.Core.Utils;
 
@@ -20,7 +21,7 @@ public static class InstanceProvider
     public static void Initialize(IFilePathProvider filePathProvider)
     {
         _filePathProvider = filePathProvider;
-        
+
         // Reset all services to ensure they use the new file path provider
         _gourmetCacheService = null;
         _settingsService = null;
@@ -28,7 +29,7 @@ public static class InstanceProvider
         _billingCacheService = null;
     }
 
-    internal static IFilePathProvider FilePathProvider 
+    internal static IFilePathProvider FilePathProvider
     {
         get
         {

@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
-using GourmetClient.Model;
-using GourmetClient.Network;
-using GourmetClient.Notifications;
-using GourmetClient.Settings;
-using GourmetClient.Utils;
+using GourmetClient.Core.Model;
+using GourmetClient.Core.Network;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Settings;
+using GourmetClient.Core.Utils;
 
 namespace GourmetClient.ViewModels;
 

@@ -1,5 +1,5 @@
-﻿using GourmetClient.Model;
-using GourmetClient.Utils;
+﻿using GourmetClient.Core.Model;
+using GourmetClient.Core.Utils;
 
 namespace GourmetClient.ViewModels;
 

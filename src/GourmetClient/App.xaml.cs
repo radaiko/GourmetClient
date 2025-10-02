@@ -8,8 +8,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using GourmetClient.Notifications;
-using GourmetClient.Update;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Update;
+using GourmetClient.Core.Utils;
 using GourmetClient.Utils;
 
 namespace GourmetClient;
@@ -24,7 +25,7 @@ public partial class App : Application
     {
         // Initialize the Core library with platform-specific services
         InstanceProvider.Initialize(new WpfFilePathProvider());
-        
+
         AddExceptionHandlers();
 
         if (e.Args.Length > 1 && e.Args[0] == "/update")

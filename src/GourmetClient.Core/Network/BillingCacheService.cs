@@ -1,12 +1,12 @@
-﻿using System;
+﻿using GourmetClient.Core.Model;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Settings;
+using GourmetClient.Core.Utils;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using GourmetClient.Model;
-using GourmetClient.Notifications;
-using GourmetClient.Settings;
-using GourmetClient.Utils;
 
 namespace GourmetClient.Core.Network;
 

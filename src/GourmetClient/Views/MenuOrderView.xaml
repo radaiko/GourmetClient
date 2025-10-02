@@ -5,7 +5,7 @@
                          xmlns:behaviors="clr-namespace:GourmetClient.Behaviors"
                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                         xmlns:models="clr-namespace:GourmetClient.Model;assembly=GourmetClient.Core"
+                         xmlns:models="clr-namespace:GourmetClient.Core.Model;assembly=GourmetClient.Core"
                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
                          xmlns:viewModels="clr-namespace:GourmetClient.ViewModels"
                          xmlns:views="clr-namespace:GourmetClient.Views"

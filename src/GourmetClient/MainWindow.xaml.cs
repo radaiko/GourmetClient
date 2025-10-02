@@ -1,8 +1,8 @@
-﻿using System;
+﻿using GourmetClient.Core.Settings;
+using GourmetClient.Core.Utils;
+using System;
 using System.ComponentModel;
 using System.Windows;
-using GourmetClient.Settings;
-using GourmetClient.Utils;
 
 namespace GourmetClient;
 

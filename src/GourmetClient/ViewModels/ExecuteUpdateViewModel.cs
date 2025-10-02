@@ -1,5 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using GourmetClient.Core.Update;
+using GourmetClient.Core.Utils;
 using GourmetClient.Update;
 using GourmetClient.Utils;
 

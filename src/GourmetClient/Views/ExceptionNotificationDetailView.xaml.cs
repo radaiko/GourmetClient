@@ -1,5 +1,5 @@
 ﻿using System.Windows.Controls;
-using GourmetClient.Notifications;
+using GourmetClient.Core.Notifications;
 using GourmetClient.ViewModels;
 
 namespace GourmetClient.Views;

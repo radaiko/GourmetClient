@@ -91,8 +91,8 @@ public class IsTextTrimmedBehavior : Behavior<TextBlock>
         // width of the textBlock, if the textBlock is being trimmed to fit then the formatted
         // text will report a larger height than the textBlock. Should work whether the
         // textBlock is single or multi-line.
-        // The "formattedText.MinWidth > formattedText.MaxTextWidth" check detects if any 
-        // single line is too long to fit within the text area, this can only happen if there is a 
+        // The "formattedText.MinWidth > formattedText.MaxTextWidth" check detects if any
+        // single line is too long to fit within the text area, this can only happen if there is a
         // long span of text with no spaces.
         return (formattedText.Height > textBlock.ActualHeight || formattedText.MinWidth > formattedText.MaxTextWidth);
     }

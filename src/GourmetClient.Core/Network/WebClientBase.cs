@@ -1,4 +1,5 @@
-﻿using GourmetClient.Utils;
+﻿using GourmetClient.Core.Network;
+using GourmetClient.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;

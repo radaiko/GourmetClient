@@ -1,5 +1,6 @@
-﻿using GourmetClient.Model;
-using GourmetClient.Utils;
+﻿using GourmetClient.Core.Model;
+using GourmetClient.Core.Utils;
+using GourmetClient.Network;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using GourmetClient.Model;
-using GourmetClient.Network;
-using GourmetClient.Utils;
+using GourmetClient.Core.Model;
+using GourmetClient.Core.Network;
+using GourmetClient.Core.Utils;
 
 namespace GourmetClient.ViewModels;
 

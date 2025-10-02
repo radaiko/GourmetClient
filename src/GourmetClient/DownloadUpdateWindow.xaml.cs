@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
+using GourmetClient.Core.Update;
 using GourmetClient.Update;
 
 namespace GourmetClient;

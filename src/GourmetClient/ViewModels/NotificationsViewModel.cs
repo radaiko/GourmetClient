@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
-using GourmetClient.Notifications;
-using GourmetClient.Utils;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Utils;
 
 namespace GourmetClient.ViewModels;
 

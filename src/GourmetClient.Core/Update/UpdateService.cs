@@ -12,9 +12,10 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using GourmetClient.Core.Serialization;
+using GourmetClient.Core.Update;
 using GourmetClient.Core.Update.GitHubApi;
-using GourmetClient.Serialization;
-using GourmetClient.Utils;
+using GourmetClient.Core.Utils;
 using Semver;
 
 namespace GourmetClient.Update;
@@ -320,7 +321,7 @@ public class UpdateService
         if (cachedQueryResult is not null)
         {
             request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(cachedQueryResult.ETagHeaderValue, cachedQueryResult.IsWeakETag));
-            releaseDescriptions = cachedQueryResult.Releases;
+            releaseDescriptions = (IReadOnlyList<ReleaseDescription>)cachedQueryResult.Releases;
         }
 
         try

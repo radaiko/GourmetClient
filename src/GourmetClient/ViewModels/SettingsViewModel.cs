@@ -1,8 +1,10 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using GourmetClient.Behaviors;
-using GourmetClient.Notifications;
-using GourmetClient.Settings;
+using GourmetClient.Core.Notifications;
+using GourmetClient.Core.Settings;
+using GourmetClient.Core.Update;
+using GourmetClient.Core.Utils;
 using GourmetClient.Update;
 using GourmetClient.Utils;
 

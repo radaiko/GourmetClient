@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using GourmetClient.Core.Update;
 using GourmetClient.Update;
 using GourmetClient.ViewModels;
 

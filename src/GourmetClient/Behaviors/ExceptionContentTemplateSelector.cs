@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using GourmetClient.Network;
+using GourmetClient.Core.Network;
 
 namespace GourmetClient.Behaviors;
 
