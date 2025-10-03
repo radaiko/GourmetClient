@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.iOS;
-using Foundation;
 
 namespace GourmetClient.MVU.Platforms.iOS;
 

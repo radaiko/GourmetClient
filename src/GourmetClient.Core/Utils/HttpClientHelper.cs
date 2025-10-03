@@ -7,6 +7,19 @@ namespace GourmetClient.Core.Utils;
 
 public static class HttpClientHelper
 {
+    // Helper to create an HttpClient that does not use any explicit proxy. On iOS setting UseProxy = false
+    // throws: "It's not allowed to disable the system proxy. Value is false". Therefore we only set UseProxy=false
+    // on platforms where it is supported and leave default behavior on iOS.
+    private static HttpClient CreateClientWithoutProxy(CookieContainer cookieContainer)
+    {
+#if IOS
+        // On iOS: don't set UseProxy explicitly.
+        return new HttpClient(new HttpClientHandler { CookieContainer = cookieContainer });
+#else
+        return new HttpClient(new HttpClientHandler { UseProxy = false, CookieContainer = cookieContainer });
+#endif
+    }
+
     public static async Task<HttpClientResult<T>> CreateHttpClient<T>(string requestUrl, Func<HttpClient, Task<T>> proxyTestRequestFunc, CookieContainer cookieContainer)
     {
         HttpClient? client;
@@ -16,7 +29,7 @@ public static class HttpClientHelper
         if (proxy is null)
         {
             // No proxy required
-            client = new HttpClient(new HttpClientHandler { UseProxy = false, CookieContainer = cookieContainer });
+            client = CreateClientWithoutProxy(cookieContainer);
             requestResult = await proxyTestRequestFunc(client);
             return new HttpClientResult<T>(client, requestResult);
         }
@@ -43,7 +56,7 @@ public static class HttpClientHelper
             else if (IsProxyConnectionErrorException(proxy, exception))
             {
                 // Connection to proxy cannot be established. Try executing request without proxy
-                client = new HttpClient(new HttpClientHandler { UseProxy = false, CookieContainer = cookieContainer });
+                client = CreateClientWithoutProxy(cookieContainer);
             }
 
             if (client is null)

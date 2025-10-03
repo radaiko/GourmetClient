@@ -259,7 +259,7 @@ namespace GourmetClient.MVU.Update
                                 }
                                 else
                                 {
-                                    errorMessages.Add($"{menu.MenuDescription} für den {day.Date:dd.MM.yyyy} ist nicht mehr verfügbar");
+                                    errorMessages.Add($"{menu.MenuDescription} fÃ¼r den {day.Date:dd.MM.yyyy} ist nicht mehr verfÃ¼gbar");
                                 }
                             }
                             else if (menu.MenuState == GourmetMenuState.MarkedForCancel)
@@ -278,7 +278,7 @@ namespace GourmetClient.MVU.Update
                                     }
                                     else
                                     {
-                                        errorMessages.Add($"{menu.MenuDescription} für den {day.Date:dd.MM.yyyy} kann nicht storniert werden");
+                                        errorMessages.Add($"{menu.MenuDescription} fÃ¼r den {day.Date:dd.MM.yyyy} kann nicht storniert werden");
                                     }
                                 }
                             }
@@ -297,7 +297,7 @@ namespace GourmetClient.MVU.Update
                     // Add any failed order messages
                     foreach (var failedMenu in updateResult.FailedMenusToOrder)
                     {
-                        errorMessages.Add($"Das Menü '{failedMenu.Menu.MenuName}' am {failedMenu.Menu.Day:dd.MM.yyyy} konnte nicht bestellt werden. Ursache: {failedMenu.Message}");
+                        errorMessages.Add($"Das MenÃ¼ '{failedMenu.Menu.MenuName}' am {failedMenu.Menu.Day:dd.MM.yyyy} konnte nicht bestellt werden. Ursache: {failedMenu.Message}");
                     }
                 }
 

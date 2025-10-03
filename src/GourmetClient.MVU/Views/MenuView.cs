@@ -1,45 +1,47 @@
-﻿using Avalonia;
+﻿﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Models;
+using GourmetClient.MVU.Utils;
 
 namespace GourmetClient.MVU.Views;
 
+/// <summary>
+/// Main menu view that routes to platform-specific implementations
+/// </summary>
 public static class MenuView
 {
-    private static SolidColorBrush GetTextBrush() =>
+    public static Control Create(AppState state, Action<Msg> dispatch)
+    {
+        // Use iOS-specific layout on iOS devices
+        if (PlatformDetector.IsIOS)
+        {
+            return MenuViewIOS.Create(state, dispatch);
+        }
+        
+        // Use desktop layout for all other platforms
+        return MenuViewDesktop.Create(state, dispatch);
+    }
+}
+
+/// <summary>
+/// Shared utilities and styling for menu views across all platforms
+/// </summary>
+public static class MenuViewShared
+{
+    public static SolidColorBrush GetTextBrush() =>
       new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
         ? Colors.White
         : Colors.Black);
 
-    public static Control Create(AppState state, Action<Msg> dispatch)
-    {
-        if (state.IsLoading)
-        {
-            return CreateLoadingView();
-        }
+    public static SolidColorBrush GetBackgroundBrush() =>
+      new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+        ? Color.Parse("#0d1117") 
+        : Color.Parse("#ffffff"));
 
-        if (state.MenuDays == null || state.MenuDays.Count == 0)
-        {
-            // Check if Gourmet credentials are configured
-            if (state.Settings != null && 
-                !string.IsNullOrEmpty(state.Settings.Username) && 
-                !string.IsNullOrEmpty(state.Settings.Password))
-            {
-                // Auto-refresh if credentials are available
-                dispatch(new LoadMenus());
-                return CreateLoadingView();
-            }
-            
-            return CreateWelcomeView(state, dispatch);
-        }
-
-        return CreateMenuGridView(state, dispatch);
-    }
-
-    private static Control CreateLoadingView()
+    public static Control CreateLoadingView()
     {
         var loadingPanel = new StackPanel
         {
@@ -91,7 +93,7 @@ public static class MenuView
         return loadingPanel;
     }
 
-    private static Control CreateWelcomeView(AppState state, Action<Msg> dispatch)
+    public static Control CreateWelcomeView(AppState state, Action<Msg> dispatch)
     {
         var welcomePanel = new StackPanel
         {
@@ -145,89 +147,7 @@ public static class MenuView
         return welcomePanel;
     }
 
-    private static Control CreateMenuGridView(AppState state, Action<Msg> dispatch)
-    {
-        var scrollViewer = new ScrollViewer
-        {
-            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-            Padding = new Thickness(40, 20),
-            Background = new SolidColorBrush(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
-                ? Color.Parse("#0d1117") : Color.Parse("#ffffff"))
-        };
-
-        var mainPanel = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            Spacing = 32
-        };
-
-        // Create menu days with minimal cards
-        foreach (var menuDay in state.MenuDays!)
-        {
-            var dayCard = CreateMinimalistMenuDayCard(menuDay, dispatch);
-            mainPanel.Children.Add(dayCard);
-        }
-
-        scrollViewer.Content = mainPanel;
-        return scrollViewer;
-    }
-
-    private static Control CreateMinimalistMenuDayCard(GourmetMenuDayViewModel menuDay, Action<Msg> dispatch)
-    {
-        var dayPanel = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            Spacing = 16,
-            Margin = new Thickness(0, 0, 0, 40)
-        };
-
-        // Simple date header
-        var dateHeader = new TextBlock
-        {
-            Text = menuDay.Date.ToString("dddd, dd. MMMM yyyy"),
-            FontWeight = FontWeight.Normal,
-            FontSize = 18,
-            Foreground = GetTextBrush(),
-            Margin = new Thickness(0, 0, 0, 16)
-        };
-        dayPanel.Children.Add(dateHeader);
-
-        // Horizontal menu layout
-        var menusPanel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 24
-        };
-
-        // Date spacer to align with header
-        var dateSpacer = new Border
-        {
-            Width = 120,
-            Height = 1
-        };
-        menusPanel.Children.Add(dateSpacer);
-
-        // Menu cards
-        foreach (var menu in menuDay.Menus.Take(4))
-        {
-            if (menu != null)
-            {
-                var menuCard = CreateMinimalistMenuCard(menu, dispatch);
-                menusPanel.Children.Add(menuCard);
-            }
-            else
-            {
-                var emptySpace = new Border { Width = 200, Height = 1 };
-                menusPanel.Children.Add(emptySpace);
-            }
-        }
-
-        dayPanel.Children.Add(menusPanel);
-        return dayPanel;
-    }
-
-    private static Control CreateMinimalistMenuCard(GourmetMenuViewModel menu, Action<Msg> dispatch)
+    public static Control CreateMinimalistMenuCard(GourmetMenuViewModel menu, Action<Msg> dispatch, double? width = null)
     {
         var cardBorder = new Border
         {
@@ -235,11 +155,15 @@ public static class MenuView
             BorderBrush = GetMinimalistBorderBrush(menu.MenuState),
             BorderThickness = new Thickness(0, 0, 0, 2), // Only bottom border for minimal look
             Padding = new Thickness(0, 16, 0, 16),
-            Width = 200,
             MinHeight = 100,
             Cursor = new Avalonia.Input.Cursor(menu.MenuState != GourmetMenuState.NotAvailable ?
                 Avalonia.Input.StandardCursorType.Hand : Avalonia.Input.StandardCursorType.Arrow)
         };
+
+        if (width.HasValue)
+        {
+            cardBorder.Width = width.Value;
+        }
 
         var contentStack = new StackPanel
         {
@@ -303,17 +227,20 @@ public static class MenuView
         }
         else
         {
-            // Subtle hover effect
-            cardBorder.PointerEntered += (s, e) =>
+            // Desktop: subtle hover effect
+            if (!PlatformDetector.IsIOS)
             {
-                cardBorder.Background = new SolidColorBrush(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
-                    ? Color.Parse("#161b22") : Color.Parse("#f6f8fa"));
-            };
+                cardBorder.PointerEntered += (s, e) =>
+                {
+                    cardBorder.Background = new SolidColorBrush(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+                        ? Color.Parse("#161b22") : Color.Parse("#f6f8fa"));
+                };
 
-            cardBorder.PointerExited += (s, e) =>
-            {
-                cardBorder.Background = GetMinimalistBackgroundBrush(menu.MenuState);
-            };
+                cardBorder.PointerExited += (s, e) =>
+                {
+                    cardBorder.Background = GetMinimalistBackgroundBrush(menu.MenuState);
+                };
+            }
 
             cardBorder.PointerPressed += (s, e) => dispatch(new ToggleMenuOrder(menu.MenuDescription));
         }
@@ -334,7 +261,7 @@ public static class MenuView
     }
 
     // Minimalist color schemes
-    private static SolidColorBrush GetMinimalistBackgroundBrush(GourmetMenuState state)
+    public static SolidColorBrush GetMinimalistBackgroundBrush(GourmetMenuState state)
     {
         var isDark = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
 
@@ -356,7 +283,7 @@ public static class MenuView
         };
     }
 
-    private static SolidColorBrush GetMinimalistBorderBrush(GourmetMenuState state)
+    public static SolidColorBrush GetMinimalistBorderBrush(GourmetMenuState state)
     {
         return state switch
         {
@@ -368,7 +295,7 @@ public static class MenuView
         };
     }
 
-    private static SolidColorBrush GetMinimalistStatusBrush(GourmetMenuState state)
+    public static SolidColorBrush GetMinimalistStatusBrush(GourmetMenuState state)
     {
         return state switch
         {
@@ -380,7 +307,7 @@ public static class MenuView
         };
     }
 
-    private static string GetMinimalistStatusText(GourmetMenuState state)
+    public static string GetMinimalistStatusText(GourmetMenuState state)
     {
         return state switch
         {
