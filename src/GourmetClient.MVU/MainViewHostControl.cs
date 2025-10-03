@@ -1,25 +1,17 @@
-using Avalonia;
 using Avalonia.FuncUI.Hosts;
 using Avalonia.Threading;
 using GourmetClient.MVU.Core;
+using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Models;
 using GourmetClient.MVU.Views;
-using GourmetClient.MVU.Messages;
+using Avalonia;
 
 namespace GourmetClient.MVU;
 
-public class MainWindow : HostWindow {
+public class MainViewHostControl : HostControl {
   private readonly MvuDispatcher _dispatcher;
 
-  public MainWindow() {
-    Title = "Gourmet Client";
-    Width = 1200;
-    Height = 1024;
-
-    #if DEBUG && !IOS
-    this.AttachDevTools();
-    #endif
-
+  public MainViewHostControl() {
     // Initialize MVU dispatcher with initial state
     _dispatcher = new MvuDispatcher(AppState.Initial);
     _dispatcher.SetStateChangedCallback(OnStateChanged);
@@ -40,8 +32,9 @@ public class MainWindow : HostWindow {
     Content = MainView.Create(state, _dispatcher.Dispatch);
   }
 
-  protected override void OnClosed(EventArgs e) {
+  protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+  {
     _dispatcher?.Dispose();
-    base.OnClosed(e);
+    base.OnDetachedFromVisualTree(e);
   }
 }

@@ -4,6 +4,7 @@ using Avalonia.Themes.Fluent;
 
 namespace GourmetClient.MVU;
 
+#if !IOS
 internal class Program {
   public static void Main(string[] args) => BuildAvaloniaApp()
     .StartWithClassicDesktopLifetime(args);
@@ -13,6 +14,7 @@ internal class Program {
       .UsePlatformDetect()
       .LogToTrace();
 }
+#endif
 
 public class App : Application {
   public override void Initialize() {
@@ -21,10 +23,13 @@ public class App : Application {
   }
 
   public override void OnFrameworkInitializationCompleted() {
-    var mainWindow = new MainWindow();
-
     if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
-      desktop.MainWindow = mainWindow;
+      // Desktop application uses a window host
+      desktop.MainWindow = new MainWindow();
+    }
+    else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform) {
+      // Mobile application (iOS) uses a control host
+      singleViewPlatform.MainView = new MainViewHostControl();
     }
 
     base.OnFrameworkInitializationCompleted();

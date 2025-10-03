@@ -1,9 +1,7 @@
 ﻿using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Styling;
 using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Models;
 

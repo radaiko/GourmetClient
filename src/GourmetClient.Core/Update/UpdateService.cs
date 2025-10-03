@@ -21,7 +21,7 @@ namespace GourmetClient.Core.Update;
 
 public class UpdateService
 {
-    private const string ReleaseListUri = "https://api.github.com/repos/patrickl92/GourmetClient/releases";
+    private const string ReleaseListUri = "https://api.github.com/repos/radaiko/GourmetClient/releases";
 
     private readonly string _releaseListQueryResultFilePath;
     private readonly SemaphoreSlim _availableReleasesSemaphore;
