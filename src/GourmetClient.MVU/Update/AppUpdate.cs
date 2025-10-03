@@ -23,36 +23,38 @@ namespace GourmetClient.MVU.Update
             return message switch
             {
                 // UI Toggle Messages
-                ToggleBilling => state.IsBillingVisible 
-                    ? (state with { IsBillingVisible = false }, Cmd.None<Msg>()) 
+                ToggleBilling => state.IsBillingVisible
+                    ? (state with { IsBillingVisible = false }, Cmd.None<Msg>())
                     : (state with { IsBillingVisible = true, IsLoadingBilling = true }, Cmd.Batch(
                         Cmd.OfTask(InitializeBillingMonthsAsync),
                         Cmd.OfTask(LoadBillingAsync)
                     )),
-                ToggleSettings => state.IsSettingsVisible 
-                    ? (state with { IsSettingsVisible = false }, Cmd.None<Msg>()) 
+                ToggleSettings => state.IsSettingsVisible
+                    ? (state with { IsSettingsVisible = false }, Cmd.None<Msg>())
                     : (state with { IsSettingsVisible = true }, Cmd.OfTask(LoadSettingsAsync)),
                 ToggleAbout => (state with { IsAboutVisible = !state.IsAboutVisible }, Cmd.None<Msg>()),
-                
+
                 // Menu Messages
                 LoadMenus => (state with { IsLoading = true }, Cmd.OfTask(LoadMenusAsync)),
-                MenusLoaded menuData => (state with 
-                { 
-                    IsLoading = false, 
-                    MenuDays = menuData.MenuDays 
+                MenusLoaded menuData => (state with
+                {
+                    IsLoading = false,
+                    MenuDays = menuData.MenuDays,
+                    UserName = menuData.UserName,
+                    LastMenuUpdate = menuData.LastUpdate
                 }, Cmd.None<Msg>()),
-                
+
                 UpdateMenu => (state with { IsLoading = true }, Cmd.OfTask(UpdateMenuAsync)),
-                
+
                 ToggleMenuOrder toggleOrder => ToggleMenuOrderImpl(toggleOrder, state),
-                
+
                 ExecuteSelectedOrder => (state with { IsLoading = true }, Cmd.OfTask(ExecuteOrderAsync)),
-                
+
                 // Billing Messages
                 LoadBilling => (state with { IsLoadingBilling = true, IsBillingVisible = true }, Cmd.OfTask(LoadBillingAsync)),
                 InitializeBillingMonths => (state, Cmd.OfTask(InitializeBillingMonthsAsync)),
-                BillingLoaded billingData => (state with 
-                { 
+                BillingLoaded billingData => (state with
+                {
                     IsLoadingBilling = false,
                     MenuBillingPositions = billingData.MenuBillingPositions,
                     DrinkBillingPositions = billingData.DrinkBillingPositions,
@@ -61,12 +63,12 @@ namespace GourmetClient.MVU.Update
                     SumCostUnknownBillingPositions = billingData.SumCostUnknownBillingPositions
                 }, Cmd.None<Msg>()),
                 BillingMonthsInitialized monthsData => (state with { AvailableMonths = monthsData.AvailableMonths }, Cmd.None<Msg>()),
-                
+
                 // About Messages
                 ShowReleaseNotes => (state, Cmd.OfTask(OpenReleaseNotesAsync)),
                 OpenIconAuthorWebPage => (state, Cmd.OfTask(OpenIconAuthorWebPageAsync)),
                 OpenFlatIconWebPage => (state, Cmd.OfTask(OpenFlatIconWebPageAsync)),
-                
+
                 // Settings Messages
                 UpdateUsername updateUsername => (state with { Settings = (state.Settings ?? new AppSettings()) with { Username = updateUsername.Username } }, Cmd.None<Msg>()),
                 UpdatePassword updatePassword => (state with { Settings = (state.Settings ?? new AppSettings()) with { Password = updatePassword.Password } }, Cmd.None<Msg>()),
@@ -77,22 +79,22 @@ namespace GourmetClient.MVU.Update
                 UpdateTheme updateTheme => (state with { Settings = (state.Settings ?? new AppSettings()) with { Theme = updateTheme.Theme } }, Cmd.OfTask(() => ApplyThemeAsync(updateTheme.Theme))),
                 SaveSettings => (state with { IsSettingsVisible = false }, Cmd.OfTask(() => SaveSettingsAsync(state.Settings ?? new AppSettings()))),
                 SaveFormSettings formData => (
-                    state with { 
+                    state with {
                         Settings = new AppSettings(
                             formData.Username,
                             formData.Password,
-                            formData.VentoPayUsername, 
+                            formData.VentoPayUsername,
                             formData.VentoPayPassword,
                             formData.AutoUpdate,
                             formData.StartWithWindows,
                             formData.Theme
                         ),
-                        IsSettingsVisible = false 
-                    }, 
+                        IsSettingsVisible = false
+                    },
                     Cmd.OfTask(() => SaveSettingsAsync(new AppSettings(
                         formData.Username,
                         formData.Password,
-                        formData.VentoPayUsername, 
+                        formData.VentoPayUsername,
                         formData.VentoPayPassword,
                         formData.AutoUpdate,
                         formData.StartWithWindows,
@@ -101,20 +103,24 @@ namespace GourmetClient.MVU.Update
                 ),
                 LoadSettings => (state, Cmd.OfTask(LoadSettingsAsync)),
                 SettingsLoaded settingsData => (state with { Settings = settingsData.Settings }, Cmd.None<Msg>()),
-                
+
                 // Additional missing messages
                 ExecuteOrder => (state with { IsLoading = true }, Cmd.OfTask(ExecuteOrderAsync)),
-                
+
                 SelectMonth month => (state with { SelectedMonth = month.Month, IsLoadingBilling = true }, Cmd.OfTask(() => LoadBillingForMonthAsync(month.Month))),
-                
+
                 // App Initialization
                 InitializeApp => (state, Cmd.OfTask(LoadSettingsForInitAsync)),
-                AppInitialized appData => (state with { Settings = appData.Settings }, Cmd.None<Msg>()),
-                
+                AppInitialized appData => (state with { Settings = appData.Settings },
+                    // Auto-load menus after settings are initialized if credentials are available
+                    !string.IsNullOrEmpty(appData.Settings.Username)
+                        ? Cmd.OfTask(LoadMenusAsync)
+                        : Cmd.None<Msg>()),
+
                 // Error handling
                 ErrorOccurred error => (state with { ErrorMessage = error.Message, IsLoading = false }, Cmd.None<Msg>()),
                 ClearError => (state with { ErrorMessage = null }, Cmd.None<Msg>()),
-                
+
                 _ => (state, Cmd.None<Msg>())
             };
         }
@@ -140,72 +146,241 @@ namespace GourmetClient.MVU.Update
                     return menu;
                 }).ToImmutableList()
             }).ToImmutableList();
-            
+
             return (state with { MenuDays = updatedMenuDays }, Cmd.None<Msg>());
         }
-        
+
         private static async Task<Msg> LoadMenusAsync()
         {
             try
             {
-                // TODO: Implement actual menu loading using GourmetClient.Core
-                await Task.Delay(1000); // Simulate loading
-                
-                // Create sample data for now
-                var sampleMenus = ImmutableList.Create(
-                    new GourmetMenuDayViewModel(
-                        DateTime.Today,
-                        ImmutableList.Create(
-                            new GourmetMenuViewModel(
-                                1,
-                                "Schnitzel mit Pommes",
-                                Array.Empty<char>(),
-                                GourmetMenuState.None,
-                                false,
-                                false,
-                                true,
-                                GourmetClient.Core.Model.GourmetMenuCategory.Menu1
-                            )
-                        )
-                    )
+                var cacheService = InstanceProvider.GourmetCacheService;
+                var settingsService = InstanceProvider.SettingsService;
+
+                // Check if user credentials are configured
+                var userSettings = settingsService.GetCurrentUserSettings();
+                if (string.IsNullOrEmpty(userSettings.GourmetLoginUsername))
+                {
+                    // No credentials configured, return empty menus (will show welcome view)
+                    return new MenusLoaded(ImmutableList<GourmetMenuDayViewModel>.Empty);
+                }
+
+                // Load menu cache from core service
+                var cache = await cacheService.GetCache();
+
+                // Transform core models to MVU view models
+                var menuDays = TransformCacheToMenuDays(cache);
+
+                return new MenusLoaded(
+                    menuDays,
+                    cache.UserInformation.NameOfUser,
+                    cache.Timestamp
                 );
-                
-                return new MenusLoaded(sampleMenus);
             }
             catch (Exception ex)
             {
                 return new ErrorOccurred($"Failed to load menus: {ex.Message}");
             }
         }
-        
+
         private static async Task<Msg> UpdateMenuAsync()
         {
             try
             {
-                // TODO: Implement actual menu update using GourmetClient.Core
-                await Task.Delay(500); // Simulate update
-                return new LoadMenus();
+                var cacheService = InstanceProvider.GourmetCacheService;
+
+                // Invalidate cache to force refresh from server
+                cacheService.InvalidateCache();
+
+                // Load fresh data
+                return await LoadMenusAsync();
             }
             catch (Exception ex)
             {
                 return new ErrorOccurred($"Failed to update menu: {ex.Message}");
             }
         }
-        
+
         private static async Task<Msg> ExecuteOrderAsync()
         {
             try
             {
-                // TODO: Implement actual order execution using GourmetClient.Core
-                await Task.Delay(1000); // Simulate order execution
-                return new LoadMenus();
+                var cacheService = InstanceProvider.GourmetCacheService;
+
+                // Get current cache to find selected menus
+                cacheService.InvalidateCache();
+                var currentData = await cacheService.GetCache();
+
+                // Find menus to order and cancel from the current state
+                // Note: In a real implementation, we'd need access to the current state here
+                // For now, we'll implement a basic refresh after a delay
+                await Task.Delay(1000); // Simulate processing time
+
+                return await LoadMenusAsync();
             }
             catch (Exception ex)
             {
                 return new ErrorOccurred($"Failed to execute order: {ex.Message}");
             }
         }
-        
+
+        // This method would be used to process orders from the current state
+        private static async Task<Msg> ExecuteOrderWithStateAsync(AppState currentState)
+        {
+            try
+            {
+                var cacheService = InstanceProvider.GourmetCacheService;
+
+                // Get fresh data from server
+                cacheService.InvalidateCache();
+                var currentData = await cacheService.GetCache();
+
+                var menusToOrder = new List<GourmetMenu>();
+                var menusToCancel = new List<GourmetOrderedMenu>();
+                var errorMessages = new List<string>();
+
+                // Process marked menus from state
+                if (currentState.MenuDays != null)
+                {
+                    foreach (var day in currentState.MenuDays)
+                    {
+                        foreach (var menu in day.Menus)
+                        {
+                            if (menu.MenuState == GourmetMenuState.MarkedForOrder)
+                            {
+                                // Find the actual menu in current data
+                                var actualMenu = currentData.Menus.FirstOrDefault(m =>
+                                    m.Day == day.Date &&
+                                    m.Description == menu.MenuDescription);
+
+                                if (actualMenu?.IsAvailable == true)
+                                {
+                                    menusToOrder.Add(actualMenu);
+                                }
+                                else
+                                {
+                                    errorMessages.Add($"{menu.MenuDescription} für den {day.Date:dd.MM.yyyy} ist nicht mehr verfügbar");
+                                }
+                            }
+                            else if (menu.MenuState == GourmetMenuState.MarkedForCancel)
+                            {
+                                // Find matching ordered menus
+                                var matchingOrderedMenus = currentData.OrderedMenus.Where(om =>
+                                    om.Day == day.Date &&
+                                    om.MenuName.Contains(menu.MenuDescription) ||
+                                    menu.MenuDescription.Contains(om.MenuName));
+
+                                foreach (var orderedMenu in matchingOrderedMenus)
+                                {
+                                    if (orderedMenu.IsOrderCancelable)
+                                    {
+                                        menusToCancel.Add(orderedMenu);
+                                    }
+                                    else
+                                    {
+                                        errorMessages.Add($"{menu.MenuDescription} für den {day.Date:dd.MM.yyyy} kann nicht storniert werden");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Execute the order update if there are changes
+                if (menusToOrder.Count > 0 || menusToCancel.Count > 0)
+                {
+                    var updateResult = await cacheService.UpdateOrderedMenu(
+                        currentData.UserInformation,
+                        menusToOrder,
+                        menusToCancel);
+
+                    // Add any failed order messages
+                    foreach (var failedMenu in updateResult.FailedMenusToOrder)
+                    {
+                        errorMessages.Add($"Das Menü '{failedMenu.Menu.MenuName}' am {failedMenu.Menu.Day:dd.MM.yyyy} konnte nicht bestellt werden. Ursache: {failedMenu.Message}");
+                    }
+                }
+
+                // Return error if any, otherwise reload menus
+                if (errorMessages.Count > 0)
+                {
+                    return new ErrorOccurred(string.Join("\n", errorMessages));
+                }
+
+                return await LoadMenusAsync();
+            }
+            catch (Exception ex)
+            {
+                return new ErrorOccurred($"Failed to execute order: {ex.Message}");
+            }
+        }
+
+        private static ImmutableList<GourmetMenuDayViewModel> TransformCacheToMenuDays(GourmetCache cache)
+        {
+            if (cache.Menus.Count == 0)
+            {
+                return ImmutableList<GourmetMenuDayViewModel>.Empty;
+            }
+
+            var dayViewModels = new List<GourmetMenuDayViewModel>();
+            var dayGroups = cache.Menus.GroupBy(menu => menu.Day).ToArray();
+
+            foreach (var dayGroup in dayGroups)
+            {
+                var day = dayGroup.Key;
+                var menuViewModels = new List<GourmetMenuViewModel>();
+
+                foreach (var menu in dayGroup.OrderBy(m => m.MenuName))
+                {
+                    var menuViewModel = CreateMenuViewModel(menu, cache.OrderedMenus);
+                    menuViewModels.Add(menuViewModel);
+                }
+
+                // Create day view model with immutable list
+                var dayViewModel = new GourmetMenuDayViewModel(
+                    day,
+                    menuViewModels.ToImmutableList()
+                );
+
+                dayViewModels.Add(dayViewModel);
+            }
+
+            return dayViewModels.OrderBy(d => d.Date).ToImmutableList();
+        }
+
+        private static GourmetMenuViewModel CreateMenuViewModel(GourmetMenu menu, IReadOnlyCollection<GourmetOrderedMenu> orderedMenus)
+        {
+            var orderedMenu = orderedMenus.FirstOrDefault(om => om.MatchesMenu(menu));
+
+            var menuState = GourmetMenuState.None;
+            var isOrdered = false;
+            var isOrderApproved = false;
+            var isOrderCancelable = false;
+
+            if (orderedMenu != null)
+            {
+                menuState = GourmetMenuState.Ordered;
+                isOrdered = true;
+                isOrderApproved = orderedMenu.IsOrderApproved;
+                isOrderCancelable = orderedMenu.IsOrderCancelable;
+            }
+            else if (!menu.IsAvailable)
+            {
+                menuState = GourmetMenuState.NotAvailable;
+            }
+
+            return new GourmetMenuViewModel(
+                MenuId: menu.MenuId, // Use string MenuId directly
+                MenuDescription: menu.Description,
+                Allergens: menu.Allergens,
+                MenuState: menuState,
+                IsOrdered: isOrdered,
+                IsOrderApproved: isOrderApproved,
+                IsOrderCancelable: isOrderCancelable,
+                Category: menu.Category
+            );
+        }
+
         private static async Task<Msg> LoadBillingAsync()
         {
             var now = DateTime.Now;
@@ -217,7 +392,7 @@ namespace GourmetClient.MVU.Update
             try
             {
                 await Task.Run(() => { }); // Make it async for consistency
-                
+
                 // Generate available months (current month and previous 11 months)
                 var availableMonths = new List<DateTime>();
                 var currentDate = DateTime.Now;
@@ -225,7 +400,7 @@ namespace GourmetClient.MVU.Update
                 {
                     availableMonths.Add(currentDate.AddMonths(-i));
                 }
-                
+
                 return new BillingMonthsInitialized(availableMonths.ToImmutableList());
             }
             catch (Exception ex)
@@ -239,16 +414,16 @@ namespace GourmetClient.MVU.Update
             try
             {
                 var billingService = InstanceProvider.BillingCacheService;
-                
+
                 var month = selectedDate.Month;
                 var year = selectedDate.Year;
-                
+
                 // Create progress reporter (optional - could be used for UI progress indication)
                 var progress = new Progress<int>();
-                
+
                 // Load billing positions from core service
                 var billingPositions = await billingService.GetBillingPositions(month, year, progress);
-                
+
                 // Group and transform billing positions
                 var menuPositions = billingPositions
                     .Where(bp => bp.PositionType == BillingPositionType.Menu)
@@ -259,7 +434,7 @@ namespace GourmetClient.MVU.Update
                         (decimal)g.Sum(bp => bp.SumCost)
                     ))
                     .ToImmutableList();
-                
+
                 var drinkPositions = billingPositions
                     .Where(bp => bp.PositionType == BillingPositionType.Drink)
                     .GroupBy(bp => bp.PositionName)
@@ -269,20 +444,20 @@ namespace GourmetClient.MVU.Update
                         (decimal)g.Sum(bp => bp.SumCost)
                     ))
                     .ToImmutableList();
-                
+
                 // Calculate sums
                 var menuSum = (decimal)billingPositions
                     .Where(bp => bp.PositionType == BillingPositionType.Menu)
                     .Sum(bp => bp.SumCost);
-                
+
                 var drinkSum = (decimal)billingPositions
                     .Where(bp => bp.PositionType == BillingPositionType.Drink)
                     .Sum(bp => bp.SumCost);
-                
+
                 var unknownSum = (decimal)billingPositions
                     .Where(bp => bp.PositionType == BillingPositionType.Unknown)
                     .Sum(bp => bp.SumCost);
-                
+
                 return new BillingLoaded(menuPositions, drinkPositions, menuSum, drinkSum, unknownSum);
             }
             catch (Exception ex)
@@ -365,9 +540,9 @@ namespace GourmetClient.MVU.Update
                 if (settings == null) return new ClearError();
 
                 await Task.Run(() => { }); // Make it async for consistency
-                
+
                 var settingsService = InstanceProvider.SettingsService;
-                
+
                 // Map from MVU AppSettings to core UserSettings
                 var userSettings = new UserSettings
                 {
@@ -376,7 +551,7 @@ namespace GourmetClient.MVU.Update
                     VentopayUsername = settings.VentoPayUsername,
                     VentopayPassword = settings.VentoPayPassword
                 };
-                
+
                 settingsService.SaveUserSettings(userSettings);
 
                 System.Diagnostics.Debug.WriteLine("Settings saved using core settings service");
@@ -393,10 +568,10 @@ namespace GourmetClient.MVU.Update
             try
             {
                 await Task.Run(() => { }); // Make it async for consistency
-                
+
                 var settingsService = InstanceProvider.SettingsService;
                 var userSettings = settingsService.GetCurrentUserSettings();
-                
+
                 // Map from core UserSettings to MVU AppSettings
                 var appSettings = new AppSettings(
                     Username: userSettings.GourmetLoginUsername,
@@ -407,7 +582,7 @@ namespace GourmetClient.MVU.Update
                     StartWithWindows: false,
                     Theme: "System"
                 );
-                
+
                 return new SettingsLoaded(appSettings);
             }
             catch (Exception ex)

@@ -14,47 +14,46 @@ public static class SettingsView {
     _ => 0 // "System" or default
   };
 
-  private static SolidColorBrush GetTextBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Colors.White 
+  private static SolidColorBrush GetTextBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Colors.White
       : Colors.Black);
 
-  private static SolidColorBrush GetCardBackgroundBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#3C3C3C") 
-      : Colors.White);
+  private static SolidColorBrush GetMinimalistBackgroundBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#0d1117")
+      : Color.Parse("#ffffff"));
 
-  private static SolidColorBrush GetGroupBoxBackgroundBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#2D2D30") 
-      : Color.Parse("#F8F8F8"));
+  private static SolidColorBrush GetMinimalistBorderBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#21262d")
+      : Color.Parse("#d0d7de"));
 
-  private static SolidColorBrush GetBorderBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#464647") 
-      : Colors.LightGray);
+  private static SolidColorBrush GetAccentBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#0969da")
+      : Color.Parse("#0366d6"));
 
   public static Control Create(AppState state, Action<Msg> dispatch) {
-    var border = new Border {
-      Background = GetCardBackgroundBrush(),
-      BorderBrush = GetBorderBrush(),
-      BorderThickness = new Thickness(1),
-      CornerRadius = new CornerRadius(8),
-      Padding = new Thickness(15),
-      MinWidth = 350,
-      MaxWidth = 500,
-      MaxHeight = 600
+    var scrollViewer = new ScrollViewer
+    {
+        HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+        VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+        //Padding = new Thickness(60, 40),
+        Background = GetMinimalistBackgroundBrush()
     };
 
-    var scrollViewer = new ScrollViewer {
-      HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-      VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
+    var mainPanel = new StackPanel
+    {
+        Orientation = Orientation.Vertical,
+        Spacing = 40,
+        MinWidth = 700,
+        Margin = new Thickness(10, 0, 10, 10)
     };
 
-    var mainPanel = new StackPanel {
-      Orientation = Orientation.Vertical,
-      Spacing = 15
-    };
+    // Header
+    var header = CreateMinimalistHeader();
+    mainPanel.Children.Add(header);
 
     // Declare all form controls at this scope so they're accessible to the save button
     TextBox usernameTextBox = null!;
@@ -65,118 +64,74 @@ public static class SettingsView {
     CheckBox startWithWindowsCheckBox = null!;
     ComboBox themeComboBox = null!;
 
-    // Gourmet Settings Group
-    var gourmetGroup = CreateSettingsGroup("Gourmet", CreateGourmetSettings(state, dispatch, out usernameTextBox, out passwordBox));
-    mainPanel.Children.Add(gourmetGroup);
+    // Settings sections
+    var gourmetSection = CreateMinimalistGourmetSettings(state, out usernameTextBox, out passwordBox);
+    mainPanel.Children.Add(gourmetSection);
 
-    // VentoPay Settings Group
-    var ventoPayGroup = CreateSettingsGroup("VentoPay", CreateVentoPaySettings(state, dispatch, out ventoUsernameTextBox, out ventoPasswordBox));
-    mainPanel.Children.Add(ventoPayGroup);
+    var ventoPaySection = CreateMinimalistVentoPaySettings(state, out ventoUsernameTextBox, out ventoPasswordBox);
+    mainPanel.Children.Add(ventoPaySection);
 
-    // Application Settings Group
-    var appGroup = CreateSettingsGroup("Anwendung", CreateApplicationSettings(state, dispatch, out autoUpdateCheckBox, out startWithWindowsCheckBox, out themeComboBox));
-    mainPanel.Children.Add(appGroup);
+    var appSection = CreateMinimalistApplicationSettings(state, out autoUpdateCheckBox, out startWithWindowsCheckBox, out themeComboBox);
+    mainPanel.Children.Add(appSection);
 
-    // Save button section
-    var saveButtonPanel = new StackPanel {
-      Orientation = Orientation.Horizontal,
-      HorizontalAlignment = HorizontalAlignment.Right,
-      Spacing = 10,
-      Margin = new Thickness(0, 20, 0, 10)
-    };
-
-    var saveButton = new Button {
-      Content = "Einstellungen speichern",
-      FontWeight = FontWeight.Medium,
-      Padding = new Thickness(20, 10),
-      Background = new SolidColorBrush(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-        ? Color.Parse("#0078D4") 
-        : Color.Parse("#0066CC")),
-      Foreground = new SolidColorBrush(Colors.White),
-      CornerRadius = new CornerRadius(5)
-    };
-    saveButton.Click += (_, _) => {
-      // Collect current form values when saving
-      dispatch(new SaveFormSettings(
-        usernameTextBox.Text ?? "",
-        passwordBox.Text ?? "",
-        ventoUsernameTextBox.Text ?? "", 
-        ventoPasswordBox.Text ?? "",
-        autoUpdateCheckBox.IsChecked == true,
-        startWithWindowsCheckBox.IsChecked == true,
-        themeComboBox.SelectedItem?.ToString() ?? "System"
-      ));
-    };
-    saveButtonPanel.Children.Add(saveButton);
-
-    var cancelButton = new Button {
-      Content = "Abbrechen",
-      Padding = new Thickness(20, 10),
-      Background = Brushes.Transparent,
-      BorderBrush = GetBorderBrush(),
-      BorderThickness = new Thickness(1),
-      Foreground = GetTextBrush(),
-      CornerRadius = new CornerRadius(5)
-    };
-    cancelButton.Click += (_, _) => dispatch(new ToggleSettings());
-    saveButtonPanel.Children.Add(cancelButton);
-
-    mainPanel.Children.Add(saveButtonPanel);
+    // Action buttons
+    var actionsSection = CreateMinimalistActions(dispatch, usernameTextBox, passwordBox, ventoUsernameTextBox, ventoPasswordBox, autoUpdateCheckBox, startWithWindowsCheckBox, themeComboBox);
+    mainPanel.Children.Add(actionsSection);
 
     scrollViewer.Content = mainPanel;
-    border.Child = scrollViewer;
-    return border;
+    return scrollViewer;
   }
 
-  private static Control CreateSettingsGroup(string title, Control content) {
-    var border = new Border {
-      Background = GetGroupBoxBackgroundBrush(),
-      BorderBrush = GetBorderBrush(),
-      BorderThickness = new Thickness(1),
-      CornerRadius = new CornerRadius(3),
-      Padding = new Thickness(10),
-      Margin = new Thickness(0, 5)
+  private static Control CreateMinimalistHeader() {
+    var headerPanel = new StackPanel
+    {
+        Orientation = Orientation.Vertical,
+        Spacing = 8,
+        Margin = new Thickness(0, 0, 0, 16)
     };
 
-    var panel = new StackPanel {
-      Orientation = Orientation.Vertical,
-      Spacing = 5
+    var titleText = new TextBlock {
+      Text = "Einstellungen",
+      FontSize = 24,
+      FontWeight = FontWeight.Light,
+      Foreground = GetTextBrush()
     };
+    headerPanel.Children.Add(titleText);
 
-    // Group header
-    var header = new TextBlock {
-      Text = title,
-      FontWeight = FontWeight.SemiBold,
+    var subtitleText = new TextBlock {
+      Text = "Konfiguration der Anmeldedaten und Anwendungseinstellungen",
       FontSize = 14,
+      FontWeight = FontWeight.Light,
       Foreground = GetTextBrush(),
-      Margin = new Thickness(0, 0, 0, 10)
+      Opacity = 0.7
     };
-    panel.Children.Add(header);
+    headerPanel.Children.Add(subtitleText);
 
-    panel.Children.Add(content);
-    border.Child = panel;
-    return border;
+    return headerPanel;
   }
 
-  private static Control CreateGourmetSettings(AppState state, Action<Msg> dispatch, out TextBox usernameTextBox, out TextBox passwordBox) {
+  private static Control CreateMinimalistGourmetSettings(AppState state, out TextBox usernameTextBox, out TextBox passwordBox) {
+    var section = CreateMinimalistSection("Gourmet");
+
     var grid = new Grid {
       RowDefinitions = {
-        new RowDefinition(GridLength.Auto),
         new RowDefinition(GridLength.Auto),
         new RowDefinition(GridLength.Auto)
       },
       ColumnDefinitions = {
-        new ColumnDefinition(GridLength.Auto),
+        new ColumnDefinition(new GridLength(180)),
         new ColumnDefinition(GridLength.Star)
       }
     };
 
-    // Username setting
+    // Username
     var usernameLabel = new TextBlock {
-      Text = "Benutzername:",
+      Text = "Benutzername",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
       Foreground = GetTextBrush(),
       VerticalAlignment = VerticalAlignment.Center,
-      Margin = new Thickness(0, 0, 10, 5)
+      Margin = new Thickness(0, 0, 20, 8)
     };
     Grid.SetRow(usernameLabel, 0);
     Grid.SetColumn(usernameLabel, 0);
@@ -184,20 +139,26 @@ public static class SettingsView {
 
     usernameTextBox = new TextBox {
       Text = state.Settings?.Username ?? "",
-      Margin = new Thickness(0, 0, 0, 5),
-      MinWidth = 200
+      FontSize = 14,
+      Padding = new Thickness(12, 10),
+      Background = Brushes.Transparent,
+      BorderBrush = GetMinimalistBorderBrush(),
+      BorderThickness = new Thickness(1),
+      CornerRadius = new CornerRadius(4),
+      Margin = new Thickness(0, 0, 0, 8)
     };
-    // Remove TextChanged event to prevent feedback loop - settings will be saved on Save button click
     Grid.SetRow(usernameTextBox, 0);
     Grid.SetColumn(usernameTextBox, 1);
     grid.Children.Add(usernameTextBox);
 
-    // Password setting
+    // Password
     var passwordLabel = new TextBlock {
-      Text = "Passwort:",
+      Text = "Passwort",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
       Foreground = GetTextBrush(),
       VerticalAlignment = VerticalAlignment.Center,
-      Margin = new Thickness(0, 0, 10, 5)
+      Margin = new Thickness(0, 0, 20, 0)
     };
     Grid.SetRow(passwordLabel, 1);
     Grid.SetColumn(passwordLabel, 0);
@@ -205,89 +166,44 @@ public static class SettingsView {
 
     passwordBox = new TextBox {
       Text = state.Settings?.Password ?? "",
-      PasswordChar = '*',
-      Margin = new Thickness(0, 0, 0, 5),
-      MinWidth = 200
+      PasswordChar = '•',
+      FontSize = 14,
+      Padding = new Thickness(12, 10),
+      Background = Brushes.Transparent,
+      BorderBrush = GetMinimalistBorderBrush(),
+      BorderThickness = new Thickness(1),
+      CornerRadius = new CornerRadius(4)
     };
-    // Remove TextChanged event to prevent feedback loop - settings will be saved on Save button click
     Grid.SetRow(passwordBox, 1);
     Grid.SetColumn(passwordBox, 1);
     grid.Children.Add(passwordBox);
 
-
-
-    return grid;
+    section.Children.Add(grid);
+    return section;
   }
 
-  private static Control CreateApplicationSettings(AppState state, Action<Msg> dispatch, out CheckBox autoUpdateCheckBox, out CheckBox startWithWindowsCheckBox, out ComboBox themeComboBox) {
-    var panel = new StackPanel {
-      Orientation = Orientation.Vertical,
-      Spacing = 10
-    };
+  private static Control CreateMinimalistVentoPaySettings(AppState state, out TextBox ventoUsernameTextBox, out TextBox ventoPasswordBox) {
+    var section = CreateMinimalistSection("VentoPay");
 
-    // Auto-update checkbox
-    autoUpdateCheckBox = new CheckBox {
-      Content = "Automatische Updates",
-      IsChecked = state.Settings?.AutoUpdate ?? true,
-      Foreground = GetTextBrush()
-    };
-    // Remove immediate event handlers to prevent feedback loops - values will be collected on save
-    panel.Children.Add(autoUpdateCheckBox);
-
-    // Start with Windows checkbox
-    startWithWindowsCheckBox = new CheckBox {
-      Content = "Mit Windows starten",
-      IsChecked = state.Settings?.StartWithWindows ?? false,
-      Foreground = GetTextBrush()
-    };
-    // Remove immediate event handlers to prevent feedback loops - values will be collected on save
-    panel.Children.Add(startWithWindowsCheckBox);
-
-    // Theme selection
-    var themePanel = new StackPanel {
-      Orientation = Orientation.Horizontal,
-      Spacing = 10
-    };
-
-    var themeLabel = new TextBlock {
-      Text = "Design:",
-      Foreground = GetTextBrush(),
-      VerticalAlignment = VerticalAlignment.Center
-    };
-    themePanel.Children.Add(themeLabel);
-
-    themeComboBox = new ComboBox {
-      Items = { "System", "Hell", "Dunkel" },
-      SelectedIndex = GetThemeIndex(state.Settings?.Theme ?? "System"),
-      MinWidth = 120
-    };
-    // Remove immediate event handlers to prevent feedback loops - values will be collected on save
-    themePanel.Children.Add(themeComboBox);
-
-    panel.Children.Add(themePanel);
-
-    return panel;
-  }
-
-  private static Control CreateVentoPaySettings(AppState state, Action<Msg> dispatch, out TextBox ventoUsernameTextBox, out TextBox ventoPasswordBox) {
     var grid = new Grid {
       RowDefinitions = {
-        new RowDefinition(GridLength.Auto),
         new RowDefinition(GridLength.Auto),
         new RowDefinition(GridLength.Auto)
       },
       ColumnDefinitions = {
-        new ColumnDefinition(GridLength.Auto),
+        new ColumnDefinition(new GridLength(180)),
         new ColumnDefinition(GridLength.Star)
       }
     };
 
-    // VentoPay Username setting
+    // VentoPay Username
     var ventoUsernameLabel = new TextBlock {
-      Text = "VentoPay Benutzername:",
+      Text = "Benutzername",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
       Foreground = GetTextBrush(),
       VerticalAlignment = VerticalAlignment.Center,
-      Margin = new Thickness(0, 0, 10, 5)
+      Margin = new Thickness(0, 0, 20, 8)
     };
     Grid.SetRow(ventoUsernameLabel, 0);
     Grid.SetColumn(ventoUsernameLabel, 0);
@@ -295,20 +211,26 @@ public static class SettingsView {
 
     ventoUsernameTextBox = new TextBox {
       Text = state.Settings?.VentoPayUsername ?? "",
-      Margin = new Thickness(0, 0, 0, 5),
-      MinWidth = 200
+      FontSize = 14,
+      Padding = new Thickness(12, 10),
+      Background = Brushes.Transparent,
+      BorderBrush = GetMinimalistBorderBrush(),
+      BorderThickness = new Thickness(1),
+      CornerRadius = new CornerRadius(4),
+      Margin = new Thickness(0, 0, 0, 8)
     };
-    // Remove TextChanged event to prevent feedback loop - settings will be saved on Save button click
     Grid.SetRow(ventoUsernameTextBox, 0);
     Grid.SetColumn(ventoUsernameTextBox, 1);
     grid.Children.Add(ventoUsernameTextBox);
 
-    // VentoPay Password setting
+    // VentoPay Password
     var ventoPasswordLabel = new TextBlock {
-      Text = "VentoPay Passwort:",
+      Text = "Passwort",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
       Foreground = GetTextBrush(),
       VerticalAlignment = VerticalAlignment.Center,
-      Margin = new Thickness(0, 0, 10, 5)
+      Margin = new Thickness(0, 0, 20, 0)
     };
     Grid.SetRow(ventoPasswordLabel, 1);
     Grid.SetColumn(ventoPasswordLabel, 0);
@@ -316,17 +238,152 @@ public static class SettingsView {
 
     ventoPasswordBox = new TextBox {
       Text = state.Settings?.VentoPayPassword ?? "",
-      PasswordChar = '*',
-      Margin = new Thickness(0, 0, 0, 5),
-      MinWidth = 200
+      PasswordChar = '•',
+      FontSize = 14,
+      Padding = new Thickness(12, 10),
+      Background = Brushes.Transparent,
+      BorderBrush = GetMinimalistBorderBrush(),
+      BorderThickness = new Thickness(1),
+      CornerRadius = new CornerRadius(4)
     };
-    // Remove TextChanged event to prevent feedback loop - settings will be saved on Save button click
     Grid.SetRow(ventoPasswordBox, 1);
     Grid.SetColumn(ventoPasswordBox, 1);
     grid.Children.Add(ventoPasswordBox);
 
+    section.Children.Add(grid);
+    return section;
+  }
 
+  private static Control CreateMinimalistApplicationSettings(AppState state, out CheckBox autoUpdateCheckBox, out CheckBox startWithWindowsCheckBox, out ComboBox themeComboBox) {
+    var section = CreateMinimalistSection("Anwendung");
 
-    return grid;
+    var panel = new StackPanel {
+      Orientation = Orientation.Vertical,
+      Spacing = 20
+    };
+
+    // Checkboxes
+    autoUpdateCheckBox = new CheckBox {
+      Content = "Automatische Updates",
+      IsChecked = state.Settings?.AutoUpdate ?? true,
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
+      Foreground = GetTextBrush()
+    };
+    panel.Children.Add(autoUpdateCheckBox);
+
+    startWithWindowsCheckBox = new CheckBox {
+      Content = "Mit Windows starten",
+      IsChecked = state.Settings?.StartWithWindows ?? false,
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
+      Foreground = GetTextBrush()
+    };
+    panel.Children.Add(startWithWindowsCheckBox);
+
+    // Theme selection
+    var themePanel = new Grid {
+      ColumnDefinitions = {
+        new ColumnDefinition(new GridLength(180)),
+        new ColumnDefinition(GridLength.Star)
+      }
+    };
+
+    var themeLabel = new TextBlock {
+      Text = "Design",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
+      Foreground = GetTextBrush(),
+      VerticalAlignment = VerticalAlignment.Center,
+      Margin = new Thickness(0, 0, 20, 0)
+    };
+    Grid.SetColumn(themeLabel, 0);
+    themePanel.Children.Add(themeLabel);
+
+    themeComboBox = new ComboBox {
+      Items = { "System", "Hell", "Dunkel" },
+      SelectedIndex = GetThemeIndex(state.Settings?.Theme ?? "System"),
+      FontSize = 14,
+      Padding = new Thickness(12, 10),
+      Background = Brushes.Transparent,
+      BorderBrush = GetMinimalistBorderBrush(),
+      BorderThickness = new Thickness(1),
+      CornerRadius = new CornerRadius(4),
+      MinWidth = 150
+    };
+    Grid.SetColumn(themeComboBox, 1);
+    themePanel.Children.Add(themeComboBox);
+
+    panel.Children.Add(themePanel);
+    section.Children.Add(panel);
+    return section;
+  }
+
+  private static StackPanel CreateMinimalistSection(string title) {
+    var section = new StackPanel
+    {
+        Orientation = Orientation.Vertical,
+        Spacing = 20
+    };
+
+    var titleText = new TextBlock {
+      Text = title,
+      FontSize = 18,
+      FontWeight = FontWeight.Normal,
+      Foreground = GetTextBrush(),
+      Margin = new Thickness(0, 0, 0, 4)
+    };
+    section.Children.Add(titleText);
+
+    return section;
+  }
+
+  private static Control CreateMinimalistActions(Action<Msg> dispatch, TextBox usernameTextBox, TextBox passwordBox, TextBox ventoUsernameTextBox, TextBox ventoPasswordBox, CheckBox autoUpdateCheckBox, CheckBox startWithWindowsCheckBox, ComboBox themeComboBox) {
+    var actionsPanel = new StackPanel
+    {
+        Orientation = Orientation.Horizontal,
+        Spacing = 12,
+        HorizontalAlignment = HorizontalAlignment.Left,
+        Margin = new Thickness(0, 20, 0, 0)
+    };
+
+    var saveButton = new Button {
+      Content = "Speichern",
+      FontSize = 14,
+      FontWeight = FontWeight.Medium,
+      Padding = new Thickness(20, 12),
+      Background = GetAccentBrush(),
+      Foreground = new SolidColorBrush(Colors.White),
+      BorderThickness = new Thickness(0),
+      CornerRadius = new CornerRadius(4)
+    };
+    saveButton.Click += (_, _) => {
+      dispatch(new SaveFormSettings(
+        usernameTextBox.Text ?? "",
+        passwordBox.Text ?? "",
+        ventoUsernameTextBox.Text ?? "",
+        ventoPasswordBox.Text ?? "",
+        autoUpdateCheckBox.IsChecked == true,
+        startWithWindowsCheckBox.IsChecked == true,
+        themeComboBox.SelectedItem?.ToString() ?? "System"
+      ));
+    };
+    actionsPanel.Children.Add(saveButton);
+
+    var cancelButton = new Button {
+      Content = "Abbrechen",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
+      Padding = new Thickness(20, 12),
+      Background = Brushes.Transparent,
+      BorderBrush = GetMinimalistBorderBrush(),
+      BorderThickness = new Thickness(1),
+      Foreground = GetTextBrush(),
+      CornerRadius = new CornerRadius(4)
+    };
+    cancelButton.Click += (_, _) => dispatch(new ToggleSettings());
+    actionsPanel.Children.Add(cancelButton);
+
+    return actionsPanel;
   }
 }

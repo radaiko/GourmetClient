@@ -13,9 +13,8 @@ public class MainWindow : HostWindow {
 
   public MainWindow() {
     Title = "Gourmet Client";
-    Width = 800;
-    Height = 900;
-    MinWidth = 590;
+    Width = 1200;
+    Height = 1024;
 
     this.AttachDevTools();
 
@@ -25,7 +24,7 @@ public class MainWindow : HostWindow {
 
     // Initialize the view with current state
     UpdateView(_dispatcher.CurrentState);
-    
+
     // Load settings at startup
     _dispatcher.Dispatch(new InitializeApp());
   }

@@ -19,6 +19,8 @@ public record AppState(
   , decimal SumCostUnknownBillingPositions = 0
   , string? ErrorMessage = null
   , AppSettings? Settings = null
+  , string UserName = ""
+  , DateTime? LastMenuUpdate = null
 ) {
   public static AppState Initial => new(Settings: new AppSettings());
 }
@@ -39,7 +41,7 @@ public record GourmetMenuDayViewModel(
 );
 
 public record GourmetMenuViewModel(
-  int MenuId
+  string MenuId
   , string MenuDescription
   , char[] Allergens
   , GourmetMenuState MenuState

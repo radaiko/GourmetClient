@@ -33,7 +33,9 @@ public static class MainView {
       ? Color.Parse("#404040")
       : Colors.LightGray);
 
-  private static SolidColorBrush GetIconBorderBrush() =>
+    private static SolidColorBrush GetTransparentBrush() => new(Colors.Transparent);
+
+    private static SolidColorBrush GetIconBorderBrush() =>
     new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
       ? Color.Parse("#555555")
       : Colors.Gray);
@@ -69,6 +71,11 @@ public static class MainView {
     Grid.SetRow(mainContent, 2);
     mainGrid.Children.Add(mainContent);
 
+    // Status bar
+    var statusBar = CreateStatusBar(state);
+    Grid.SetRow(statusBar, 3);
+    mainGrid.Children.Add(statusBar);
+
     // Overlay panels for About, Settings, and Billing views
     if (state.IsAboutVisible) {
       var aboutOverlay = CreateOverlay(AboutView.Create(state, dispatch), dispatch, new ToggleAbout());
@@ -93,7 +100,7 @@ public static class MainView {
 
   private static Border CreateActionBar(AppState state, Action<Msg> dispatch) {
     var border = new Border {
-      Background = GetActionBarBackgroundBrush()
+      Background = GetTransparentBrush()
     };
 
     var dockPanel = new DockPanel {
@@ -111,7 +118,10 @@ public static class MainView {
       Content = CreateIconButton("Bill.png"),
       Width = 40,
       Height = 40,
-      Margin = new Thickness(2)
+      Margin = new Thickness(2),
+      Background = GetTransparentBrush(),
+      BorderBrush = GetTransparentBrush(),
+      BorderThickness = new Thickness(0)
     };
     ToolTip.SetTip(billButton, "Transaktionen anzeigen");
     billButton.Click += (_, _) => dispatch(new ToggleBilling());
@@ -131,7 +141,10 @@ public static class MainView {
       Content = CreateIconButton("RefreshLocalData.png"),
       Width = 40,
       Height = 40,
-      Margin = new Thickness(2)
+      Margin = new Thickness(2),
+      Background = GetTransparentBrush(),
+        BorderBrush = GetTransparentBrush(),
+        BorderThickness = new Thickness(0)
     };
     ToolTip.SetTip(refreshButton, "Lokale Daten aktualisieren");
     refreshButton.Click += (_, _) => dispatch(new LoadMenus());
@@ -142,9 +155,18 @@ public static class MainView {
       Content = CreateIconButton("ExecuteOrder.png"),
       Width = 40,
       Height = 40,
-      Margin = new Thickness(5, 2)
+      Margin = new Thickness(5, 2),
+        Background = GetTransparentBrush(),
+        BorderBrush = GetTransparentBrush(),
+        BorderThickness = new Thickness(0)
     };
-    ToolTip.SetTip(executeButton, "Bestellung ausführen");
+
+    var (orderCount, cancelCount) = CountMarkedMenus(state);
+    var executeTooltip = orderCount > 0 || cancelCount > 0
+      ? $"Bestellung ausführen ({orderCount} bestellen, {cancelCount} stornieren)"
+      : "Bestellung ausführen (keine Änderungen)";
+
+    ToolTip.SetTip(executeButton, executeTooltip);
     executeButton.Click += (_, _) => dispatch(new ExecuteOrder());
     leftPanel.Children.Add(executeButton);
 
@@ -162,7 +184,10 @@ public static class MainView {
       Content = CreateIconButton("Information.png"),
       Width = 40,
       Height = 40,
-      Margin = new Thickness(5, 2)
+      Margin = new Thickness(5, 2),
+        Background = GetTransparentBrush(),
+        BorderBrush = GetTransparentBrush(),
+        BorderThickness = new Thickness(0)
     };
     ToolTip.SetTip(aboutButton, "Über");
     aboutButton.Click += (_, _) => dispatch(new ToggleAbout());
@@ -173,7 +198,10 @@ public static class MainView {
       Content = CreateIconButton("Settings.png"),
       Width = 40,
       Height = 40,
-      Margin = new Thickness(2)
+      Margin = new Thickness(2),
+        Background = GetTransparentBrush(),
+        BorderBrush = GetTransparentBrush(),
+        BorderThickness = new Thickness(0)
     };
     ToolTip.SetTip(settingsButton, "Einstellungen");
     settingsButton.Click += (_, _) => dispatch(new ToggleSettings());
@@ -186,15 +214,31 @@ public static class MainView {
     return border;
   }
 
+  private static (int orderCount, int cancelCount) CountMarkedMenus(AppState state) {
+    if (state.MenuDays == null) return (0, 0);
+
+    var orderCount = 0;
+    var cancelCount = 0;
+
+    foreach (var day in state.MenuDays) {
+      foreach (var menu in day.Menus) {
+        if (menu.MenuState == GourmetMenuState.MarkedForOrder) orderCount++;
+        else if (menu.MenuState == GourmetMenuState.MarkedForCancel) cancelCount++;
+      }
+    }
+
+    return (orderCount, cancelCount);
+  }
+
   private static Control CreateIconButton(string iconName) {
     // Create a styled button that looks like the WPF icon buttons
     var border = new Border {
       Width = 32,
       Height = 32,
-      Background = GetIconBackgroundBrush(),
+      Background = GetTransparentBrush(),
       CornerRadius = new CornerRadius(3),
-      BorderBrush = GetIconBorderBrush(),
-      BorderThickness = new Thickness(1)
+      BorderBrush = GetTransparentBrush(),
+      BorderThickness = new Thickness(0)
     };
 
     // Use text symbols as placeholders for icons - theme-aware colors
@@ -255,180 +299,46 @@ public static class MainView {
   }
 
   private static Control CreateMainContent(AppState state, Action<Msg> dispatch) {
-    var scrollViewer = new ScrollViewer {
-      HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
-      VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto
-    };
-
-    if (state.IsLoading) {
-      var loadingPanel = new StackPanel {
-        HorizontalAlignment = HorizontalAlignment.Center,
-        VerticalAlignment = VerticalAlignment.Center
-      };
-
-      var loadingText = new TextBlock {
-        Text = "Loading...",
-        FontSize = 16,
-        Foreground = GetTextBrush(),
-        HorizontalAlignment = HorizontalAlignment.Center
-      };
-      loadingPanel.Children.Add(loadingText);
-
-      scrollViewer.Content = loadingPanel;
-    }
-    else {
-      // Create menu content similar to WPF MenuOrderView
-      scrollViewer.Content = CreateMenuContent(state, dispatch);
-    }
-
-    return scrollViewer;
+    // Use the dedicated MenuView for the main content
+    return MenuView.Create(state, dispatch);
   }
 
-  private static Control CreateMenuContent(AppState state, Action<Msg> dispatch) {
-    var mainPanel = new StackPanel {
-      Margin = new Thickness(10)
-    };
-
-    // Welcome header
-    var headerText = new TextBlock {
-      Text = "Gourmet Client",
-      FontSize = 24,
-      FontWeight = FontWeight.Bold,
-      Foreground = GetTextBrush(),
-      HorizontalAlignment = HorizontalAlignment.Center,
-      Margin = new Thickness(0, 10, 0, 20)
-    };
-    mainPanel.Children.Add(headerText);
-
-    // Menu categories placeholder (to be implemented with actual menu data)
-    var categoriesPanel = CreateMenuCategoriesPanel(state, dispatch);
-    mainPanel.Children.Add(categoriesPanel);
-
-    return mainPanel;
-  }
-
-  private static Control CreateMenuCategoriesPanel(AppState state, Action<Msg> dispatch) {
-    var panel = new StackPanel();
-
-    // Menu categories (matching WPF structure)
-    var categories = new[] { "Menü 1", "Menü 2", "Menü 3", "Suppe & Salat" };
-
-    foreach (var category in categories) {
-      var categoryHeader = CreateCategoryHeader(category);
-      panel.Children.Add(categoryHeader);
-
-      // Placeholder for menu items
-      var menuItemsPanel = CreateMenuItemsPanel(category, state, dispatch);
-      panel.Children.Add(menuItemsPanel);
-    }
-
-    return panel;
-  }
-
-  private static Control CreateCategoryHeader(string categoryName) {
+  private static Control CreateStatusBar(AppState state) {
     var border = new Border {
+      Background = GetActionBarBackgroundBrush(),
       BorderBrush = GetBorderBrush(),
-      BorderThickness = new Thickness(2, 0, 0, 0),
-      Margin = new Thickness(0, 10, 0, 5)
+      BorderThickness = new Thickness(0, 1, 0, 0),
+      Padding = new Thickness(10, 5)
     };
 
-    var textBlock = new TextBlock {
-      Text = categoryName,
-      FontSize = 20,
-      Foreground = GetTextBrush(),
-      Margin = new Thickness(12, 0, 0, 0),
-      VerticalAlignment = VerticalAlignment.Center
-    };
+    var dockPanel = new DockPanel();
 
-    border.Child = textBlock;
+    // User information on the left
+    if (!string.IsNullOrEmpty(state.UserName)) {
+      var userText = new TextBlock {
+        Text = $"Angemeldet als: {state.UserName}",
+        Foreground = GetTextBrush(),
+        VerticalAlignment = VerticalAlignment.Center,
+        FontSize = 12
+      };
+      DockPanel.SetDock(userText, Dock.Left);
+      dockPanel.Children.Add(userText);
+    }
+
+    // Last update time on the right
+    if (state.LastMenuUpdate.HasValue) {
+      var updateText = new TextBlock {
+        Text = $"Letzte Aktualisierung: {state.LastMenuUpdate.Value:dd.MM.yyyy HH:mm}",
+        Foreground = GetTextBrush(),
+        VerticalAlignment = VerticalAlignment.Center,
+        FontSize = 12
+      };
+      DockPanel.SetDock(updateText, Dock.Right);
+      dockPanel.Children.Add(updateText);
+    }
+
+    border.Child = dockPanel;
     return border;
-  }
-
-  private static Control CreateMenuItemsPanel(string category, AppState state, Action<Msg> dispatch) {
-    var panel = new StackPanel();
-
-    // Placeholder menu item (to be replaced with actual data)
-    var menuItem = CreateMenuItemCard($"Sample menu from {category}", "Sample description for the menu item", state, dispatch);
-    panel.Children.Add(menuItem);
-
-    return panel;
-  }
-
-  private static Control CreateMenuItemCard(string title, string description, AppState state, Action<Msg> dispatch) {
-    var dockPanel = new DockPanel {
-      LastChildFill = true,
-      Margin = new Thickness(0, 2)
-    };
-
-    // Left border (matching WPF design)
-    var leftBorder = new Border {
-      Width = 2,
-      Background = GetBorderBrush(),
-      Margin = new Thickness(0, -2)
-    };
-    DockPanel.SetDock(leftBorder, Dock.Left);
-    dockPanel.Children.Add(leftBorder);
-
-    // Menu card
-    var menuBorder = new Border {
-      Height = 120,
-      Background = GetCardBackgroundBrush(),
-      BorderBrush = GetBorderBrush(),
-      BorderThickness = new Thickness(0, 2)
-    };
-
-    var menuButton = new Button {
-      HorizontalAlignment = HorizontalAlignment.Stretch,
-      VerticalAlignment = VerticalAlignment.Stretch,
-      HorizontalContentAlignment = HorizontalAlignment.Stretch,
-      VerticalContentAlignment = VerticalAlignment.Top,
-      Margin = new Thickness(10, 0),
-      Background = Brushes.Transparent,
-      BorderThickness = new Thickness(0)
-    };
-
-    var contentGrid = new Grid {
-      Margin = new Thickness(0, 10, 0, 0)
-    };
-    contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-    contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-    contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
-    contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-
-    // Menu description
-    var descriptionText = new TextBlock {
-      Text = description,
-      FontSize = 14,
-      Foreground = GetTextBrush(),
-      TextWrapping = TextWrapping.Wrap,
-      TextTrimming = TextTrimming.CharacterEllipsis
-    };
-    Grid.SetRow(descriptionText, 0);
-    Grid.SetColumn(descriptionText, 0);
-    contentGrid.Children.Add(descriptionText);
-
-    // Status icons panel
-    var iconsPanel = new StackPanel {
-      Orientation = Orientation.Vertical,
-      Margin = new Thickness(5, 0)
-    };
-    Grid.SetRow(iconsPanel, 0);
-    Grid.SetRowSpan(iconsPanel, 2);
-    Grid.SetColumn(iconsPanel, 1);
-
-    // Add status icons (placeholder)
-    var statusIcon = CreateIconButton("MenuNotAvailable.png");
-    iconsPanel.Children.Add(statusIcon);
-
-    contentGrid.Children.Add(iconsPanel);
-
-    menuButton.Content = contentGrid;
-    menuButton.Click += (_, _) => dispatch(new ToggleMenuOrder(title));
-
-    menuBorder.Child = menuButton;
-    dockPanel.Children.Add(menuBorder);
-
-    return dockPanel;
   }
 
   private static Control CreateOverlay(Control content, Action<Msg> dispatch, Msg closeMessage) {
@@ -450,7 +360,7 @@ public static class MainView {
       Margin = new Thickness(0, 10, 10, 0),
       Background = new SolidColorBrush(Colors.Red),
       Foreground = new SolidColorBrush(Colors.White),
-      CornerRadius = new CornerRadius(15)
+      //CornerRadius = new CornerRadius(15)
     };
     closeButton.Click += (_, _) => dispatch(closeMessage);
 

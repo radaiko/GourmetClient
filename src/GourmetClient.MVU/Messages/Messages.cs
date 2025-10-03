@@ -13,7 +13,11 @@ public record SelectMonth(DateTime Month) : Msg;
 
 // Menu Messages
 public record LoadMenus : Msg;
-public record MenusLoaded(ImmutableList<GourmetMenuDayViewModel> MenuDays) : Msg;
+public record MenusLoaded(
+  ImmutableList<GourmetMenuDayViewModel> MenuDays,
+  string UserName = "",
+  DateTime? LastUpdate = null
+) : Msg;
 public record UpdateMenu : Msg;
 public record ToggleMenuOrder(string MenuTitle) : Msg;
 public record ExecuteOrder : Msg;
