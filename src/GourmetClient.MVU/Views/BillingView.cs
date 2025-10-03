@@ -4,6 +4,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
+using Avalonia.Controls.Shapes;
+using Avalonia.Collections;
+using Avalonia.Styling;
 using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Models;
 
@@ -44,7 +49,8 @@ public static class BillingView {
     var mainPanel = new DockPanel {
       Background = GetCardBackgroundBrush(),
       MinWidth = 500,
-      MaxHeight = 600
+      MinHeight = 400
+      // Removed MaxHeight to prevent bottom cutoff
     };
 
     // Header with title and close button
@@ -52,27 +58,15 @@ public static class BillingView {
     DockPanel.SetDock(header, Dock.Top);
     mainPanel.Children.Add(header);
 
-    // Content area
+    // Content area with improved scrolling
     var contentScrollViewer = new ScrollViewer {
-      Padding = new Thickness(15)
+      Padding = new Thickness(15),
+      VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+      HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled
     };
 
     if (state.IsLoadingBilling) {
-      var loadingPanel = new StackPanel {
-        HorizontalAlignment = HorizontalAlignment.Center,
-        VerticalAlignment = VerticalAlignment.Center,
-        Spacing = 10
-      };
-
-      var loadingText = new TextBlock {
-        Text = "Lade Abrechnungsdaten...",
-        FontSize = 16,
-        Foreground = GetTextBrush(),
-        HorizontalAlignment = HorizontalAlignment.Center
-      };
-      loadingPanel.Children.Add(loadingText);
-
-      contentScrollViewer.Content = loadingPanel;
+      contentScrollViewer.Content = CreateLoadingPanel();
     }
     else {
       contentScrollViewer.Content = CreateBillingContent(state, dispatch);
@@ -80,6 +74,37 @@ public static class BillingView {
 
     mainPanel.Children.Add(contentScrollViewer);
     return mainPanel;
+  }
+
+  private static Control CreateLoadingPanel() {
+    var loadingPanel = new StackPanel {
+      HorizontalAlignment = HorizontalAlignment.Center,
+      VerticalAlignment = VerticalAlignment.Center,
+      Spacing = 15,
+      MinHeight = 200
+    };
+
+    // Create a simple spinning loading indicator using emoji
+    var spinner = new TextBlock {
+      Text = "⟳",
+      FontSize = 40,
+      Foreground = new SolidColorBrush(Color.Parse("#007ACC")),
+      HorizontalAlignment = HorizontalAlignment.Center,
+      VerticalAlignment = VerticalAlignment.Center
+    };
+
+    loadingPanel.Children.Add(spinner);
+
+    var loadingText = new TextBlock {
+      Text = "Lade Abrechnungsdaten...",
+      FontSize = 16,
+      Foreground = GetTextBrush(),
+      HorizontalAlignment = HorizontalAlignment.Center,
+      Margin = new Thickness(0, 10, 0, 0)
+    };
+    loadingPanel.Children.Add(loadingText);
+
+    return loadingPanel;
   }
 
   private static Control CreateHeader(AppState state, Action<Msg> dispatch) {
@@ -363,12 +388,8 @@ public static class BillingView {
       VerticalAlignment = VerticalAlignment.Center
     };
 
-    // Generate available months (current month and previous 11 months)
-    var availableMonths = new List<DateTime>();
-    var currentDate = DateTime.Now;
-    for (int i = 0; i < 12; i++) {
-      availableMonths.Add(currentDate.AddMonths(-i));
-    }
+    // Use available months from state, fallback to current month if not yet initialized
+    var availableMonths = state.AvailableMonths?.ToList() ?? new List<DateTime> { DateTime.Now };
 
     // Set items and display format
     comboBox.ItemsSource = availableMonths;
@@ -378,7 +399,7 @@ public static class BillingView {
     };
 
     // Set selected item to current selected month or current month
-    var selectedMonth = state.SelectedMonth ?? currentDate;
+    var selectedMonth = state.SelectedMonth ?? DateTime.Now;
     var matchingMonth = availableMonths.FirstOrDefault(m => 
       m.Year == selectedMonth.Year && m.Month == selectedMonth.Month);
     
@@ -388,10 +409,13 @@ public static class BillingView {
       comboBox.SelectedItem = availableMonths[0];
     }
 
-    // Handle selection changed
+    // Handle selection changed - automatically trigger loading
     comboBox.SelectionChanged += (sender, e) => {
       if (comboBox.SelectedItem is DateTime selectedDate) {
-        dispatch(new SelectMonth(selectedDate));
+        // Only dispatch if the billing view is visible and the month actually changed
+        if (state.IsBillingVisible && selectedDate != state.SelectedMonth) {
+          dispatch(new SelectMonth(selectedDate));
+        }
       }
     };
 

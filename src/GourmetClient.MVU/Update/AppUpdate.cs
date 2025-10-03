@@ -23,7 +23,12 @@ namespace GourmetClient.MVU.Update
             return message switch
             {
                 // UI Toggle Messages
-                ToggleBilling => (state with { IsBillingVisible = !state.IsBillingVisible }, Cmd.None<Msg>()),
+                ToggleBilling => state.IsBillingVisible 
+                    ? (state with { IsBillingVisible = false }, Cmd.None<Msg>()) 
+                    : (state with { IsBillingVisible = true, IsLoadingBilling = true }, Cmd.Batch(
+                        Cmd.OfTask(InitializeBillingMonthsAsync),
+                        Cmd.OfTask(LoadBillingAsync)
+                    )),
                 ToggleSettings => state.IsSettingsVisible 
                     ? (state with { IsSettingsVisible = false }, Cmd.None<Msg>()) 
                     : (state with { IsSettingsVisible = true }, Cmd.OfTask(LoadSettingsAsync)),
@@ -45,6 +50,7 @@ namespace GourmetClient.MVU.Update
                 
                 // Billing Messages
                 LoadBilling => (state with { IsLoadingBilling = true, IsBillingVisible = true }, Cmd.OfTask(LoadBillingAsync)),
+                InitializeBillingMonths => (state, Cmd.OfTask(InitializeBillingMonthsAsync)),
                 BillingLoaded billingData => (state with 
                 { 
                     IsLoadingBilling = false,
@@ -54,6 +60,7 @@ namespace GourmetClient.MVU.Update
                     SumCostDrinkBillingPositions = billingData.SumCostDrinkBillingPositions,
                     SumCostUnknownBillingPositions = billingData.SumCostUnknownBillingPositions
                 }, Cmd.None<Msg>()),
+                BillingMonthsInitialized monthsData => (state with { AvailableMonths = monthsData.AvailableMonths }, Cmd.None<Msg>()),
                 
                 // About Messages
                 ShowReleaseNotes => (state, Cmd.OfTask(OpenReleaseNotesAsync)),
@@ -203,6 +210,28 @@ namespace GourmetClient.MVU.Update
         {
             var now = DateTime.Now;
             return await LoadBillingForMonthAsync(now);
+        }
+
+        private static async Task<Msg> InitializeBillingMonthsAsync()
+        {
+            try
+            {
+                await Task.Run(() => { }); // Make it async for consistency
+                
+                // Generate available months (current month and previous 11 months)
+                var availableMonths = new List<DateTime>();
+                var currentDate = DateTime.Now;
+                for (int i = 0; i < 12; i++)
+                {
+                    availableMonths.Add(currentDate.AddMonths(-i));
+                }
+                
+                return new BillingMonthsInitialized(availableMonths.ToImmutableList());
+            }
+            catch (Exception ex)
+            {
+                return new ErrorOccurred($"Failed to initialize billing months: {ex.Message}");
+            }
         }
 
         private static async Task<Msg> LoadBillingForMonthAsync(DateTime selectedDate)

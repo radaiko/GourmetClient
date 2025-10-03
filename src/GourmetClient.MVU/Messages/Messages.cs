@@ -21,6 +21,7 @@ public record ExecuteSelectedOrder : Msg;
 
 // Billing Messages
 public record LoadBilling : Msg;
+public record InitializeBillingMonths : Msg;
 
 public record BillingLoaded(
   ImmutableList<GroupedBillingPositionsViewModel> MenuBillingPositions,
@@ -29,6 +30,8 @@ public record BillingLoaded(
   decimal SumCostDrinkBillingPositions,
   decimal SumCostUnknownBillingPositions
 ) : Msg;
+
+public record BillingMonthsInitialized(ImmutableList<DateTime> AvailableMonths) : Msg;
 
 // About Messages
 public record ShowReleaseNotes : Msg;

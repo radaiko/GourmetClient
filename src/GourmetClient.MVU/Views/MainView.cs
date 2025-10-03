@@ -13,39 +13,39 @@ namespace GourmetClient.MVU.Views;
 
 public static class MainView {
   // Theme-aware color brushes that work in both light and dark modes
-  private static SolidColorBrush GetActionBarBackgroundBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#2D2D30") 
+  private static SolidColorBrush GetActionBarBackgroundBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#2D2D30")
       : Color.Parse("#F2F2F2"));
-  
-  private static SolidColorBrush GetCardBackgroundBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#3C3C3C") 
+
+  private static SolidColorBrush GetCardBackgroundBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#3C3C3C")
       : Colors.White);
-  
-  private static SolidColorBrush GetBorderBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#464647") 
+
+  private static SolidColorBrush GetBorderBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#464647")
       : Color.Parse("#F2F2F2"));
-  
-  private static SolidColorBrush GetIconBackgroundBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#404040") 
+
+  private static SolidColorBrush GetIconBackgroundBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#404040")
       : Colors.LightGray);
-  
-  private static SolidColorBrush GetIconBorderBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Color.Parse("#555555") 
+
+  private static SolidColorBrush GetIconBorderBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Color.Parse("#555555")
       : Colors.Gray);
-  
-  private static SolidColorBrush GetTextBrush() => 
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark 
-      ? Colors.White 
+
+  private static SolidColorBrush GetTextBrush() =>
+    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      ? Colors.White
       : Colors.Black);
 
   public static Control Create(AppState state, Action<Msg> dispatch) {
     var mainGrid = new Grid();
-    
+
     // Define rows like in WPF version
     mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Action bar
     mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Error display
@@ -201,7 +201,7 @@ public static class MainView {
     var isDark = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
     var iconText = iconName switch {
       "Bill.png" => isDark ? "💳" : "💰",
-      "RefreshLocalData.png" => isDark ? "⟳" : "🔄", 
+      "RefreshLocalData.png" => isDark ? "⟳" : "🔄",
       "ExecuteOrder.png" => isDark ? "☑" : "✓",
       "Information.png" => isDark ? "🛈" : "ℹ️",
       "Settings.png" => isDark ? "⚙" : "⚙️",
@@ -226,7 +226,7 @@ public static class MainView {
 
   private static Panel CreateErrorPanel(AppState state, Action<Msg> dispatch) {
     var isDark = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
-    
+
     var panel = new StackPanel {
       Orientation = Orientation.Horizontal,
       Background = new SolidColorBrush(isDark ? Color.Parse("#4D1F1F") : Colors.LightCoral),
@@ -265,7 +265,7 @@ public static class MainView {
         HorizontalAlignment = HorizontalAlignment.Center,
         VerticalAlignment = VerticalAlignment.Center
       };
-      
+
       var loadingText = new TextBlock {
         Text = "Loading...",
         FontSize = 16,
@@ -273,7 +273,7 @@ public static class MainView {
         HorizontalAlignment = HorizontalAlignment.Center
       };
       loadingPanel.Children.Add(loadingText);
-      
+
       scrollViewer.Content = loadingPanel;
     }
     else {
@@ -312,11 +312,11 @@ public static class MainView {
 
     // Menu categories (matching WPF structure)
     var categories = new[] { "Menü 1", "Menü 2", "Menü 3", "Suppe & Salat" };
-    
+
     foreach (var category in categories) {
       var categoryHeader = CreateCategoryHeader(category);
       panel.Children.Add(categoryHeader);
-      
+
       // Placeholder for menu items
       var menuItemsPanel = CreateMenuItemsPanel(category, state, dispatch);
       panel.Children.Add(menuItemsPanel);
