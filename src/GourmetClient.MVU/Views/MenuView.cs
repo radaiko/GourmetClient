@@ -1,7 +1,9 @@
 ﻿using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Models;
 
@@ -23,6 +25,16 @@ public static class MenuView
 
         if (state.MenuDays == null || state.MenuDays.Count == 0)
         {
+            // Check if Gourmet credentials are configured
+            if (state.Settings != null && 
+                !string.IsNullOrEmpty(state.Settings.Username) && 
+                !string.IsNullOrEmpty(state.Settings.Password))
+            {
+                // Auto-refresh if credentials are available
+                dispatch(new LoadMenus());
+                return CreateLoadingView();
+            }
+            
             return CreateWelcomeView(state, dispatch);
         }
 
@@ -44,8 +56,28 @@ public static class MenuView
             FontSize = 40,
             Foreground = new SolidColorBrush(Color.Parse("#007ACC")),
             HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            RenderTransformOrigin = RelativePoint.Center
         };
+
+        // Create rotation animation using a simple timer-based approach
+        var rotateTransform = new RotateTransform();
+        spinner.RenderTransform = rotateTransform;
+
+        // Use a timer for smooth rotation animation
+        var timer = new System.Timers.Timer(16); // ~60 FPS
+        var angle = 0.0;
+        timer.Elapsed += (sender, e) =>
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                angle += 6; // 360 degrees in 1 second (6 degrees per 16ms)
+                if (angle >= 360) angle = 0;
+                rotateTransform.Angle = angle;
+            });
+        };
+        timer.Start();
+
         loadingPanel.Children.Add(spinner);
 
         var loadingText = new TextBlock
