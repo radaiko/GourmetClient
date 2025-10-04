@@ -77,16 +77,25 @@ public static class BillingViewIOS
         // Month selector
         if (state.AvailableMonths != null && state.AvailableMonths.Count > 0)
         {
-            var monthPanel = new DockPanel();
+            // Replaced DockPanel with Grid to push the ComboBox fully to the right side
+            var monthPanel = new Grid
+            {
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition(GridLength.Auto),
+                    new ColumnDefinition(GridLength.Star)
+                }
+            };
 
             var label = new TextBlock
             {
                 Text = "Monat",
                 FontSize = 17,
                 Foreground = BillingViewShared.GetTextBrush(),
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0,0,12,0) // space between label and picker
             };
-            DockPanel.SetDock(label, Dock.Left);
+            Grid.SetColumn(label, 0);
             monthPanel.Children.Add(label);
 
             var monthPicker = new ComboBox
@@ -96,7 +105,8 @@ public static class BillingViewIOS
                     ? state.AvailableMonths.IndexOf(state.SelectedMonth.Value)
                     : 0,
                 MinWidth = 180,
-                FontSize = 17
+                FontSize = 17,
+                HorizontalAlignment = HorizontalAlignment.Right
             };
             monthPicker.SelectionChanged += (_, _) =>
             {
@@ -106,7 +116,7 @@ public static class BillingViewIOS
                     dispatch(new SelectMonth(selectedMonth));
                 }
             };
-            DockPanel.SetDock(monthPicker, Dock.Right);
+            Grid.SetColumn(monthPicker, 1);
             monthPanel.Children.Add(monthPicker);
 
             headerPanel.Children.Add(monthPanel);
