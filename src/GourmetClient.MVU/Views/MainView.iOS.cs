@@ -95,7 +95,7 @@ public static class MainViewIOS
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
             BorderThickness = new Thickness(0, 0, 0, 0.5),
-            Padding = new Thickness(16, 12, 16, 12)
+            Padding = new Thickness(16, 44, 16, 12) // Increased top padding for status bar/notch
         };
 
         var grid = new Grid();
@@ -160,7 +160,7 @@ public static class MainViewIOS
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
             BorderThickness = new Thickness(0, 0.5, 0, 0),
-            Padding = new Thickness(0, 8, 0, 8)
+            Padding = new Thickness(0, 8, 0, 24) // Increased bottom padding for home indicator
         };
 
         var navGrid = new Grid();
@@ -323,7 +323,7 @@ public static class MainViewIOS
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
             BorderThickness = new Thickness(0, 0, 0, 0.5),
-            Padding = new Thickness(16, 12)
+            Padding = new Thickness(16, 44, 16, 12) // Increased top padding for status bar/notch
         };
 
         var navGrid = new Grid();
