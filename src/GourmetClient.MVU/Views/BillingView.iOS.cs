@@ -120,20 +120,6 @@ public static class BillingViewIOS
             monthPanel.Children.Add(monthPicker);
 
             headerPanel.Children.Add(monthPanel);
-
-            // Refresh button
-            var refreshButton = new Button
-            {
-                Content = "↻ Aktualisieren",
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                Padding = new Thickness(16, 12),
-                FontSize = 17,
-                Background = new SolidColorBrush(Color.Parse("#007AFF")),
-                Foreground = Brushes.White,
-                CornerRadius = new CornerRadius(10)
-            };
-            refreshButton.Click += (_, _) => dispatch(new LoadBilling());
-            headerPanel.Children.Add(refreshButton);
         }
 
         return headerPanel;

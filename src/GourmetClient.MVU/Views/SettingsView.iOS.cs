@@ -13,10 +13,7 @@ namespace GourmetClient.MVU.Views;
 public static class SettingsViewIOS
 {
 
-    private static SolidColorBrush GetSecondaryTextBrush() =>
-      new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
-        ? Color.Parse("#8E8E93")
-        : Color.Parse("#8E8E93"));
+    private static SolidColorBrush GetSecondaryTextBrush() => new(Color.Parse("#8E8E93"));
 
     private static SolidColorBrush GetBackgroundBrush() =>
       new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
@@ -38,56 +35,23 @@ public static class SettingsViewIOS
             Background = GetBackgroundBrush()
         };
 
-        // Declare form controls
-        TextBox usernameTextBox = null!;
-        TextBox passwordBox = null!;
-        TextBox ventoUsernameTextBox = null!;
-        TextBox ventoPasswordBox = null!;
-        CheckBox startWithWindowsCheckBox = null!;
-        ComboBox themeComboBox = null!;
-
         // Gourmet credentials section
         var gourmetSection = CreateFormSection(
             "Gourmet Anmeldedaten",
-            CreateGourmetFields(state, out usernameTextBox, out passwordBox)
+            CreateGourmetFields(state, dispatch)
         );
         mainPanel.Children.Add(gourmetSection);
 
         // VentoPay credentials section
         var ventoSection = CreateFormSection(
             "VentoPay Anmeldedaten",
-            CreateVentoPayFields(state, out ventoUsernameTextBox, out ventoPasswordBox)
+            CreateVentoPayFields(state, dispatch)
         );
         mainPanel.Children.Add(ventoSection);
 
-        // Save button
-        var saveButton = new Button
-        {
-            Content = "Einstellungen speichern",
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Padding = new Thickness(16, 14),
-            FontSize = 17,
-            FontWeight = FontWeight.SemiBold,
-            Background = new SolidColorBrush(Color.Parse("#007AFF")),
-            Foreground = Brushes.White,
-            CornerRadius = new CornerRadius(10),
-            Margin = new Thickness(16, 8, 16, 32)
-        };
-        saveButton.Click += (_, _) =>
-        {
-            dispatch(new SaveFormSettings(
-                usernameTextBox.Text ?? "",
-                passwordBox.Text ?? "",
-                ventoUsernameTextBox.Text ?? "",
-                ventoPasswordBox.Text ?? "",
-                false,
-                false,
-                "System"
-            ));
-        };
-        mainPanel.Children.Add(saveButton);
+        // Removed inline save button; save now handled by top bar when dirty
 
-        return mainPanel;
+        return new ScrollViewer { Content = mainPanel };
     }
 
     private static Control CreateFormSection(string title, Control content)
@@ -122,7 +86,7 @@ public static class SettingsViewIOS
         return section;
     }
 
-    private static Control CreateGourmetFields(AppState state, out TextBox usernameBox, out TextBox passwordBox)
+    private static Control CreateGourmetFields(AppState state, Action<Msg> dispatch)
     {
         var stack = new StackPanel
         {
@@ -130,7 +94,7 @@ public static class SettingsViewIOS
             Spacing = 0
         };
 
-        usernameBox = new TextBox
+        var usernameBox = new TextBox
         {
             Text = state.Settings?.Username ?? "",
             Watermark = "Benutzername",
@@ -138,6 +102,11 @@ public static class SettingsViewIOS
             Padding = new Thickness(16, 12),
             BorderThickness = new Thickness(0),
             Background = Brushes.Transparent
+        };
+        usernameBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+                dispatch(new UpdateUsername(usernameBox.Text ?? ""));
         };
         var usernameContainer = new Border
         {
@@ -147,7 +116,7 @@ public static class SettingsViewIOS
         };
         stack.Children.Add(usernameContainer);
 
-        passwordBox = new TextBox
+        var passwordBox = new TextBox
         {
             Text = state.Settings?.Password ?? "",
             Watermark = "Passwort",
@@ -157,12 +126,17 @@ public static class SettingsViewIOS
             BorderThickness = new Thickness(0),
             Background = Brushes.Transparent
         };
+        passwordBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+                dispatch(new UpdatePassword(passwordBox.Text ?? ""));
+        };
         stack.Children.Add(passwordBox);
 
         return stack;
     }
 
-    private static Control CreateVentoPayFields(AppState state, out TextBox usernameBox, out TextBox passwordBox)
+    private static Control CreateVentoPayFields(AppState state, Action<Msg> dispatch)
     {
         var stack = new StackPanel
         {
@@ -170,7 +144,7 @@ public static class SettingsViewIOS
             Spacing = 0
         };
 
-        usernameBox = new TextBox
+        var usernameBox = new TextBox
         {
             Text = state.Settings?.VentoPayUsername ?? "",
             Watermark = "VentoPay Benutzername",
@@ -178,6 +152,11 @@ public static class SettingsViewIOS
             Padding = new Thickness(16, 12),
             BorderThickness = new Thickness(0),
             Background = Brushes.Transparent
+        };
+        usernameBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+                dispatch(new UpdateVentoPayUsername(usernameBox.Text ?? ""));
         };
         var usernameContainer = new Border
         {
@@ -187,7 +166,7 @@ public static class SettingsViewIOS
         };
         stack.Children.Add(usernameContainer);
 
-        passwordBox = new TextBox
+        var passwordBox = new TextBox
         {
             Text = state.Settings?.VentoPayPassword ?? "",
             Watermark = "VentoPay Passwort",
@@ -196,6 +175,11 @@ public static class SettingsViewIOS
             Padding = new Thickness(16, 12),
             BorderThickness = new Thickness(0),
             Background = Brushes.Transparent
+        };
+        passwordBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+                dispatch(new UpdateVentoPayPassword(passwordBox.Text ?? ""));
         };
         stack.Children.Add(passwordBox);
 

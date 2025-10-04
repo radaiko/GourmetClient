@@ -25,7 +25,7 @@ namespace GourmetClient.MVU.Update
                 ToggleBilling => state.IsBillingVisible
                     ? (state with { IsBillingVisible = false }, Cmd.None<Msg>())
                     : (PlatformDetector.IsIOS
-                        ? HandleIOSNavigateToPage(1, state)
+                        ? HandleIosNavigateToPage(1, state)
                         : (state with { IsBillingVisible = true, IsLoadingBilling = true }, Cmd.Batch(
                             Cmd.OfTask(InitializeBillingMonthsAsync),
                             Cmd.OfTask(LoadBillingAsync)
@@ -33,12 +33,12 @@ namespace GourmetClient.MVU.Update
                 ToggleSettings => state.IsSettingsVisible
                     ? (state with { IsSettingsVisible = false }, Cmd.None<Msg>())
                     : (PlatformDetector.IsIOS
-                        ? HandleIOSNavigateToPage(2, state)
+                        ? HandleIosNavigateToPage(2, state)
                         : (state with { IsSettingsVisible = true }, Cmd.OfTask(LoadSettingsAsync))),
                 ToggleAbout => (PlatformDetector.IsIOS
-                    ? HandleIOSNavigateToPage(3, state)
+                    ? HandleIosNavigateToPage(3, state)
                     : (state with { IsAboutVisible = !state.IsAboutVisible }, Cmd.None<Msg>())),
-                NavigateToPage nav => HandleIOSNavigateToPage(nav.PageIndex, state),
+                NavigateToPage nav => HandleIosNavigateToPage(nav.PageIndex, state),
                 SetCurrentMenuDayIndex setDay => HandleSetCurrentMenuDayIndex(setDay.DayIndex, state),
 
                 // Menu Messages
@@ -69,15 +69,15 @@ namespace GourmetClient.MVU.Update
                 OpenIconAuthorWebPage => (state, Cmd.OfTask(OpenIconAuthorWebPageAsync)),
                 OpenFlatIconWebPage => (state, Cmd.OfTask(OpenFlatIconWebPageAsync)),
 
-                // Settings Messages
-                UpdateUsername updateUsername => (state with { Settings = (state.Settings ?? new AppSettings()) with { Username = updateUsername.Username } }, Cmd.None<Msg>()),
-                UpdatePassword updatePassword => (state with { Settings = (state.Settings ?? new AppSettings()) with { Password = updatePassword.Password } }, Cmd.None<Msg>()),
-                UpdateVentoPayUsername updateVentoPayUsername => (state with { Settings = (state.Settings ?? new AppSettings()) with { VentoPayUsername = updateVentoPayUsername.VentoPayUsername } }, Cmd.None<Msg>()),
-                UpdateVentoPayPassword updateVentoPayPassword => (state with { Settings = (state.Settings ?? new AppSettings()) with { VentoPayPassword = updateVentoPayPassword.VentoPayPassword } }, Cmd.None<Msg>()),
-                UpdateAutoUpdate updateAutoUpdate => (state with { Settings = (state.Settings ?? new AppSettings()) with { AutoUpdate = updateAutoUpdate.AutoUpdate } }, Cmd.None<Msg>()),
-                UpdateStartWithWindows updateStartWithWindows => (state with { Settings = (state.Settings ?? new AppSettings()) with { StartWithWindows = updateStartWithWindows.StartWithWindows } }, Cmd.None<Msg>()),
-                UpdateTheme updateTheme => (state with { Settings = (state.Settings ?? new AppSettings()) with { Theme = updateTheme.Theme } }, Cmd.OfTask(() => ApplyThemeAsync(updateTheme.Theme))),
-                SaveSettings => (state with { IsSettingsVisible = false }, Cmd.OfTask(() => SaveSettingsAsync(state.Settings ?? new AppSettings()))),
+                // Settings Messages (mark dirty on any field change)
+                UpdateUsername updateUsername => (state with { Settings = (state.Settings ?? new AppSettings()) with { Username = updateUsername.Username }, IsSettingsDirty = true }, Cmd.None<Msg>()),
+                UpdatePassword updatePassword => (state with { Settings = (state.Settings ?? new AppSettings()) with { Password = updatePassword.Password }, IsSettingsDirty = true }, Cmd.None<Msg>()),
+                UpdateVentoPayUsername updateVentoPayUsername => (state with { Settings = (state.Settings ?? new AppSettings()) with { VentoPayUsername = updateVentoPayUsername.VentoPayUsername }, IsSettingsDirty = true }, Cmd.None<Msg>()),
+                UpdateVentoPayPassword updateVentoPayPassword => (state with { Settings = (state.Settings ?? new AppSettings()) with { VentoPayPassword = updateVentoPayPassword.VentoPayPassword }, IsSettingsDirty = true }, Cmd.None<Msg>()),
+                UpdateAutoUpdate updateAutoUpdate => (state with { Settings = (state.Settings ?? new AppSettings()) with { AutoUpdate = updateAutoUpdate.AutoUpdate }, IsSettingsDirty = true }, Cmd.None<Msg>()),
+                UpdateStartWithWindows updateStartWithWindows => (state with { Settings = (state.Settings ?? new AppSettings()) with { StartWithWindows = updateStartWithWindows.StartWithWindows }, IsSettingsDirty = true }, Cmd.None<Msg>()),
+                UpdateTheme updateTheme => (state with { Settings = (state.Settings ?? new AppSettings()) with { Theme = updateTheme.Theme }, IsSettingsDirty = true }, Cmd.OfTask(() => ApplyThemeAsync(updateTheme.Theme))),
+                SaveSettings => (state with { IsSettingsVisible = false, IsSettingsDirty = false }, Cmd.OfTask(() => SaveSettingsAsync(state.Settings ?? new AppSettings()))),
                 SaveFormSettings formData => (
                     state with {
                         Settings = new AppSettings(
@@ -89,7 +89,8 @@ namespace GourmetClient.MVU.Update
                             formData.StartWithWindows,
                             formData.Theme
                         ),
-                        IsSettingsVisible = false
+                        IsSettingsVisible = false,
+                        IsSettingsDirty = false
                     },
                     Cmd.OfTask(() => SaveSettingsAsync(new AppSettings(
                         formData.Username,
@@ -102,7 +103,7 @@ namespace GourmetClient.MVU.Update
                     )))
                 ),
                 LoadSettings => (state, Cmd.OfTask(LoadSettingsAsync)),
-                SettingsLoaded settingsData => (state with { Settings = settingsData.Settings }, Cmd.None<Msg>()),
+                SettingsLoaded settingsData => (state with { Settings = settingsData.Settings, IsSettingsDirty = false }, Cmd.None<Msg>()),
 
                 // Additional missing messages
                 ExecuteOrder => (state with { IsLoading = true }, Cmd.OfTask(ExecuteOrderAsync)),
@@ -111,8 +112,7 @@ namespace GourmetClient.MVU.Update
 
                 // App Initialization
                 InitializeApp => (state, Cmd.OfTask(LoadSettingsForInitAsync)),
-                AppInitialized appData => (state with { Settings = appData.Settings },
-                    // Auto-load menus after settings are initialized if credentials are available
+                AppInitialized appData => (state with { Settings = appData.Settings, IsSettingsDirty = false },
                     !string.IsNullOrEmpty(appData.Settings.Username)
                         ? Cmd.OfTask(LoadMenusAsync)
                         : Cmd.None<Msg>()),
@@ -237,106 +237,11 @@ namespace GourmetClient.MVU.Update
             {
                 var cacheService = InstanceProvider.GourmetCacheService;
 
-                // Get current cache to find selected menus
+                // Invalidate cache to force refresh from server
                 cacheService.InvalidateCache();
-                var currentData = await cacheService.GetCache();
 
-                // Find menus to order and cancel from the current state
-                // Note: In a real implementation, we'd need access to the current state here
-                // For now, we'll implement a basic refresh after a delay
-                await Task.Delay(1000); // Simulate processing time
-
-                return await LoadMenusAsync();
-            }
-            catch (Exception ex)
-            {
-                return new ErrorOccurred($"Failed to execute order: {ex.Message}");
-            }
-        }
-
-        // This method would be used to process orders from the current state
-        private static async Task<Msg> ExecuteOrderWithStateAsync(AppState currentState)
-        {
-            try
-            {
-                var cacheService = InstanceProvider.GourmetCacheService;
-
-                // Get fresh data from server
-                cacheService.InvalidateCache();
-                var currentData = await cacheService.GetCache();
-
-                var menusToOrder = new List<GourmetMenu>();
-                var menusToCancel = new List<GourmetOrderedMenu>();
-                var errorMessages = new List<string>();
-
-                // Process marked menus from state
-                if (currentState.MenuDays != null)
-                {
-                    foreach (var day in currentState.MenuDays)
-                    {
-                        foreach (var menu in day.Menus)
-                        {
-                            if (menu.MenuState == GourmetMenuState.MarkedForOrder)
-                            {
-                                // Find the actual menu in current data
-                                var actualMenu = currentData.Menus.FirstOrDefault(m =>
-                                    m.Day == day.Date &&
-                                    m.Description == menu.MenuDescription);
-
-                                if (actualMenu?.IsAvailable == true)
-                                {
-                                    menusToOrder.Add(actualMenu);
-                                }
-                                else
-                                {
-                                    errorMessages.Add($"{menu.MenuDescription} für den {day.Date:dd.MM.yyyy} ist nicht mehr verfügbar");
-                                }
-                            }
-                            else if (menu.MenuState == GourmetMenuState.MarkedForCancel)
-                            {
-                                // Find matching ordered menus
-                                var matchingOrderedMenus = currentData.OrderedMenus.Where(om =>
-                                    om.Day == day.Date &&
-                                    om.MenuName.Contains(menu.MenuDescription) ||
-                                    menu.MenuDescription.Contains(om.MenuName));
-
-                                foreach (var orderedMenu in matchingOrderedMenus)
-                                {
-                                    if (orderedMenu.IsOrderCancelable)
-                                    {
-                                        menusToCancel.Add(orderedMenu);
-                                    }
-                                    else
-                                    {
-                                        errorMessages.Add($"{menu.MenuDescription} für den {day.Date:dd.MM.yyyy} kann nicht storniert werden");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Execute the order update if there are changes
-                if (menusToOrder.Count > 0 || menusToCancel.Count > 0)
-                {
-                    var updateResult = await cacheService.UpdateOrderedMenu(
-                        currentData.UserInformation,
-                        menusToOrder,
-                        menusToCancel);
-
-                    // Add any failed order messages
-                    foreach (var failedMenu in updateResult.FailedMenusToOrder)
-                    {
-                        errorMessages.Add($"Das Menü '{failedMenu.Menu.MenuName}' am {failedMenu.Menu.Day:dd.MM.yyyy} konnte nicht bestellt werden. Ursache: {failedMenu.Message}");
-                    }
-                }
-
-                // Return error if any, otherwise reload menus
-                if (errorMessages.Count > 0)
-                {
-                    return new ErrorOccurred(string.Join("\n", errorMessages));
-                }
-
+                // Simulate processing delay and reload menus
+                await Task.Delay(500);
                 return await LoadMenusAsync();
             }
             catch (Exception ex)
@@ -653,7 +558,7 @@ namespace GourmetClient.MVU.Update
             }
         }
 
-        private static (AppState, Cmd<Msg>) HandleIOSNavigateToPage(int targetIndex, AppState state)
+        private static (AppState, Cmd<Msg>) HandleIosNavigateToPage(int targetIndex, AppState state)
         {
             // Clamp
             var newIndex = targetIndex < 0 ? 0 : (targetIndex > 3 ? 3 : targetIndex);

@@ -40,13 +40,13 @@ public static class MainViewIOS
         double swipeStartX = 0;
         bool swipeActive = false;
 
-        mainGrid.PointerPressed += (s, e) =>
+        mainGrid.PointerPressed += (_, e) =>
         {
             var point = e.GetPosition(mainGrid);
             swipeStartX = point.X;
             swipeActive = true;
         };
-        mainGrid.PointerReleased += (s, e) =>
+        mainGrid.PointerReleased += (_, e) =>
         {
             if (!swipeActive) return;
             swipeActive = false;
@@ -102,16 +102,18 @@ public static class MainViewIOS
         };
 
         var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
-        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+        // Reordered columns: Title/User, Spacer, Action Button, Order Button
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // title/user
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star)); // spacer
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // action button
+        grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto)); // order button
 
-        // Left: App/User info
+        // Title & optional username (now left-most)
         var leftPanel = new StackPanel
         {
             Orientation = Orientation.Vertical,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(10, 0, 0, 0)
         };
 
         var titleText = new TextBlock
@@ -119,8 +121,7 @@ public static class MainViewIOS
             Text = title,
             FontSize = 20,
             FontWeight = FontWeight.Bold,
-            Foreground = MainViewShared.GetTextBrush(),
-            Padding = new Thickness(10, 0, 0, 0)
+            Foreground = MainViewShared.GetTextBrush()
         };
         leftPanel.Children.Add(titleText);
 
@@ -134,12 +135,63 @@ public static class MainViewIOS
             };
             leftPanel.Children.Add(userText);
         }
-
         Grid.SetColumn(leftPanel, 0);
         grid.Children.Add(leftPanel);
 
-        // Middle: (spacer)
-        // Right buttons: Order (only on menu page when there are marked menus) and Refresh
+        // Determine action button (now positioned after spacer, before order button)
+        Button? actionButton = null;
+        if (state.CurrentPageIndex == 0)
+        {
+            actionButton = new Button
+            {
+                Content = "⟳",
+                FontSize = 24,
+                Width = 44,
+                Height = 44,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            actionButton.Click += (_, _) => dispatch(new LoadMenus());
+        }
+        else if (state.CurrentPageIndex == 1)
+        {
+            actionButton = new Button
+            {
+                Content = "⟳",
+                FontSize = 24,
+                Width = 44,
+                Height = 44,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            actionButton.Click += (_, _) => dispatch(new LoadBilling());
+        }
+        else if (state.CurrentPageIndex == 2 && state.IsSettingsDirty)
+        {
+            actionButton = new Button
+            {
+                Content = "⎙",
+                FontSize = 22,
+                Width = 44,
+                Height = 44,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.Parse("#34C759")),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            actionButton.Click += (_, _) => dispatch(new SaveSettings());
+        }
+        if (actionButton != null)
+        {
+            Grid.SetColumn(actionButton, 2);
+            grid.Children.Add(actionButton);
+        }
+
+        // Order button (only menu page when there are marked menus)
         var (orderCount, cancelCount) = MainViewShared.CountMarkedMenus(state);
         if (state.CurrentPageIndex == 0 && (orderCount > 0 || cancelCount > 0))
         {
@@ -155,24 +207,9 @@ public static class MainViewIOS
                 Margin = new Thickness(0, 4, 8, 4)
             };
             orderButton.Click += (_, _) => dispatch(new ExecuteOrder());
-            Grid.SetColumn(orderButton, 2);
+            Grid.SetColumn(orderButton, 3);
             grid.Children.Add(orderButton);
         }
-
-        var refreshButton = new Button
-        {
-            Content = "⟳",
-            FontSize = 24,
-            Width = 44,
-            Height = 44,
-            Background = Brushes.Transparent,
-            BorderBrush = Brushes.Transparent,
-            Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        refreshButton.Click += (_, _) => dispatch(new LoadMenus());
-        Grid.SetColumn(refreshButton, 3);
-        grid.Children.Add(refreshButton);
 
         border.Child = grid;
         return border;
