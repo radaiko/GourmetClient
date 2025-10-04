@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Models;
+using System.Linq;
 
 namespace GourmetClient.MVU.Views;
 
@@ -43,7 +44,15 @@ public static class BillingViewIOS
         // Content
         if (state.IsLoadingBilling)
         {
-            var loadingView = CreateLoadingView();
+            // Use shared loading view factory (customized for iOS look)
+            var loadingView = LoadingViewFactory.Create(
+                message: "Lade Transaktionen...",
+                spinnerFontSize: 48,
+                textFontSize: 17,
+                spacing: 20,
+                margin: new Thickness(20, 60, 20, 20),
+                spinnerColor: Color.Parse("#007AFF"),
+                textBrush: BillingViewShared.GetTextBrush());
             mainPanel.Children.Add(loadingView);
         }
         else
@@ -118,55 +127,6 @@ public static class BillingViewIOS
         }
 
         return headerPanel;
-    }
-
-    private static Control CreateLoadingView()
-    {
-        var loadingPanel = new StackPanel
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Spacing = 20,
-            Margin = new Thickness(20, 60, 20, 20)
-        };
-
-        var spinner = new TextBlock
-        {
-            Text = "↻",
-            FontSize = 48,
-            Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            RenderTransformOrigin = RelativePoint.Center
-        };
-
-        var rotateTransform = new RotateTransform();
-        spinner.RenderTransform = rotateTransform;
-
-        var timer = new System.Timers.Timer(16);
-        var angle = 0.0;
-        timer.Elapsed += (_, _) =>
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                angle += 6;
-                if (angle >= 360) angle = 0;
-                rotateTransform.Angle = angle;
-            });
-        };
-        timer.Start();
-
-        loadingPanel.Children.Add(spinner);
-
-        var loadingText = new TextBlock
-        {
-            Text = "Lade Transaktionen...",
-            FontSize = 17,
-            Foreground = BillingViewShared.GetTextBrush(),
-            HorizontalAlignment = HorizontalAlignment.Center
-        };
-        loadingPanel.Children.Add(loadingText);
-
-        return loadingPanel;
     }
 
     private static Control CreateBillingContent(AppState state)

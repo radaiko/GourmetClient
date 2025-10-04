@@ -43,54 +43,16 @@ public static class MenuViewShared
 
     public static Control CreateLoadingView()
     {
-        var loadingPanel = new StackPanel
-        {
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Spacing = 15
-        };
-
-        var spinner = new TextBlock
-        {
-            Text = "⟳",
-            FontSize = 40,
-            Foreground = new SolidColorBrush(Color.Parse("#007ACC")),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            RenderTransformOrigin = RelativePoint.Center
-        };
-
-        // Create rotation animation using a simple timer-based approach
-        var rotateTransform = new RotateTransform();
-        spinner.RenderTransform = rotateTransform;
-
-        // Use a timer for smooth rotation animation
-        var timer = new System.Timers.Timer(16); // ~60 FPS
-        var angle = 0.0;
-        timer.Elapsed += (sender, e) =>
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                angle += 6; // 360 degrees in 1 second (6 degrees per 16ms)
-                if (angle >= 360) angle = 0;
-                rotateTransform.Angle = angle;
-            });
-        };
-        timer.Start();
-
-        loadingPanel.Children.Add(spinner);
-
-        var loadingText = new TextBlock
-        {
-            Text = "Lade Menüdaten...",
-            FontSize = 16,
-            Foreground = GetTextBrush(),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 10, 0, 0)
-        };
-        loadingPanel.Children.Add(loadingText);
-
-        return loadingPanel;
+        // Delegate to shared factory (spinner glyph unified globally)
+        return LoadingViewFactory.Create(
+            message: "Lade Menüdaten...",
+            spinnerFontSize: 40,
+            textFontSize: 16,
+            spacing: 15,
+            spinnerColor: Color.Parse("#007ACC"),
+            textBrush: GetTextBrush(),
+            textMargin: new Thickness(0, 10, 0, 0)
+        );
     }
 
     public static Control CreateWelcomeView(AppState state, Action<Msg> dispatch)
@@ -199,7 +161,7 @@ public static class MenuViewShared
         bottomPanel.Children.Add(statusText);
 
         // Allergens - simple text
-        if (menu.Allergens != null && menu.Allergens.Length > 0)
+        if (menu.Allergens is { Length: > 0 })
         {
             var allergensText = new TextBlock
             {
@@ -230,19 +192,19 @@ public static class MenuViewShared
             // Desktop: subtle hover effect
             if (!PlatformDetector.IsIOS)
             {
-                cardBorder.PointerEntered += (s, e) =>
+                cardBorder.PointerEntered += (_, _) =>
                 {
                     cardBorder.Background = new SolidColorBrush(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
                         ? Color.Parse("#161b22") : Color.Parse("#f6f8fa"));
                 };
 
-                cardBorder.PointerExited += (s, e) =>
+                cardBorder.PointerExited += (_, _) =>
                 {
                     cardBorder.Background = GetMinimalistBackgroundBrush(menu.MenuState);
                 };
             }
 
-            cardBorder.PointerPressed += (s, e) => dispatch(new ToggleMenuOrder(menu.MenuDescription));
+            cardBorder.PointerPressed += (_, _) => dispatch(new ToggleMenuOrder(menu.MenuDescription));
         }
 
         // Simple tooltip
@@ -264,23 +226,8 @@ public static class MenuViewShared
     public static SolidColorBrush GetMinimalistBackgroundBrush(GourmetMenuState state)
     {
         var isDark = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
-
-        return state switch
-        {
-            GourmetMenuState.MarkedForOrder => new SolidColorBrush(isDark
-                ? Color.Parse("#0d1117")
-                : Color.Parse("#ffffff")),
-            GourmetMenuState.MarkedForCancel => new SolidColorBrush(isDark
-                ? Color.Parse("#0d1117")
-                : Color.Parse("#ffffff")),
-            GourmetMenuState.Ordered => new SolidColorBrush(isDark
-                ? Color.Parse("#0d1117")
-                : Color.Parse("#ffffff")),
-            GourmetMenuState.NotAvailable => new SolidColorBrush(isDark
-                ? Color.Parse("#0d1117")
-                : Color.Parse("#ffffff")),
-            _ => new SolidColorBrush(isDark ? Color.Parse("#0d1117") : Color.Parse("#ffffff"))
-        };
+        // All cases returned same value previously; simplified
+        return new SolidColorBrush(isDark ? Color.Parse("#0d1117") : Color.Parse("#ffffff"));
     }
 
     public static SolidColorBrush GetMinimalistBorderBrush(GourmetMenuState state)

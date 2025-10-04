@@ -144,7 +144,7 @@ public static class MainViewIOS
         {
             var orderButton = new Button
             {
-                Content = orderCount + cancelCount > 0 ? $"☑ {orderCount + cancelCount}" : "☑",
+                Content = orderCount + cancelCount > 0 ? $"✓ {orderCount + cancelCount}" : "☑",
                 FontSize = 16,
                 Padding = new Thickness(12, 6),
                 Background = new SolidColorBrush(Color.Parse("#007AFF")),
