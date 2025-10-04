@@ -1,4 +1,6 @@
+using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.FuncUI.Hosts;
 using Avalonia.Threading;
 using GourmetClient.MVU.Core;
@@ -16,7 +18,7 @@ public class MainWindow : HostWindow {
     Width = 1200;
     Height = 1024;
 
-    #if DEBUG && !IOS
+    #if DEBUG && !__IOS__
     this.AttachDevTools();
     #endif
 

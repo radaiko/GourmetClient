@@ -13,13 +13,8 @@ namespace GourmetClient.MVU.Views;
 /// </summary>
 public static class MainView {
   public static Control Create(AppState state, Action<Msg> dispatch) {
-    // Use iOS-specific layout on iOS devices
-    if (PlatformDetector.IsIOS) {
-      return MainViewIOS.Create(state, dispatch);
-    }
-    
-    // Use desktop layout for all other platforms
-    return MainViewDesktop.Create(state, dispatch);
+    return PlatformDetector.IsIOS ? MainViewIOS.Create(state, dispatch) :
+      MainViewDesktop.Create(state, dispatch);
   }
 }
 

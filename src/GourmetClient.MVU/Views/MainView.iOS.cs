@@ -23,10 +23,7 @@ public static class MainViewIOS
         ? Color.Parse("#1C1C1E")
         : Colors.White);
 
-    private static SolidColorBrush GetSecondaryTextBrush() =>
-      new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
-        ? Color.Parse("#8E8E93")
-        : Color.Parse("#8E8E93"));
+    private static SolidColorBrush GetSecondaryTextBrush() => new(Color.Parse("#8E8E93"));
 
     public static Control Create(AppState state, Action<Msg> dispatch)
     {
@@ -94,8 +91,7 @@ public static class MainViewIOS
         {
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
-            BorderThickness = new Thickness(0, 0, 0, 0.5),
-            Padding = new Thickness(16, 12, 16, 12)
+            BorderThickness = new Thickness(0, 0, 0, 0.5)
         };
 
         var grid = new Grid();
@@ -159,8 +155,7 @@ public static class MainViewIOS
         {
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
-            BorderThickness = new Thickness(0, 0.5, 0, 0),
-            Padding = new Thickness(0, 8, 0, 8)
+            BorderThickness = new Thickness(0, 0.5, 0, 0)
         };
 
         var navGrid = new Grid();
@@ -323,7 +318,6 @@ public static class MainViewIOS
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
             BorderThickness = new Thickness(0, 0, 0, 0.5),
-            Padding = new Thickness(16, 12)
         };
 
         var navGrid = new Grid();
@@ -366,8 +360,8 @@ public static class MainViewIOS
         // Content area with scroll
         var scrollViewer = new ScrollViewer
         {
-            HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
-            VerticalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             Background = GetBackgroundBrush()
         };
         scrollViewer.Content = content;
@@ -377,4 +371,3 @@ public static class MainViewIOS
         return overlayGrid;
     }
 }
-

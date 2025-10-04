@@ -43,7 +43,6 @@ public static class SettingsViewIOS
         TextBox passwordBox = null!;
         TextBox ventoUsernameTextBox = null!;
         TextBox ventoPasswordBox = null!;
-        CheckBox autoUpdateCheckBox = null!;
         CheckBox startWithWindowsCheckBox = null!;
         ComboBox themeComboBox = null!;
 
@@ -60,13 +59,6 @@ public static class SettingsViewIOS
             CreateVentoPayFields(state, out ventoUsernameTextBox, out ventoPasswordBox)
         );
         mainPanel.Children.Add(ventoSection);
-
-        // App settings section
-        var appSection = CreateFormSection(
-            "App Einstellungen",
-            CreateAppSettingsFields(state, out autoUpdateCheckBox, out startWithWindowsCheckBox, out themeComboBox)
-        );
-        mainPanel.Children.Add(appSection);
 
         // Save button
         var saveButton = new Button
@@ -88,7 +80,7 @@ public static class SettingsViewIOS
                 passwordBox.Text ?? "",
                 ventoUsernameTextBox.Text ?? "",
                 ventoPasswordBox.Text ?? "",
-                autoUpdateCheckBox.IsChecked ?? true,
+                false,
                 startWithWindowsCheckBox.IsChecked ?? false,
                 themeComboBox.SelectedIndex switch { 1 => "Hell", 2 => "Dunkel", _ => "System" }
             ));
@@ -206,70 +198,6 @@ public static class SettingsViewIOS
             Background = Brushes.Transparent
         };
         stack.Children.Add(passwordBox);
-
-        return stack;
-    }
-
-    private static Control CreateAppSettingsFields(AppState state, out CheckBox autoUpdateBox, out CheckBox startWithWindowsBox, out ComboBox themeBox)
-    {
-        var stack = new StackPanel
-        {
-            Orientation = Orientation.Vertical,
-            Spacing = 0
-        };
-
-        // Auto update toggle
-        autoUpdateBox = new CheckBox
-        {
-            Content = "Automatische Updates",
-            IsChecked = state.Settings?.AutoUpdate ?? true,
-            FontSize = 17,
-            Padding = new Thickness(16, 12)
-        };
-        var autoUpdateContainer = new Border
-        {
-            Child = autoUpdateBox,
-            BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
-            BorderThickness = new Thickness(0, 0, 0, 0.5)
-        };
-        stack.Children.Add(autoUpdateContainer);
-
-        // Start with Windows (hidden on iOS but kept for compatibility)
-        startWithWindowsBox = new CheckBox
-        {
-            Content = "Mit System starten",
-            IsChecked = state.Settings?.StartWithWindows ?? false,
-            FontSize = 17,
-            Padding = new Thickness(16, 12),
-            IsVisible = false // Not applicable on iOS
-        };
-
-        // Theme selector
-        var themePanel = new DockPanel
-        {
-            Margin = new Thickness(16, 12)
-        };
-        var themeLabel = new TextBlock
-        {
-            Text = "Erscheinungsbild",
-            FontSize = 17,
-            Foreground = SettingsViewShared.GetTextBrush(),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        DockPanel.SetDock(themeLabel, Dock.Left);
-        themePanel.Children.Add(themeLabel);
-
-        themeBox = new ComboBox
-        {
-            ItemsSource = new[] { "System", "Hell", "Dunkel" },
-            SelectedIndex = SettingsViewShared.GetThemeIndex(state.Settings?.Theme ?? "System"),
-            MinWidth = 120,
-            FontSize = 17
-        };
-        DockPanel.SetDock(themeBox, Dock.Right);
-        themePanel.Children.Add(themeBox);
-
-        stack.Children.Add(themePanel);
 
         return stack;
     }
