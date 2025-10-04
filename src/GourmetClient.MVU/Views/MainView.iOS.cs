@@ -119,7 +119,8 @@ public static class MainViewIOS
             Text = title,
             FontSize = 20,
             FontWeight = FontWeight.Bold,
-            Foreground = MainViewShared.GetTextBrush()
+            Foreground = MainViewShared.GetTextBrush(),
+            Padding = new Thickness(10, 0, 0, 0)
         };
         leftPanel.Children.Add(titleText);
 

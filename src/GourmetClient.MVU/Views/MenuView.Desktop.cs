@@ -102,13 +102,12 @@ public static class MenuViewDesktop
         {
             if (menu != null)
             {
-                var menuCard = MenuViewShared.CreateMinimalistMenuCard(menu, dispatch, 200);
+                var menuCard = MenuViewShared.CreateMinimalistMenuCard(menuDay.Date, menu, dispatch, 200);
                 menusPanel.Children.Add(menuCard);
             }
             else
             {
-                var emptySpace = new Border { Width = 200, Height = 1 };
-                menusPanel.Children.Add(emptySpace);
+                menusPanel.Children.Add(new Border { Width = 200, Height = 1 });
             }
         }
 
@@ -116,4 +115,3 @@ public static class MenuViewDesktop
         return dayPanel;
     }
 }
-

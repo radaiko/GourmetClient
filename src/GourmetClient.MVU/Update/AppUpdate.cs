@@ -39,17 +39,11 @@ namespace GourmetClient.MVU.Update
                     ? HandleIOSNavigateToPage(3, state)
                     : (state with { IsAboutVisible = !state.IsAboutVisible }, Cmd.None<Msg>())),
                 NavigateToPage nav => HandleIOSNavigateToPage(nav.PageIndex, state),
+                SetCurrentMenuDayIndex setDay => HandleSetCurrentMenuDayIndex(setDay.DayIndex, state),
 
                 // Menu Messages
                 LoadMenus => (state with { IsLoading = true }, Cmd.OfTask(LoadMenusAsync)),
-                MenusLoaded menuData => (state with
-                {
-                    IsLoading = false,
-                    MenuDays = menuData.MenuDays,
-                    UserName = menuData.UserName,
-                    LastMenuUpdate = menuData.LastUpdate
-                }, Cmd.None<Msg>()),
-
+                MenusLoaded menuData => HandleMenusLoaded(menuData, state),
                 UpdateMenu => (state with { IsLoading = true }, Cmd.OfTask(UpdateMenuAsync)),
 
                 ToggleMenuOrder toggleOrder => ToggleMenuOrderImpl(toggleOrder, state),
@@ -131,13 +125,42 @@ namespace GourmetClient.MVU.Update
             };
         }
 
+        private static (AppState, Cmd<Msg>) HandleSetCurrentMenuDayIndex(int newIndex, AppState state)
+        {
+            if (state.MenuDays == null || state.MenuDays.Count == 0)
+                return (state, Cmd.None<Msg>());
+            if (newIndex < 0) newIndex = 0;
+            if (newIndex >= state.MenuDays.Count) newIndex = state.MenuDays.Count - 1;
+            if (newIndex == state.CurrentMenuDayIndex)
+                return (state, Cmd.None<Msg>());
+            return (state with { CurrentMenuDayIndex = newIndex }, Cmd.None<Msg>());
+        }
+
+        private static (AppState, Cmd<Msg>) HandleMenusLoaded(MenusLoaded menuData, AppState state)
+        {
+            var newDays = menuData.MenuDays;
+            int preservedIndex = state.CurrentMenuDayIndex;
+            if (preservedIndex >= newDays.Count) preservedIndex = -1; // force re-select next render
+            return (state with
+            {
+                IsLoading = false,
+                MenuDays = newDays,
+                UserName = menuData.UserName,
+                LastMenuUpdate = menuData.LastUpdate,
+                CurrentMenuDayIndex = preservedIndex
+            }, Cmd.None<Msg>());
+        }
+
         private static (AppState, Cmd<Msg>) ToggleMenuOrderImpl(ToggleMenuOrder toggleOrder, AppState state)
         {
-            var updatedMenuDays = state.MenuDays?.Select(day => day with
+            if (state.MenuDays == null) return (state, Cmd.None<Msg>());
+
+            var updatedMenuDays = state.MenuDays.Select(day =>
             {
-                Menus = day.Menus.Select(menu =>
+                if (day.Date.Date != toggleOrder.Day.Date) return day; // other days untouched
+                var updatedMenus = day.Menus.Select(menu =>
                 {
-                    if (menu.MenuDescription == toggleOrder.MenuTitle)
+                    if (menu.MenuId == toggleOrder.MenuId)
                     {
                         var newState = menu.MenuState switch
                         {
@@ -150,7 +173,8 @@ namespace GourmetClient.MVU.Update
                         return menu with { MenuState = newState };
                     }
                     return menu;
-                }).ToImmutableList()
+                }).ToImmutableList();
+                return day with { Menus = updatedMenus };
             }).ToImmutableList();
 
             return (state with { MenuDays = updatedMenuDays }, Cmd.None<Msg>());

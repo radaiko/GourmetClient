@@ -11,6 +11,7 @@ public record ToggleSettings : Msg;
 public record ToggleAbout : Msg;
 public record SelectMonth(DateTime Month) : Msg;
 public record NavigateToPage(int PageIndex) : Msg; // iOS swipe navigation
+public record SetCurrentMenuDayIndex(int DayIndex) : Msg; // Persist vertical paged menu current day
 
 // Menu Messages
 public record LoadMenus : Msg;
@@ -20,7 +21,7 @@ public record MenusLoaded(
   DateTime? LastUpdate = null
 ) : Msg;
 public record UpdateMenu : Msg;
-public record ToggleMenuOrder(string MenuTitle) : Msg;
+public record ToggleMenuOrder(DateTime Day, string MenuId) : Msg; // Updated: day-specific toggle
 public record ExecuteOrder : Msg;
 public record ExecuteSelectedOrder : Msg;
 

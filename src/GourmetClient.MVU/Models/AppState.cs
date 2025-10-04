@@ -22,6 +22,7 @@ public record AppState(
   , string UserName = ""
   , DateTime? LastMenuUpdate = null
   , int CurrentPageIndex = 0 // iOS horizontal swipe navigation: 0=Menu,1=Billing,2=Settings,3=About
+  , int CurrentMenuDayIndex = -1 // Persist currently viewed menu day (paged vertical view); -1 = not yet set
 ) {
   public static AppState Initial => new(Settings: new AppSettings());
 }

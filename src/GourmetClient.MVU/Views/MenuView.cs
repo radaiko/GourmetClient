@@ -109,7 +109,7 @@ public static class MenuViewShared
         return welcomePanel;
     }
 
-    public static Control CreateMinimalistMenuCard(GourmetMenuViewModel menu, Action<Msg> dispatch, double? width = null)
+    public static Control CreateMinimalistMenuCard(DateTime day, GourmetMenuViewModel menu, Action<Msg> dispatch, double? width = null)
     {
         var cardBorder = new Border
         {
@@ -204,7 +204,7 @@ public static class MenuViewShared
                 };
             }
 
-            cardBorder.PointerPressed += (_, _) => dispatch(new ToggleMenuOrder(menu.MenuDescription));
+            cardBorder.PointerPressed += (_, _) => dispatch(new ToggleMenuOrder(day, menu.MenuId));
         }
 
         // Simple tooltip
