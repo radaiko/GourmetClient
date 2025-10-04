@@ -1,26 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
+		<!-- Multi-target for desktop and iOS so partial/platform code compiles -->
 		<TargetFrameworks>net9.0;net9.0-ios26.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<OutputType>Library</OutputType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<ApplicationId>dev.radaiko.gourmetclient</ApplicationId>
-		<InfoPlist>Platforms\iOS\Info.plist</InfoPlist>
-		<DefineConstants>$(DefineConstants);IOS</DefineConstants>
-		<SupportedOSPlatformVersion>12.2</SupportedOSPlatformVersion>
+	<!-- iOS specific minimal property (head project will define AppId etc.) -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios26.0'">
+		<SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
 		<NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
-	</PropertyGroup>
-
-	<!-- Desktop specific properties -->
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
-		<OutputType>WinExe</OutputType>
-		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,22 +20,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Avalonia" Version="11.1.3" />
-		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.3" />
-		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.1.3" />
-		<PackageReference Include="Avalonia.FuncUI" Version="1.3.0" />
-		<!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.3" />
-	</ItemGroup>
-
-	<!-- Desktop-specific packages -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-		<PackageReference Include="Avalonia.Desktop" Version="11.1.3" />
-	</ItemGroup>
-
-	<!-- iOS-specific packages -->
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
-		<PackageReference Include="Avalonia.iOS" Version="11.1.3" />
+		<PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="Avalonia.FuncUI" Version="$(AvaloniaFuncUIVersion)" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -54,11 +35,10 @@
 		<Folder Include="Assets\Icons\" />
 	</ItemGroup>
 
-	<!-- Exclude iOS platform files from desktop builds -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+	<!-- Remove any platform specific compile items if previously added (clean-up) -->
+	<ItemGroup>
 		<Compile Remove="Platforms\iOS\**" />
 		<None Remove="Platforms\iOS\**" />
 	</ItemGroup>
-
 
 </Project>
