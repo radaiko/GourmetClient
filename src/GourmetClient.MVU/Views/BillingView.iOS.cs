@@ -105,7 +105,7 @@ public static class BillingViewIOS
             // Refresh button
             var refreshButton = new Button
             {
-                Content = "⟳ Aktualisieren",
+                Content = "↻ Aktualisieren",
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 Padding = new Thickness(16, 12),
                 FontSize = 17,
@@ -132,7 +132,7 @@ public static class BillingViewIOS
 
         var spinner = new TextBlock
         {
-            Text = "⟳",
+            Text = "↻",
             FontSize = 48,
             Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
             HorizontalAlignment = HorizontalAlignment.Center,

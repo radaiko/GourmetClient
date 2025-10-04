@@ -8,6 +8,7 @@
         <NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
         <!-- Optional: Set a consistent root namespace -->
         <RootNamespace>GourmetClient.iOS</RootNamespace>
+        <InvariantGlobalization>false</InvariantGlobalization>
     </PropertyGroup>
 
     <ItemGroup>

@@ -81,8 +81,8 @@ public static class SettingsViewIOS
                 ventoUsernameTextBox.Text ?? "",
                 ventoPasswordBox.Text ?? "",
                 false,
-                startWithWindowsCheckBox.IsChecked ?? false,
-                themeComboBox.SelectedIndex switch { 1 => "Hell", 2 => "Dunkel", _ => "System" }
+                false,
+                "System"
             ));
         };
         mainPanel.Children.Add(saveButton);

@@ -10,6 +10,7 @@ public record ToggleBilling : Msg;
 public record ToggleSettings : Msg;
 public record ToggleAbout : Msg;
 public record SelectMonth(DateTime Month) : Msg;
+public record NavigateToPage(int PageIndex) : Msg; // iOS swipe navigation
 
 // Menu Messages
 public record LoadMenus : Msg;

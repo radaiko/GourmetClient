@@ -4,7 +4,6 @@ using GourmetClient.MVU.Models;
 using GourmetClient.MVU.Messages;
 using GourmetClient.MVU.Utils;
 using GourmetClient.Core.Utils;
-using GourmetClient.Core.Network;
 using GourmetClient.Core.Model;
 using GourmetClient.Core.Settings;
 
@@ -25,14 +24,21 @@ namespace GourmetClient.MVU.Update
                 // UI Toggle Messages
                 ToggleBilling => state.IsBillingVisible
                     ? (state with { IsBillingVisible = false }, Cmd.None<Msg>())
-                    : (state with { IsBillingVisible = true, IsLoadingBilling = true }, Cmd.Batch(
-                        Cmd.OfTask(InitializeBillingMonthsAsync),
-                        Cmd.OfTask(LoadBillingAsync)
-                    )),
+                    : (PlatformDetector.IsIOS
+                        ? HandleIOSNavigateToPage(1, state)
+                        : (state with { IsBillingVisible = true, IsLoadingBilling = true }, Cmd.Batch(
+                            Cmd.OfTask(InitializeBillingMonthsAsync),
+                            Cmd.OfTask(LoadBillingAsync)
+                        ))),
                 ToggleSettings => state.IsSettingsVisible
                     ? (state with { IsSettingsVisible = false }, Cmd.None<Msg>())
-                    : (state with { IsSettingsVisible = true }, Cmd.OfTask(LoadSettingsAsync)),
-                ToggleAbout => (state with { IsAboutVisible = !state.IsAboutVisible }, Cmd.None<Msg>()),
+                    : (PlatformDetector.IsIOS
+                        ? HandleIOSNavigateToPage(2, state)
+                        : (state with { IsSettingsVisible = true }, Cmd.OfTask(LoadSettingsAsync))),
+                ToggleAbout => (PlatformDetector.IsIOS
+                    ? HandleIOSNavigateToPage(3, state)
+                    : (state with { IsAboutVisible = !state.IsAboutVisible }, Cmd.None<Msg>())),
+                NavigateToPage nav => HandleIOSNavigateToPage(nav.PageIndex, state),
 
                 // Menu Messages
                 LoadMenus => (state with { IsLoading = true }, Cmd.OfTask(LoadMenusAsync)),
@@ -623,6 +629,33 @@ namespace GourmetClient.MVU.Update
             }
         }
 
+        private static (AppState, Cmd<Msg>) HandleIOSNavigateToPage(int targetIndex, AppState state)
+        {
+            // Clamp
+            var newIndex = targetIndex < 0 ? 0 : (targetIndex > 3 ? 3 : targetIndex);
+            if (newIndex == state.CurrentPageIndex)
+            {
+                return (state, Cmd.None<Msg>());
+            }
 
+            var cmds = new List<Cmd<Msg>>();
+            var newState = state with { CurrentPageIndex = newIndex, IsBillingVisible = false, IsSettingsVisible = false, IsAboutVisible = false };
+
+            // Lazy load billing data
+            if (newIndex == 1)
+            {
+                newState = newState with { IsLoadingBilling = true };
+                cmds.Add(Cmd.OfTask(InitializeBillingMonthsAsync));
+                cmds.Add(Cmd.OfTask(LoadBillingAsync));
+            }
+
+            // Lazy load settings
+            if (newIndex == 2 && state.Settings == null)
+            {
+                cmds.Add(Cmd.OfTask(LoadSettingsAsync));
+            }
+
+            return (newState, cmds.Count == 0 ? Cmd.None<Msg>() : Cmd.Batch(cmds.ToArray()));
+        }
     }
 }

@@ -21,6 +21,7 @@ public record AppState(
   , AppSettings? Settings = null
   , string UserName = ""
   , DateTime? LastMenuUpdate = null
+  , int CurrentPageIndex = 0 // iOS horizontal swipe navigation: 0=Menu,1=Billing,2=Settings,3=About
 ) {
   public static AppState Initial => new(Settings: new AppSettings());
 }
