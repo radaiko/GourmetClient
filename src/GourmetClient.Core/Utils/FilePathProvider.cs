@@ -1,10 +1,12 @@
 using System;
 using System.IO;
-using GourmetClient.Core.Utils;
 
-namespace GC.ViewModels.Utils;
+namespace GourmetClient.Core.Utils;
 
-public class GcFilePathProvider : IFilePathProvider
+/// <summary>
+/// Standard file path provider for GourmetClient applications
+/// </summary>
+public class FilePathProvider : IFilePathProvider
 {
     public string LocalAppDataPath
     {

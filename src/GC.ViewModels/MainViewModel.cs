@@ -4,14 +4,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GourmetClient.Core.Utils;
 using GourmetClient.Core.Settings;
-using GC.ViewModels.Utils;
 
 namespace GC.ViewModels;
 
 public partial class MainViewModel : ObservableObject {
   static MainViewModel() {
-    // Initialize the InstanceProvider with GC file path provider
-    InstanceProvider.Initialize(new GcFilePathProvider());
+    // Initialize the InstanceProvider with core FilePathProvider
+    InstanceProvider.Initialize(new FilePathProvider());
   }
 
   public MainViewModel() {
