@@ -11,5 +11,9 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\GourmetClient.Core\GourmetClient.Core.csproj" />
+    </ItemGroup>
+
 </Project>
 

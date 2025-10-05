@@ -2,10 +2,22 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GourmetClient.Core.Utils;
+using GourmetClient.Core.Settings;
+using GC.ViewModels.Utils;
 
 namespace GC.ViewModels;
 
 public partial class MainViewModel : ObservableObject {
+  static MainViewModel() {
+    // Initialize the InstanceProvider with GC file path provider
+    InstanceProvider.Initialize(new GcFilePathProvider());
+  }
+
+  public MainViewModel() {
+    LoadSettings();
+  }
+
   [ObservableProperty]
   private string _greeting = "Welcome to Gourmet Client MVVM!";
 
@@ -57,9 +69,23 @@ public partial class MainViewModel : ObservableObject {
 
   [RelayCommand]
   private void SaveSettings() {
-    // TODO: Implement actual save logic
-    IsSettingsDirty = false;
-    // In a real implementation, this would save to storage
+    try {
+      var settingsService = InstanceProvider.SettingsService;
+      
+      // Map from ViewModel properties to UserSettings
+      var userSettings = new UserSettings {
+        GourmetLoginUsername = GourmetUsername ?? string.Empty,
+        GourmetLoginPassword = GourmetPassword ?? string.Empty,
+        VentopayUsername = VentoPayUsername ?? string.Empty,
+        VentopayPassword = VentoPayPassword ?? string.Empty
+      };
+      
+      settingsService.SaveUserSettings(userSettings);
+      IsSettingsDirty = false;
+    }
+    catch (Exception ex) {
+      ErrorMessage = $"Fehler beim Speichern: {ex.Message}";
+    }
   }
 
   partial void OnGourmetUsernameChanged(string value) {
@@ -76,6 +102,27 @@ public partial class MainViewModel : ObservableObject {
 
   partial void OnVentoPayPasswordChanged(string value) {
     IsSettingsDirty = true;
+  }
+
+  private void LoadSettings() {
+    try {
+      var settingsService = InstanceProvider.SettingsService;
+      var userSettings = settingsService.GetCurrentUserSettings();
+      
+      // Don't trigger dirty flag when loading initial settings
+      var wasDirty = IsSettingsDirty;
+      
+      GourmetUsername = userSettings.GourmetLoginUsername ?? string.Empty;
+      GourmetPassword = userSettings.GourmetLoginPassword ?? string.Empty;
+      VentoPayUsername = userSettings.VentopayUsername ?? string.Empty;
+      VentoPayPassword = userSettings.VentopayPassword ?? string.Empty;
+      
+      // Reset dirty flag after loading
+      IsSettingsDirty = wasDirty;
+    }
+    catch (Exception ex) {
+      ErrorMessage = $"Fehler beim Laden der Einstellungen: {ex.Message}";
+    }
   }
 }
 
