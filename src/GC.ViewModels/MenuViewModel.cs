@@ -40,6 +40,15 @@ public partial class MenuViewModel : ObservableObject
     private int _currentMenuDayIndex = -1;
 
     [RelayCommand]
+    private async Task RefreshMenusAsync()
+    {
+        // Force refresh by clearing existing data
+        MenuDays.Clear();
+        ErrorMessage = null;
+        await LoadMenusAsync();
+    }
+
+    [RelayCommand]
     private async Task LoadMenusAsync()
     {
         // Prevent concurrent loads or reloading if already loaded

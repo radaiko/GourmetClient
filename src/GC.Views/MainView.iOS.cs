@@ -157,7 +157,7 @@ public static class MainViewIOS
                 Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
                 Margin = new Thickness(0, 0, 4, 0)
             };
-            actionButton.Click += async (_, _) => await viewModel.MenuViewModel.LoadMenusCommand.ExecuteAsync(null);
+            actionButton.Click += async (_, _) => await viewModel.MenuViewModel.RefreshMenusCommand.ExecuteAsync(null);
         }
         else if (viewModel.CurrentPageIndex == 1 && viewModel.BillingViewModel != null)
         {
@@ -172,7 +172,7 @@ public static class MainViewIOS
                 Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
                 Margin = new Thickness(0, 0, 4, 0)
             };
-            actionButton.Click += async (_, _) => await viewModel.BillingViewModel.LoadBillingCommand.ExecuteAsync(null);
+            actionButton.Click += async (_, _) => await viewModel.BillingViewModel.RefreshBillingCommand.ExecuteAsync(null);
         }
         else if (viewModel.CurrentPageIndex == 2 && viewModel.IsSettingsDirty)
         {

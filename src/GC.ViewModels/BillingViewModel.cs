@@ -63,6 +63,15 @@ public partial class BillingViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task RefreshBillingAsync()
+    {
+        // Force refresh by clearing existing data
+        AvailableMonths.Clear();
+        ErrorMessage = null;
+        await LoadBillingAsync();
+    }
+
+    [RelayCommand]
     private async Task LoadBillingAsync()
     {
         // Prevent concurrent loads or reloading if already loaded

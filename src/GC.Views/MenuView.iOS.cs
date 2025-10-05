@@ -73,12 +73,6 @@ public static class MenuViewIOS
             {
                 new TextBlock
                 {
-                    Text = "⏳",
-                    FontSize = 48,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                },
-                new TextBlock
-                {
                     Text = "Lade Menüdaten...",
                     FontSize = 17,
                     Foreground = GetTextBrush(),
