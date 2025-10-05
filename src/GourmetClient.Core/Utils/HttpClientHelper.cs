@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+﻿﻿using System.Net.Http;
 using System.Net;
 using System;
 using System.Threading.Tasks;
@@ -12,12 +12,16 @@ public static class HttpClientHelper
     // on platforms where it is supported and leave default behavior on iOS.
     private static HttpClient CreateClientWithoutProxy(CookieContainer cookieContainer)
     {
-#if IOS
-        // On iOS: don't set UseProxy explicitly.
-        return new HttpClient(new HttpClientHandler { CookieContainer = cookieContainer });
-#else
-        return new HttpClient(new HttpClientHandler { UseProxy = false, CookieContainer = cookieContainer });
-#endif
+        var handler = new HttpClientHandler { CookieContainer = cookieContainer };
+        
+        // On iOS, we cannot set UseProxy = false as it throws an exception
+        // Check at runtime if we're on iOS/tvOS/macCatalyst
+        if (!OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS() && !OperatingSystem.IsMacCatalyst())
+        {
+            handler.UseProxy = false;
+        }
+        
+        return new HttpClient(handler);
     }
 
     public static async Task<HttpClientResult<T>> CreateHttpClient<T>(string requestUrl, Func<HttpClient, Task<T>> proxyTestRequestFunc, CookieContainer cookieContainer)

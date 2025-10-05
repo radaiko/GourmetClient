@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+</dict>
+</plist>
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Multi-target for desktop and iOS -->
+		<TargetFrameworks>net9.0;net9.0-ios26.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<OutputType>Library</OutputType>
+	</PropertyGroup>
+
+	<!-- iOS specific properties -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios26.0'">
+		<SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+		<NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GourmetClient.Core\GourmetClient.Core.csproj" />
+	</ItemGroup>
+
+</Project>
+

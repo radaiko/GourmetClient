@@ -28,6 +28,14 @@ public partial class GourmetWebClient : WebClientBase
 
     protected override async Task<bool> LoginImpl(string userName, string password)
     {
+        // Check if already logged in by fetching the start page
+        using (var checkResponse = await ExecuteGetRequestForPage(PageNameStart))
+        {
+            var content = await ReadResponseContent(checkResponse);
+            if (LoginSuccessfulRegex().IsMatch(content))
+                return true;
+        }
+
         string ufprtValue = await GetUfprtValueFromPage(PageNameStart, "//div[@class='login']//form");
 
         var parameters = new Dictionary<string, string>
