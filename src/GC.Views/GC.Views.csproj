@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Multi-target for desktop and iOS so partial/platform code compiles -->
+		<TargetFrameworks>net9.0;net9.0-ios26.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+		<OutputType>Library</OutputType>
+	</PropertyGroup>
+
+	<!-- iOS specific properties -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios26.0'">
+		<SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+		<NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AvaloniaResource Include="Assets\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />
+	</ItemGroup>
+
+</Project>
+
