@@ -14,8 +14,10 @@ public partial class MainWindow : Window {
     // Get services from DI container
     var settingsService = ServiceProviderHolder.Services.GetRequiredService<GourmetSettingsService>();
     var logger = ServiceProviderHolder.Services.GetRequiredService<ILogger<MainViewModel>>();
+    var menuViewModel = ServiceProviderHolder.Services.GetRequiredService<MenuViewModel>();
+    var billingViewModel = ServiceProviderHolder.Services.GetRequiredService<BillingViewModel>();
     
-    DataContext = new MainViewModel(settingsService, logger);
+    DataContext = new MainViewModel(settingsService, logger, menuViewModel, billingViewModel);
   }
 }
 

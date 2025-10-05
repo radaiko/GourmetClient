@@ -12,17 +12,42 @@ public partial class MainViewModel : ObservableObject {
   private readonly ILogger<MainViewModel>? _logger;
 
   // Design-time constructor for XAML previewer
-  public MainViewModel() : this(null!, null!) {
+  public MainViewModel() : this(null!, null!, null!, null!) {
   }
 
-  public MainViewModel(GourmetSettingsService settingsService, ILogger<MainViewModel> logger) {
+  public MainViewModel(
+    GourmetSettingsService settingsService, 
+    ILogger<MainViewModel> logger,
+    MenuViewModel? menuViewModel,
+    BillingViewModel? billingViewModel) {
     _settingsService = settingsService;
     _logger = logger;
+    MenuViewModel = menuViewModel;
+    BillingViewModel = billingViewModel;
+    
+    // Subscribe to child ViewModel property changes to trigger UI updates on iOS
+    if (menuViewModel != null) {
+      menuViewModel.PropertyChanged += (_, e) => {
+        // Notify that a child property changed, triggering UI refresh
+        OnPropertyChanged(nameof(MenuViewModel));
+      };
+    }
+    
+    if (billingViewModel != null) {
+      billingViewModel.PropertyChanged += (_, e) => {
+        // Notify that a child property changed, triggering UI refresh
+        OnPropertyChanged(nameof(BillingViewModel));
+      };
+    }
+    
     if (settingsService != null) {
       _logger?.LogInformation("Initializing MainViewModel");
       LoadSettings();
     }
   }
+
+  public MenuViewModel? MenuViewModel { get; }
+  public BillingViewModel? BillingViewModel { get; }
 
   [ObservableProperty]
   private string _greeting = "Welcome to Gourmet Client MVVM!";

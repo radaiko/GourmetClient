@@ -1,9 +1,9 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using GC.ViewModels;
-using GC.Views.Utils;
 
 namespace GC.Views;
 
@@ -144,7 +144,7 @@ public static class MainViewIOS
 
         // Determine action button (positioned after spacer)
         Button? actionButton = null;
-        if (viewModel.CurrentPageIndex == 0)
+        if (viewModel.CurrentPageIndex == 0 && viewModel.MenuViewModel != null)
         {
             actionButton = new Button
             {
@@ -157,9 +157,9 @@ public static class MainViewIOS
                 Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
                 Margin = new Thickness(0, 0, 4, 0)
             };
-            // TODO: Wire up to refresh command when available
+            actionButton.Click += async (_, _) => await viewModel.MenuViewModel.LoadMenusCommand.ExecuteAsync(null);
         }
-        else if (viewModel.CurrentPageIndex == 1)
+        else if (viewModel.CurrentPageIndex == 1 && viewModel.BillingViewModel != null)
         {
             actionButton = new Button
             {
@@ -172,7 +172,7 @@ public static class MainViewIOS
                 Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
                 Margin = new Thickness(0, 0, 4, 0)
             };
-            // TODO: Wire up to refresh billing command when available
+            actionButton.Click += async (_, _) => await viewModel.BillingViewModel.LoadBillingCommand.ExecuteAsync(null);
         }
         else if (viewModel.CurrentPageIndex == 2 && viewModel.IsSettingsDirty)
         {

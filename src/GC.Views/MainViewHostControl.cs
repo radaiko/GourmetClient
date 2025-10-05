@@ -15,11 +15,8 @@ public class MainViewHostControl : UserControl {
   private readonly MainViewModel _viewModel;
 
   public MainViewHostControl() {
-    // Get services from DI container
-    var settingsService = ServiceProviderHolder.Services.GetRequiredService<GourmetSettingsService>();
-    var logger = ServiceProviderHolder.Services.GetRequiredService<ILogger<MainViewModel>>();
-    
-    _viewModel = new MainViewModel(settingsService, logger);
+    // Get MainViewModel from DI container (which includes MenuViewModel and BillingViewModel)
+    _viewModel = ServiceProviderHolder.Services.GetRequiredService<MainViewModel>();
     DataContext = _viewModel;
     
 #if IOS
@@ -40,7 +37,9 @@ public class MainViewHostControl : UserControl {
     if (e.PropertyName == nameof(MainViewModel.CurrentPageIndex) ||
         e.PropertyName == nameof(MainViewModel.ErrorMessage) ||
         e.PropertyName == nameof(MainViewModel.UserName) ||
-        e.PropertyName == nameof(MainViewModel.IsSettingsDirty)) {
+        e.PropertyName == nameof(MainViewModel.IsSettingsDirty) ||
+        e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
+        e.PropertyName == nameof(MainViewModel.BillingViewModel)) {
       UpdateContent();
     }
   }
