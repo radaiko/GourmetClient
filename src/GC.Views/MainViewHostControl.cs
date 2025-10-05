@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using GC.ViewModels;
+using GC.Views.Utils;
 
 namespace GC.Views;
 
@@ -8,9 +9,16 @@ namespace GC.Views;
 /// </summary>
 public class MainViewHostControl : UserControl {
   public MainViewHostControl() {
-    // For iOS, we use the same content as the desktop window
-    DataContext = new MainViewModel();
-    Content = new MainView();
+    var viewModel = new MainViewModel();
+    DataContext = viewModel;
+    
+    // Use iOS-specific UI on iOS platform
+    if (PlatformDetector.IsIOS) {
+      Content = MainViewIOS.Create(viewModel);
+    } else {
+      // For desktop/other platforms, use the standard XAML view
+      Content = new MainView();
+    }
   }
 }
 
