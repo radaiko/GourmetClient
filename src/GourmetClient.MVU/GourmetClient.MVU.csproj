@@ -41,16 +41,4 @@
 		<None Remove="Platforms\iOS\**" />
 	</ItemGroup>
 
-	<!-- Split AboutView into platform specific variants -->
-	<ItemGroup>
-		<Compile Remove="Views/AboutView.cs" />
-		<Compile Remove="Views/AboutView.iOS.cs" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-		<Compile Include="Views/AboutView.cs" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios26.0'">
-		<Compile Include="Views/AboutView.iOS.cs" />
-	</ItemGroup>
-
 </Project>

@@ -8,17 +8,7 @@ using GourmetClient.MVU.Models;
 namespace GourmetClient.MVU.Views;
 
 // iOS specific About view (touch friendly, simplified layout widths)
-public static class AboutView {
-  private static SolidColorBrush GetTextBrush() =>
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
-      ? Colors.White
-      : Colors.Black);
-
-  private static SolidColorBrush GetLinkBrush() =>
-    new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
-      ? Color.Parse("#4A9EFF")
-      : Colors.Blue);
-
+public static class AboutViewIOS {
   private static SolidColorBrush GetCardBackgroundBrush() =>
     new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
       ? Color.Parse("#2E2E2E") // Slightly darker on iOS for contrast behind nav bars
@@ -42,7 +32,7 @@ public static class AboutView {
       Text = "Version: 1.0.0",
       FontSize = 16,
       FontWeight = FontWeight.Medium,
-      Foreground = GetTextBrush()
+      Foreground = AboutViewShared.GetTextBrush()
     });
 
     var releaseNotesBtn = MakeLinkButton("Versionsinformationen", () => dispatch(new ShowReleaseNotes()));
@@ -52,7 +42,7 @@ public static class AboutView {
     contentPanel.Children.Add(new TextBlock {
       Text = "Dieses Programm wird ohne Garantie ausgeliefert. Verwendung auf eigene Verantwortung.",
       FontSize = 14,
-      Foreground = GetTextBrush(),
+      Foreground = AboutViewShared.GetTextBrush(),
       TextWrapping = TextWrapping.Wrap
     });
 
@@ -62,13 +52,10 @@ public static class AboutView {
       BorderThickness = new Thickness(1),
       CornerRadius = new CornerRadius(10),
       Padding = new Thickness(0),
-      // Let width adapt to device; max for larger iPads
       MaxWidth = 500,
     };
 
-    var scroll = new ScrollViewer {
-      Content = contentPanel
-    };
+    var scroll = new ScrollViewer { Content = contentPanel };
 
     border.Child = scroll;
     return border;
@@ -79,7 +66,7 @@ public static class AboutView {
       Content = text,
       Background = Brushes.Transparent,
       BorderThickness = new Thickness(0),
-      Foreground = GetLinkBrush(),
+      Foreground = AboutViewShared.GetLinkBrush(),
       FontSize = fontSize,
       Padding = new Thickness(2, 4)
     };
