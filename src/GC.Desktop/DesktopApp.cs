@@ -41,6 +41,7 @@ public class DesktopApp : App
         // ViewModels
         services.AddSingleton<MenuViewModel>();
         services.AddSingleton<BillingViewModel>();
+        services.AddSingleton<MainViewModel>(); // Added for desktop dynamic view host
         
         // Platform services
         services.AddSingleton<IThemeService, DesktopThemeService>();

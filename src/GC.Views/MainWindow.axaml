@@ -3,25 +3,17 @@
         xmlns:vm="using:GC.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:views="clr-namespace:GC.Views"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
         x:Class="GC.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="Gourmet Client MVVM"
-        Width="800" Height="600">
+        Title="Gourmet Client"
+        Width="1100" Height="780" MinWidth="900" MinHeight="640">
 
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <StackPanel Margin="20" Spacing="10">
-        <TextBlock Text="{Binding Greeting}" 
-                   FontSize="24" 
-                   HorizontalAlignment="Center"/>
-        
-        <Button Content="Update Greeting" 
-                Command="{Binding UpdateGreetingCommand}"
-                HorizontalAlignment="Center"/>
-    </StackPanel>
-    
-</Window>
+    <views:MainViewHostControl/>
 
+</Window>

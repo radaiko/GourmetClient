@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace GC.Views;
 
 /// <summary>
-/// Main view host for iOS single-view lifetime.
+/// Main view host for iOS single-view lifetime and Desktop dynamic layout.
 /// </summary>
 public class MainViewHostControl : UserControl {
   private readonly MainViewModel _viewModel;
@@ -23,10 +23,11 @@ public class MainViewHostControl : UserControl {
     // Use iOS-specific UI on iOS platform
     // Subscribe to property changes to rebuild the view
     _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-    UpdateContent();
+    UpdateContentIOS();
 #else
-    // For desktop/other platforms, use the standard XAML view
-    Content = new MainView();
+    // Desktop: use desktop-specific dynamic builder for shared navigation-based UI
+    _viewModel.PropertyChanged += OnViewModelPropertyChangedDesktop;
+    UpdateContentDesktop();
 #endif
   }
 
@@ -40,13 +41,27 @@ public class MainViewHostControl : UserControl {
         e.PropertyName == nameof(MainViewModel.IsSettingsDirty) ||
         e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
         e.PropertyName == nameof(MainViewModel.BillingViewModel)) {
-      UpdateContent();
+      UpdateContentIOS();
     }
   }
 
-  private void UpdateContent() {
+  private void UpdateContentIOS() {
     Content = MainViewIOS.Create(_viewModel);
+  }
+#else
+  private void OnViewModelPropertyChangedDesktop(object? sender, PropertyChangedEventArgs e) {
+    if (e.PropertyName == nameof(MainViewModel.CurrentPageIndex) ||
+        e.PropertyName == nameof(MainViewModel.ErrorMessage) ||
+        e.PropertyName == nameof(MainViewModel.UserName) ||
+        e.PropertyName == nameof(MainViewModel.IsSettingsDirty) ||
+        e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
+        e.PropertyName == nameof(MainViewModel.BillingViewModel)) {
+      UpdateContentDesktop();
+    }
+  }
+
+  private void UpdateContentDesktop() {
+    Content = MainViewDesktop.Create(_viewModel);
   }
 #endif
 }
-
