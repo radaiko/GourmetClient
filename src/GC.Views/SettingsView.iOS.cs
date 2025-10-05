@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Layout;
+using Avalonia.Data;
 using Avalonia.Media;
 using GC.ViewModels;
 
@@ -40,8 +40,8 @@ public static class SettingsViewIOS
                 Children =
                 {
                     CreateHeader(),
-                    CreateGourmetSection(viewModel),
-                    CreateVentoPaySection(viewModel)
+                    CreateGourmetSection(),
+                    CreateVentoPaySection()
                 }
             }
         };
@@ -56,13 +56,6 @@ public static class SettingsViewIOS
             {
                 new TextBlock
                 {
-                    Text = "Einstellungen",
-                    FontSize = 28,
-                    FontWeight = FontWeight.Bold,
-                    Foreground = GetTextBrush()
-                },
-                new TextBlock
-                {
                     Text = "Konfiguration der Anmeldedaten und Anwendungseinstellungen",
                     FontSize = 14,
                     Foreground = GetSecondaryTextBrush(),
@@ -72,7 +65,7 @@ public static class SettingsViewIOS
         };
     }
 
-    private static Control CreateGourmetSection(MainViewModel viewModel)
+    private static Control CreateGourmetSection()
     {
         return new Border
         {
@@ -91,14 +84,14 @@ public static class SettingsViewIOS
                         FontWeight = FontWeight.SemiBold,
                         Foreground = GetTextBrush()
                     },
-                    CreateBoundTextBox("Benutzername", viewModel.GourmetUsername, text => viewModel.GourmetUsername = text),
-                    CreateBoundPasswordBox("Passwort", viewModel.GourmetPassword, text => viewModel.GourmetPassword = text)
+                    CreateBoundTextBox("Benutzername", nameof(MainViewModel.GourmetUsername)),
+                    CreateBoundPasswordBox("Passwort", nameof(MainViewModel.GourmetPassword))
                 }
             }
         };
     }
 
-    private static Control CreateVentoPaySection(MainViewModel viewModel)
+    private static Control CreateVentoPaySection()
     {
         return new Border
         {
@@ -117,18 +110,17 @@ public static class SettingsViewIOS
                         FontWeight = FontWeight.SemiBold,
                         Foreground = GetTextBrush()
                     },
-                    CreateBoundTextBox("Benutzername", viewModel.VentoPayUsername, text => viewModel.VentoPayUsername = text),
-                    CreateBoundPasswordBox("Passwort", viewModel.VentoPayPassword, text => viewModel.VentoPayPassword = text)
+                    CreateBoundTextBox("Benutzername", nameof(MainViewModel.VentoPayUsername)),
+                    CreateBoundPasswordBox("Passwort", nameof(MainViewModel.VentoPayPassword))
                 }
             }
         };
     }
 
-    private static Control CreateBoundTextBox(string watermark, string text, Action<string> onChanged)
+    private static Control CreateBoundTextBox(string watermark, string propertyName)
     {
         var textBox = new TextBox
         {
-            Text = text,
             Watermark = watermark,
             FontSize = 17,
             Padding = new Thickness(12),
@@ -137,19 +129,20 @@ public static class SettingsViewIOS
             CornerRadius = new CornerRadius(8),
             Background = Brushes.Transparent
         };
-        textBox.PropertyChanged += (_, e) =>
+        
+        // Use proper Avalonia data binding with two-way mode
+        textBox.Bind(TextBox.TextProperty, new Binding(propertyName)
         {
-            if (e.Property == TextBox.TextProperty)
-                onChanged(textBox.Text ?? "");
-        };
+            Mode = BindingMode.TwoWay
+        });
+        
         return textBox;
     }
 
-    private static Control CreateBoundPasswordBox(string watermark, string text, Action<string> onChanged)
+    private static Control CreateBoundPasswordBox(string watermark, string propertyName)
     {
         var textBox = new TextBox
         {
-            Text = text,
             Watermark = watermark,
             PasswordChar = '•',
             FontSize = 17,
@@ -159,11 +152,13 @@ public static class SettingsViewIOS
             CornerRadius = new CornerRadius(8),
             Background = Brushes.Transparent
         };
-        textBox.PropertyChanged += (_, e) =>
+        
+        // Use proper Avalonia data binding with two-way mode
+        textBox.Bind(TextBox.TextProperty, new Binding(propertyName)
         {
-            if (e.Property == TextBox.TextProperty)
-                onChanged(textBox.Text ?? "");
-        };
+            Mode = BindingMode.TwoWay
+        });
+        
         return textBox;
     }
 }

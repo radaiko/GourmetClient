@@ -3,15 +3,25 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GourmetClient.Core.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace GC.ViewModels;
 
 public partial class MainViewModel : ObservableObject {
-  private readonly GourmetSettingsService _settingsService;
+  private readonly GourmetSettingsService? _settingsService;
+  private readonly ILogger<MainViewModel>? _logger;
 
-  public MainViewModel(GourmetSettingsService settingsService) {
+  // Design-time constructor for XAML previewer
+  public MainViewModel() : this(null!, null!) {
+  }
+
+  public MainViewModel(GourmetSettingsService settingsService, ILogger<MainViewModel> logger) {
     _settingsService = settingsService;
-    LoadSettings();
+    _logger = logger;
+    if (settingsService != null) {
+      _logger?.LogInformation("Initializing MainViewModel");
+      LoadSettings();
+    }
   }
 
   [ObservableProperty]
@@ -65,7 +75,11 @@ public partial class MainViewModel : ObservableObject {
 
   [RelayCommand]
   private void SaveSettings() {
+    if (_settingsService == null) return;
+    
     try {
+      _logger?.LogInformation("Saving user settings");
+      
       // Map from ViewModel properties to UserSettings
       var userSettings = new UserSettings {
         GourmetLoginUsername = GourmetUsername ?? string.Empty,
@@ -76,8 +90,10 @@ public partial class MainViewModel : ObservableObject {
       
       _settingsService.SaveUserSettings(userSettings);
       IsSettingsDirty = false;
+      _logger?.LogInformation("Settings saved successfully");
     }
     catch (Exception ex) {
+      _logger?.LogError(ex, "Failed to save settings");
       ErrorMessage = $"Fehler beim Speichern: {ex.Message}";
     }
   }
@@ -99,7 +115,10 @@ public partial class MainViewModel : ObservableObject {
   }
 
   private void LoadSettings() {
+    if (_settingsService == null) return;
+    
     try {
+      _logger?.LogInformation("Loading user settings");
       var userSettings = _settingsService.GetCurrentUserSettings();
       
       // Don't trigger dirty flag when loading initial settings
@@ -112,8 +131,10 @@ public partial class MainViewModel : ObservableObject {
       
       // Reset dirty flag after loading
       IsSettingsDirty = wasDirty;
+      _logger?.LogInformation("Settings loaded successfully");
     }
     catch (Exception ex) {
+      _logger?.LogError(ex, "Failed to load settings");
       ErrorMessage = $"Fehler beim Laden der Einstellungen: {ex.Message}";
     }
   }

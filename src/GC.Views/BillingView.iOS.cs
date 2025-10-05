@@ -55,13 +55,6 @@ public static class BillingViewIOS
             {
                 new TextBlock
                 {
-                    Text = "Rechnung",
-                    FontSize = 28,
-                    FontWeight = FontWeight.Bold,
-                    Foreground = GetTextBrush()
-                },
-                new TextBlock
-                {
                     Text = "Ihre Abrechnungsinformationen",
                     FontSize = 14,
                     Foreground = GetSecondaryTextBrush()
