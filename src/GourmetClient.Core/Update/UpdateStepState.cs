@@ -1,4 +1,4 @@
-﻿namespace GourmetClient.Update;
+﻿namespace GourmetClient.Core.Update;
 
 public enum UpdateStepState
 {
