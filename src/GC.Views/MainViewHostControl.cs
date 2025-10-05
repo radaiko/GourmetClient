@@ -2,6 +2,8 @@ using Avalonia.Controls;
 using GC.ViewModels;
 using GC.Views.Utils;
 using System.ComponentModel;
+using GourmetClient.Core.Settings;
+using GourmetClient.Core.Utils;
 
 namespace GC.Views;
 
@@ -12,7 +14,10 @@ public class MainViewHostControl : UserControl {
   private readonly MainViewModel _viewModel;
 
   public MainViewHostControl() {
-    _viewModel = new MainViewModel();
+    // Create GourmetSettingsService with FilePathProvider
+    var settingsService = new GourmetSettingsService(new FilePathProvider());
+    
+    _viewModel = new MainViewModel(settingsService);
     DataContext = _viewModel;
     
     // Use iOS-specific UI on iOS platform

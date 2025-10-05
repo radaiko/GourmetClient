@@ -2,18 +2,15 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GourmetClient.Core.Utils;
 using GourmetClient.Core.Settings;
 
 namespace GC.ViewModels;
 
 public partial class MainViewModel : ObservableObject {
-  static MainViewModel() {
-    // Initialize the InstanceProvider with core FilePathProvider
-    InstanceProvider.Initialize(new FilePathProvider());
-  }
+  private readonly GourmetSettingsService _settingsService;
 
-  public MainViewModel() {
+  public MainViewModel(GourmetSettingsService settingsService) {
+    _settingsService = settingsService;
     LoadSettings();
   }
 
@@ -69,8 +66,6 @@ public partial class MainViewModel : ObservableObject {
   [RelayCommand]
   private void SaveSettings() {
     try {
-      var settingsService = InstanceProvider.SettingsService;
-      
       // Map from ViewModel properties to UserSettings
       var userSettings = new UserSettings {
         GourmetLoginUsername = GourmetUsername ?? string.Empty,
@@ -79,7 +74,7 @@ public partial class MainViewModel : ObservableObject {
         VentopayPassword = VentoPayPassword ?? string.Empty
       };
       
-      settingsService.SaveUserSettings(userSettings);
+      _settingsService.SaveUserSettings(userSettings);
       IsSettingsDirty = false;
     }
     catch (Exception ex) {
@@ -105,8 +100,7 @@ public partial class MainViewModel : ObservableObject {
 
   private void LoadSettings() {
     try {
-      var settingsService = InstanceProvider.SettingsService;
-      var userSettings = settingsService.GetCurrentUserSettings();
+      var userSettings = _settingsService.GetCurrentUserSettings();
       
       // Don't trigger dirty flag when loading initial settings
       var wasDirty = IsSettingsDirty;
