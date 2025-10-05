@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -100,22 +101,29 @@ public static class MenuViewDesktop {
       row++;
     }
 
-    scroll.Content = new Grid {
-      ColumnDefinitions = { new ColumnDefinition(GridLength.Star) },
-      Children = {
-        new Border {
-          HorizontalAlignment = HorizontalAlignment.Center,
-          MaxWidth = DesktopLayout.WideTableMaxWidth,
-          Padding = new Thickness(4,0),
-          Child = grid
-        }
-      }
+    // Wrap table + legend in a vertical stack for proper order inside scroll
+    var tableContainer = new Border {
+      HorizontalAlignment = HorizontalAlignment.Center,
+      MaxWidth = DesktopLayout.WideTableMaxWidth,
+      Padding = new Thickness(4,0),
+      Child = grid
     };
 
-    // Legend / status bar
     var legend = BuildLegend();
-    DockPanel.SetDock(legend, Dock.Bottom);
-    root.Children.Add(legend);
+    var legendContainer = new Border {
+      HorizontalAlignment = HorizontalAlignment.Center,
+      MaxWidth = DesktopLayout.WideTableMaxWidth,
+      Margin = new Thickness(4,8,4,16),
+      Child = legend
+    };
+
+    var contentStack = new StackPanel {
+      Orientation = Orientation.Vertical,
+      Spacing = 4,
+      Children = { tableContainer, legendContainer }
+    };
+
+    scroll.Content = contentStack;
 
     return root;
   }
@@ -123,7 +131,8 @@ public static class MenuViewDesktop {
   private static Control BuildHeaderBar(MenuViewModel vm) {
     var bar = new DockPanel {
       Background = AccentBlue(),
-      Height = 42
+      Height = 42,
+      DataContext = vm
     };
 
     var title = new TextBlock {
@@ -136,12 +145,31 @@ public static class MenuViewDesktop {
     DockPanel.SetDock(title, Dock.Left);
     bar.Children.Add(title);
 
+    var applyBtn = new Button {
+      Content = "✔ Anwenden",
+      Margin = new Thickness(8,4,0,4),
+      VerticalAlignment = VerticalAlignment.Center,
+      Background = new SolidColorBrush(Color.Parse("#34C759")),
+      Foreground = Brushes.White,
+      Padding = new Thickness(10,2)
+    };
+    applyBtn.Bind(Button.IsVisibleProperty, new Binding(nameof(MenuViewModel.HasPendingChanges)));
+    // Disabled when applying changes
+    applyBtn.Bind(Button.IsEnabledProperty, new Binding(nameof(MenuViewModel.IsApplyingChanges)) { Converter = new InverseBoolConverter() });
+    applyBtn.Click += async (_, _) => await vm.ApplyOrderChangesCommand.ExecuteAsync(null);
+    DockPanel.SetDock(applyBtn, Dock.Right);
+    bar.Children.Add(applyBtn);
+
     var refreshBtn = new Button {
-      Content = "Aktualisieren",
+      Content = "⟳",
       Margin = new Thickness(8,4,12,4),
       VerticalAlignment = VerticalAlignment.Center,
-      HorizontalAlignment = HorizontalAlignment.Right
+      HorizontalAlignment = HorizontalAlignment.Right,
+      Width = 40
     };
+    // Hide refresh when there are pending changes
+    refreshBtn.Bind(Button.IsVisibleProperty, new Binding(nameof(MenuViewModel.HasPendingChanges)) { Converter = new InverseBoolConverter() });
+    refreshBtn.Bind(Button.IsEnabledProperty, new Binding(nameof(MenuViewModel.IsApplyingChanges)) { Converter = new InverseBoolConverter() });
     refreshBtn.Click += async (_, _) => await vm.RefreshMenusCommand.ExecuteAsync(null);
     DockPanel.SetDock(refreshBtn, Dock.Right);
     bar.Children.Add(refreshBtn);
