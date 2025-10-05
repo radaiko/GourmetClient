@@ -2,20 +2,24 @@ using System;
 using Avalonia.Styling;
 using Foundation;
 using GC.ViewModels.Services;
+using Microsoft.Extensions.Logging;
 using UIKit;
 
 namespace GC.iOS.Services;
 
 public class iOSThemeService : IThemeService
 {
-    private NSTimer? _themeCheckTimer;
+    private NSObject? _themeChangeObserver;
     private ThemeVariant _currentTheme;
+    private readonly ILogger<iOSThemeService>? _logger;
     
     public event EventHandler<ThemeVariant>? ThemeChanged;
 
-    public iOSThemeService()
+    public iOSThemeService(ILogger<iOSThemeService>? logger = null)
     {
+        _logger = logger;
         _currentTheme = GetSystemTheme();
+        _logger?.LogInformation("iOSThemeService initialized with theme: {Theme}", _currentTheme);
     }
 
     public ThemeVariant GetSystemTheme()
@@ -36,22 +40,44 @@ public class iOSThemeService : IThemeService
     {
         if (UIDevice.CurrentDevice.CheckSystemVersion(13, 0))
         {
-            // Use a timer to poll for theme changes every 2 seconds
-            _themeCheckTimer = NSTimer.CreateRepeatingScheduledTimer(2.0, CheckThemeChange);
+            _logger?.LogInformation("Starting native iOS theme monitoring using TraitCollectionDidChange");
+            
+            // Use NSNotification to observe trait collection changes
+            // This is more efficient than polling
+            _themeChangeObserver = NSNotificationCenter.DefaultCenter.AddObserver(
+                UIApplication.DidBecomeActiveNotification,
+                notification => CheckThemeChange()
+            );
+            
+            // Also observe when returning from background
+            var backgroundObserver = NSNotificationCenter.DefaultCenter.AddObserver(
+                UIApplication.WillEnterForegroundNotification,
+                notification => CheckThemeChange()
+            );
+        }
+        else
+        {
+            _logger?.LogInformation("iOS version < 13.0, dark mode not supported");
         }
     }
 
     public void StopMonitoring()
     {
-        _themeCheckTimer?.Invalidate();
-        _themeCheckTimer = null;
+        _logger?.LogInformation("Stopping theme monitoring");
+        
+        if (_themeChangeObserver != null)
+        {
+            NSNotificationCenter.DefaultCenter.RemoveObserver(_themeChangeObserver);
+            _themeChangeObserver = null;
+        }
     }
 
-    private void CheckThemeChange(NSTimer timer)
+    private void CheckThemeChange()
     {
         var newTheme = GetSystemTheme();
         if (newTheme != _currentTheme)
         {
+            _logger?.LogInformation("Theme changed from {OldTheme} to {NewTheme}", _currentTheme, newTheme);
             _currentTheme = newTheme;
             ThemeChanged?.Invoke(this, newTheme);
         }

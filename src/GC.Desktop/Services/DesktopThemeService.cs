@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 using System.Threading;
 using Avalonia.Styling;
 using GC.ViewModels.Services;
+using Microsoft.Extensions.Logging;
 
 namespace GC.Desktop.Services;
 
@@ -11,12 +12,15 @@ public class DesktopThemeService : IThemeService
 {
     private Timer? _themeCheckTimer;
     private ThemeVariant _currentTheme;
+    private readonly ILogger<DesktopThemeService>? _logger;
     
     public event EventHandler<ThemeVariant>? ThemeChanged;
 
-    public DesktopThemeService()
+    public DesktopThemeService(ILogger<DesktopThemeService>? logger = null)
     {
+        _logger = logger;
         _currentTheme = GetSystemTheme();
+        _logger?.LogInformation("DesktopThemeService initialized with theme: {Theme}", _currentTheme);
     }
 
     public ThemeVariant GetSystemTheme()
@@ -36,12 +40,17 @@ public class DesktopThemeService : IThemeService
 
     public void StartMonitoring()
     {
-        // Poll for theme changes every 2 seconds
-        _themeCheckTimer = new Timer(CheckThemeChange, null, TimeSpan.Zero, TimeSpan.FromSeconds(2));
+        _logger?.LogInformation("Starting theme monitoring");
+        
+        // On macOS, we could use NSDistributedNotificationCenter, but since we're in a desktop project
+        // without direct Foundation access, we'll use optimized polling (5 seconds instead of 2)
+        // On Windows, we could use WMI events, but polling is simpler and works well
+        _themeCheckTimer = new Timer(CheckThemeChange, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
     }
 
     public void StopMonitoring()
     {
+        _logger?.LogInformation("Stopping theme monitoring");
         _themeCheckTimer?.Dispose();
         _themeCheckTimer = null;
     }
@@ -51,6 +60,7 @@ public class DesktopThemeService : IThemeService
         var newTheme = GetSystemTheme();
         if (newTheme != _currentTheme)
         {
+            _logger?.LogInformation("Theme changed from {OldTheme} to {NewTheme}", _currentTheme, newTheme);
             _currentTheme = newTheme;
             ThemeChanged?.Invoke(this, newTheme);
         }
