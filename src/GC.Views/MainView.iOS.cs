@@ -142,6 +142,59 @@ public static class MainViewIOS
         Grid.SetColumn(leftPanel, 0);
         grid.Children.Add(leftPanel);
 
+        // Determine action button (positioned after spacer)
+        Button? actionButton = null;
+        if (viewModel.CurrentPageIndex == 0)
+        {
+            actionButton = new Button
+            {
+                Content = "⟳",
+                FontSize = 24,
+                Width = 44,
+                Height = 44,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            // TODO: Wire up to refresh command when available
+        }
+        else if (viewModel.CurrentPageIndex == 1)
+        {
+            actionButton = new Button
+            {
+                Content = "⟳",
+                FontSize = 24,
+                Width = 44,
+                Height = 44,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            // TODO: Wire up to refresh billing command when available
+        }
+        else if (viewModel.CurrentPageIndex == 2 && viewModel.IsSettingsDirty)
+        {
+            actionButton = new Button
+            {
+                Content = "⎙",
+                FontSize = 22,
+                Width = 44,
+                Height = 44,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = new SolidColorBrush(Color.Parse("#34C759")),
+                Margin = new Thickness(0, 0, 4, 0)
+            };
+            actionButton.Click += (_, _) => viewModel.SaveSettingsCommand.Execute(null);
+        }
+        if (actionButton != null)
+        {
+            Grid.SetColumn(actionButton, 2);
+            grid.Children.Add(actionButton);
+        }
+
         border.Child = grid;
         return border;
     }

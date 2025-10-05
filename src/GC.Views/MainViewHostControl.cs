@@ -31,7 +31,8 @@ public class MainViewHostControl : UserControl {
     // This ensures the UI is updated when navigation or other state changes
     if (e.PropertyName == nameof(MainViewModel.CurrentPageIndex) ||
         e.PropertyName == nameof(MainViewModel.ErrorMessage) ||
-        e.PropertyName == nameof(MainViewModel.UserName)) {
+        e.PropertyName == nameof(MainViewModel.UserName) ||
+        e.PropertyName == nameof(MainViewModel.IsSettingsDirty)) {
       UpdateContent();
     }
   }

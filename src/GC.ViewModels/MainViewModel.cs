@@ -24,6 +24,22 @@ public partial class MainViewModel : ObservableObject {
   [ObservableProperty]
   private DateTime? _lastMenuUpdate;
 
+  [ObservableProperty]
+  private bool _isSettingsDirty = false;
+
+  // Settings properties
+  [ObservableProperty]
+  private string _gourmetUsername = "";
+
+  [ObservableProperty]
+  private string _gourmetPassword = "";
+
+  [ObservableProperty]
+  private string _ventoPayUsername = "";
+
+  [ObservableProperty]
+  private string _ventoPayPassword = "";
+
   [RelayCommand]
   private void UpdateGreeting() {
     Greeting = $"Updated at {DateTime.Now:HH:mm:ss}";
@@ -37,6 +53,29 @@ public partial class MainViewModel : ObservableObject {
   [RelayCommand]
   private void ClearError() {
     ErrorMessage = null;
+  }
+
+  [RelayCommand]
+  private void SaveSettings() {
+    // TODO: Implement actual save logic
+    IsSettingsDirty = false;
+    // In a real implementation, this would save to storage
+  }
+
+  partial void OnGourmetUsernameChanged(string value) {
+    IsSettingsDirty = true;
+  }
+
+  partial void OnGourmetPasswordChanged(string value) {
+    IsSettingsDirty = true;
+  }
+
+  partial void OnVentoPayUsernameChanged(string value) {
+    IsSettingsDirty = true;
+  }
+
+  partial void OnVentoPayPasswordChanged(string value) {
+    IsSettingsDirty = true;
   }
 }
 

@@ -40,9 +40,8 @@ public static class SettingsViewIOS
                 Children =
                 {
                     CreateHeader(),
-                    CreateGourmetSection(),
-                    CreateVentoPaySection(),
-                    CreateAppSettingsSection()
+                    CreateGourmetSection(viewModel),
+                    CreateVentoPaySection(viewModel)
                 }
             }
         };
@@ -73,7 +72,7 @@ public static class SettingsViewIOS
         };
     }
 
-    private static Control CreateGourmetSection()
+    private static Control CreateGourmetSection(MainViewModel viewModel)
     {
         return new Border
         {
@@ -92,14 +91,14 @@ public static class SettingsViewIOS
                         FontWeight = FontWeight.SemiBold,
                         Foreground = GetTextBrush()
                     },
-                    CreateTextBox("Benutzername", ""),
-                    CreatePasswordBox("Passwort", "")
+                    CreateBoundTextBox("Benutzername", viewModel.GourmetUsername, text => viewModel.GourmetUsername = text),
+                    CreateBoundPasswordBox("Passwort", viewModel.GourmetPassword, text => viewModel.GourmetPassword = text)
                 }
             }
         };
     }
 
-    private static Control CreateVentoPaySection()
+    private static Control CreateVentoPaySection(MainViewModel viewModel)
     {
         return new Border
         {
@@ -118,42 +117,16 @@ public static class SettingsViewIOS
                         FontWeight = FontWeight.SemiBold,
                         Foreground = GetTextBrush()
                     },
-                    CreateTextBox("Benutzername", ""),
-                    CreatePasswordBox("Passwort", "")
+                    CreateBoundTextBox("Benutzername", viewModel.VentoPayUsername, text => viewModel.VentoPayUsername = text),
+                    CreateBoundPasswordBox("Passwort", viewModel.VentoPayPassword, text => viewModel.VentoPayPassword = text)
                 }
             }
         };
     }
 
-    private static Control CreateAppSettingsSection()
+    private static Control CreateBoundTextBox(string watermark, string text, Action<string> onChanged)
     {
-        return new Border
-        {
-            Background = GetCardBackgroundBrush(),
-            CornerRadius = new CornerRadius(12),
-            Padding = new Thickness(16),
-            Child = new StackPanel
-            {
-                Spacing = 12,
-                Children =
-                {
-                    new TextBlock
-                    {
-                        Text = "Anwendungseinstellungen",
-                        FontSize = 18,
-                        FontWeight = FontWeight.SemiBold,
-                        Foreground = GetTextBrush()
-                    },
-                    CreateCheckBox("Automatische Updates"),
-                    CreateCheckBox("Mit Windows starten")
-                }
-            }
-        };
-    }
-
-    private static Control CreateTextBox(string watermark, string text)
-    {
-        return new TextBox
+        var textBox = new TextBox
         {
             Text = text,
             Watermark = watermark,
@@ -164,11 +137,17 @@ public static class SettingsViewIOS
             CornerRadius = new CornerRadius(8),
             Background = Brushes.Transparent
         };
+        textBox.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty)
+                onChanged(textBox.Text ?? "");
+        };
+        return textBox;
     }
 
-    private static Control CreatePasswordBox(string watermark, string text)
+    private static Control CreateBoundPasswordBox(string watermark, string text, Action<string> onChanged)
     {
-        return new TextBox
+        var textBox = new TextBox
         {
             Text = text,
             Watermark = watermark,
@@ -180,16 +159,11 @@ public static class SettingsViewIOS
             CornerRadius = new CornerRadius(8),
             Background = Brushes.Transparent
         };
-    }
-
-    private static Control CreateCheckBox(string label)
-    {
-        return new CheckBox
+        textBox.PropertyChanged += (_, e) =>
         {
-            Content = label,
-            FontSize = 16,
-            Foreground = GetTextBrush(),
-            Padding = new Thickness(8, 4)
+            if (e.Property == TextBox.TextProperty)
+                onChanged(textBox.Text ?? "");
         };
+        return textBox;
     }
 }
