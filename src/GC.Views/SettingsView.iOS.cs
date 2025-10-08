@@ -41,7 +41,8 @@ public static class SettingsViewIOS
                 {
                     CreateHeader(),
                     CreateGourmetSection(),
-                    CreateVentoPaySection()
+                    CreateVentoPaySection(),
+                    CreateInfoSection(viewModel)
                 }
             }
         };
@@ -112,6 +113,42 @@ public static class SettingsViewIOS
                     },
                     CreateBoundTextBox("Benutzername", nameof(MainViewModel.VentoPayUsername)),
                     CreateBoundPasswordBox("Passwort", nameof(MainViewModel.VentoPayPassword))
+                }
+            }
+        };
+    }
+
+    private static Control CreateInfoSection(MainViewModel vm)
+    {
+        return new Border
+        {
+            Background = GetCardBackgroundBrush(),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(16),
+            Child = new StackPanel
+            {
+                Spacing = 12,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Information",
+                        FontSize = 18,
+                        FontWeight = FontWeight.SemiBold,
+                        Foreground = GetTextBrush()
+                    },
+                    new Button
+                    {
+                        Content = "Über die App",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                        Command = vm.ShowAboutCommand
+                    },
+                    new Button
+                    {
+                        Content = "Changelog",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch,
+                        Command = vm.ShowChangelogCommand
+                    }
                 }
             }
         };

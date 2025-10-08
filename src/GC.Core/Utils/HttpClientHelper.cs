@@ -1,0 +1,124 @@
+﻿using System;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+namespace GC.Core.Utils;
+
+public static class HttpClientHelper
+{
+    // Helper to create an HttpClient that does not use any explicit proxy. On iOS setting UseProxy = false
+    // throws: "It's not allowed to disable the system proxy. Value is false". Therefore we only set UseProxy=false
+    // on platforms where it is supported and leave default behavior on iOS.
+    private static HttpClient CreateClientWithoutProxy(CookieContainer cookieContainer)
+    {
+        var handler = new HttpClientHandler { CookieContainer = cookieContainer };
+        
+        // On iOS, we cannot set UseProxy = false as it throws an exception
+        // Check at runtime if we're on iOS/tvOS/macCatalyst
+        if (!OperatingSystem.IsIOS() && !OperatingSystem.IsTvOS() && !OperatingSystem.IsMacCatalyst())
+        {
+            handler.UseProxy = false;
+        }
+        
+        return new HttpClient(handler);
+    }
+
+    public static async Task<HttpClientResult<T>> CreateHttpClient<T>(string requestUrl, Func<HttpClient, Task<T>> proxyTestRequestFunc, CookieContainer cookieContainer)
+    {
+        HttpClient? client;
+        T requestResult;
+
+        WebProxy? proxy = GetProxy(requestUrl);
+        if (proxy is null)
+        {
+            // No proxy required
+            client = CreateClientWithoutProxy(cookieContainer);
+            requestResult = await proxyTestRequestFunc(client);
+            return new HttpClientResult<T>(client, requestResult);
+        }
+
+        // Try executing request with proxy (no authentication)
+        client = new HttpClient(new HttpClientHandler { Proxy = proxy, CookieContainer = cookieContainer });
+
+        try
+        {
+            requestResult = await proxyTestRequestFunc(client);
+            return new HttpClientResult<T>(client, requestResult);
+        }
+        catch (HttpRequestException exception)
+        {
+            client.Dispose();
+            client = null;
+
+            if (IsProxyAuthenticationRequiredException(proxy, exception))
+            {
+                // Try executing request with proxy and default credentials
+                proxy.Credentials = CredentialCache.DefaultCredentials;
+                client = new HttpClient(new HttpClientHandler { Proxy = proxy, CookieContainer = cookieContainer });
+            }
+            else if (IsProxyConnectionErrorException(proxy, exception))
+            {
+                // Connection to proxy cannot be established. Try executing request without proxy
+                client = CreateClientWithoutProxy(cookieContainer);
+            }
+
+            if (client is null)
+            {
+                throw;
+            }
+        }
+
+        try
+        {
+            requestResult = await proxyTestRequestFunc(client);
+            return new HttpClientResult<T>(client, requestResult);
+        }
+        catch
+        {
+            client.Dispose();
+            throw;
+        }
+    }
+
+    public static bool IsProxyRelatedException(string requestUrl, HttpRequestException exception)
+    {
+        WebProxy? proxy = GetProxy(requestUrl);
+        if (proxy is null)
+        {
+            // No proxy required for request url
+            return false;
+        }
+
+        return IsProxyAuthenticationRequiredException(proxy, exception) || IsProxyConnectionErrorException(proxy, exception);
+    }
+
+    private static WebProxy? GetProxy(string requestUrl)
+    {
+        var requestUri = new Uri(requestUrl);
+        Uri? proxyUri = WebRequest.DefaultWebProxy?.GetProxy(requestUri);
+
+        if (proxyUri is null || proxyUri.Authority == requestUri.Authority)
+        {
+            // No proxy required
+            return null;
+        }
+
+        return new WebProxy(proxyUri, true);
+    }
+
+    private static bool IsProxyAuthenticationRequiredException(WebProxy proxy, HttpRequestException exception)
+    {
+        // Exception message is like "The proxy tunnel request to proxy '<proxyUri>' failed with status code '407'."
+        return exception.HttpRequestError == HttpRequestError.ProxyTunnelError
+               && exception.Message.Contains($"'{proxy.Address!.AbsoluteUri}'")
+               && exception.Message.Contains("'407'");
+    }
+
+    private static bool IsProxyConnectionErrorException(WebProxy proxy, HttpRequestException exception)
+    {
+        // Exception message is like "The remote host (<proxy uri>) is unknown"
+        return exception.HttpRequestError == HttpRequestError.NameResolutionError
+               && exception.Message.Contains(proxy.Address!.Authority);
+    }
+}

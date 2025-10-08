@@ -2,7 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GourmetClient.Core.Settings;
+using GC.Core.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace GC.ViewModels;
@@ -53,7 +53,7 @@ public partial class MainViewModel : ObservableObject {
   private string _greeting = "Welcome to Gourmet Client MVVM!";
 
   [ObservableProperty]
-  private int _currentPageIndex = 0; // iOS navigation: 0=Menu,1=Billing,2=Settings,3=About
+  private int _currentPageIndex = 0; // iOS bottom tab navigation: 0=Menu,1=Billing,2=Settings
 
   [ObservableProperty]
   private bool _isLoading = false;
@@ -83,6 +83,13 @@ public partial class MainViewModel : ObservableObject {
   [ObservableProperty]
   private string _ventoPayPassword = "";
 
+  // Overlay state (About / Changelog)
+  [ObservableProperty]
+  private bool _showAboutOverlay;
+
+  [ObservableProperty]
+  private bool _showChangelogOverlay;
+
   [RelayCommand]
   private void UpdateGreeting() {
     Greeting = $"Updated at {DateTime.Now:HH:mm:ss}";
@@ -90,6 +97,7 @@ public partial class MainViewModel : ObservableObject {
 
   [RelayCommand]
   private void NavigateToPage(int pageIndex) {
+    // Desktop still supports About page at index 3; iOS UI only exposes 0-2
     CurrentPageIndex = Math.Clamp(pageIndex, 0, 3);
   }
 
@@ -121,6 +129,24 @@ public partial class MainViewModel : ObservableObject {
       _logger?.LogError(ex, "Failed to save settings");
       ErrorMessage = $"Fehler beim Speichern: {ex.Message}";
     }
+  }
+
+  [RelayCommand]
+  private void ShowAbout() {
+    ShowChangelogOverlay = false;
+    ShowAboutOverlay = true;
+  }
+
+  [RelayCommand]
+  private void ShowChangelog() {
+    ShowAboutOverlay = false;
+    ShowChangelogOverlay = true;
+  }
+
+  [RelayCommand]
+  private void CloseOverlay() {
+    ShowAboutOverlay = false;
+    ShowChangelogOverlay = false;
   }
 
   partial void OnGourmetUsernameChanged(string value) {
@@ -164,4 +190,3 @@ public partial class MainViewModel : ObservableObject {
     }
   }
 }
-

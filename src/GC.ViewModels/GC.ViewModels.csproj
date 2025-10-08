@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\GourmetClient.Core\GourmetClient.Core.csproj" />
+        <ProjectReference Include="..\GC.Core\GC.Core.csproj" />
     </ItemGroup>
 
 </Project>

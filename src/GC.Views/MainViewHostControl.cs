@@ -2,7 +2,6 @@ using System.ComponentModel;
 using Avalonia.Controls;
 using GC.ViewModels;
 using GC.ViewModels.Services;
-using GourmetClient.Core.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -40,7 +39,9 @@ public class MainViewHostControl : UserControl {
         e.PropertyName == nameof(MainViewModel.UserName) ||
         e.PropertyName == nameof(MainViewModel.IsSettingsDirty) ||
         e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
-        e.PropertyName == nameof(MainViewModel.BillingViewModel)) {
+        e.PropertyName == nameof(MainViewModel.BillingViewModel) ||
+        e.PropertyName == nameof(MainViewModel.ShowAboutOverlay) ||
+        e.PropertyName == nameof(MainViewModel.ShowChangelogOverlay)) {
       UpdateContentIOS();
     }
   }

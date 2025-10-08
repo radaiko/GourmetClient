@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GourmetClient.Core.Model;
-using GourmetClient.Core.Network;
-using GourmetClient.Core.Settings;
+using GC.Core.Model;
+using GC.Core.Network;
+using GC.Core.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace GC.ViewModels;

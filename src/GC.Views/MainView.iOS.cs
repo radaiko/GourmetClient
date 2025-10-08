@@ -1,103 +1,104 @@
-using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Input;
+using Avalonia.Styling;
 using GC.ViewModels;
+using Avalonia.Platform;
+using Avalonia.Svg.Skia;
 
 namespace GC.Views;
 
 /// <summary>
-/// iOS-optimized main view with bottom navigation and mobile-friendly layout
+/// iOS-optimized main view with bottom tab bar navigation (Menu, Billing, Settings) and overlay modals (About, Changelog)
 /// </summary>
+// ReSharper disable once InconsistentNaming
 public static class MainViewIOS
 {
     private static SolidColorBrush GetBackgroundBrush() =>
-      new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
         ? Color.Parse("#000000")
         : Color.Parse("#F2F2F7"));
 
     private static SolidColorBrush GetCardBackgroundBrush() =>
-      new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+      new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
         ? Color.Parse("#1C1C1E")
         : Colors.White);
 
     private static SolidColorBrush GetSecondaryTextBrush() => new(Color.Parse("#8E8E93"));
 
     private static SolidColorBrush GetTextBrush() =>
-        new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
+        new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
             ? Colors.White
             : Colors.Black);
 
     public static Control Create(MainViewModel viewModel)
     {
-        var mainGrid = new Grid
+        var rootGrid = new Grid
         {
             Background = GetBackgroundBrush(),
             DataContext = viewModel
         };
 
-        mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Top bar
-        mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Error display
-        mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // Main content
-        mainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Page indicators
+        // Layout rows: TopBar, Error(optional), Content, TabBar
+        rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Top bar
+        rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Error
+        rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // Content
+        rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // Tab bar
 
-        // Gesture support variables
-        double swipeStartX = 0;
-        bool swipeActive = false;
-
-        mainGrid.PointerPressed += (_, e) =>
-        {
-            var point = e.GetPosition(mainGrid);
-            swipeStartX = point.X;
-            swipeActive = true;
-        };
-        mainGrid.PointerReleased += (_, e) =>
-        {
-            if (!swipeActive) return;
-            swipeActive = false;
-            var point = e.GetPosition(mainGrid);
-            var deltaX = point.X - swipeStartX;
-            const double threshold = 80; // pixels
-            if (deltaX <= -threshold && viewModel.CurrentPageIndex < 3)
-            {
-                viewModel.NavigateToPageCommand.Execute(viewModel.CurrentPageIndex + 1);
-            }
-            else if (deltaX >= threshold && viewModel.CurrentPageIndex > 0)
-            {
-                viewModel.NavigateToPageCommand.Execute(viewModel.CurrentPageIndex - 1);
-            }
-        };
-
-        // Top bar with dynamic title and actions
+        // Top bar
         var topBar = CreateTopBar(viewModel);
         Grid.SetRow(topBar, 0);
-        mainGrid.Children.Add(topBar);
+        rootGrid.Children.Add(topBar);
 
         // Error display
         if (!string.IsNullOrEmpty(viewModel.ErrorMessage))
         {
             var errorPanel = CreateErrorPanel(viewModel);
             Grid.SetRow(errorPanel, 1);
-            mainGrid.Children.Add(errorPanel);
+            rootGrid.Children.Add(errorPanel);
         }
 
-        // Main content page based on CurrentPageIndex
-        var pageContent = CreatePageContent(viewModel);
-        Grid.SetRow(pageContent, 2);
-        mainGrid.Children.Add(pageContent);
+        // Content (switch by CurrentPageIndex)
+        var content = CreateContentForPage(viewModel);
+        Grid.SetRow(content, 2);
+        rootGrid.Children.Add(content);
 
-        // Page indicators
-        var indicators = CreatePageIndicators(viewModel);
-        Grid.SetRow(indicators, 3);
-        mainGrid.Children.Add(indicators);
+        // Bottom tab bar
+        var tabBar = CreateTabBar(viewModel);
+        Grid.SetRow(tabBar, 3);
+        rootGrid.Children.Add(tabBar);
 
-        return mainGrid;
+        // Overlays (About / Changelog)
+        if (viewModel.ShowAboutOverlay)
+        {
+            var aboutOverlay = CreateOverlay(viewModel, AboutViewIOS.Create(viewModel));
+            rootGrid.Children.Add(aboutOverlay);
+        }
+        else if (viewModel.ShowChangelogOverlay)
+        {
+            var changelogOverlay = CreateOverlay(viewModel, ChangelogViewIOS.Create(viewModel));
+            rootGrid.Children.Add(changelogOverlay);
+        }
+
+        return rootGrid;
+    }
+
+    private static Control CreateContentForPage(MainViewModel vm)
+    {
+        return vm.CurrentPageIndex switch
+        {
+            0 => MenuViewIOS.Create(vm),
+            1 => BillingViewIOS.Create(vm),
+            2 => SettingsViewIOS.Create(vm),
+            _ => new TextBlock { Text = "Unbekannte Seite", Foreground = GetTextBrush(), Margin = new Thickness(16) }
+        };
     }
 
     private static Border CreateTopBar(MainViewModel viewModel)
     {
-        var titles = new[] { "Gourmet", "Rechnung", "Einstellungen", "Über" };
+        var titles = new[] { "Gourmet", "Rechnung", "Einstellungen" }; // fixed corrupted first title
         var title = titles[Math.Clamp(viewModel.CurrentPageIndex, 0, titles.Length - 1)];
 
         var border = new Border
@@ -142,53 +143,21 @@ public static class MainViewIOS
         Grid.SetColumn(leftPanel, 0);
         grid.Children.Add(leftPanel);
 
-        // Determine action button (positioned after spacer)
+        // Action button (refresh/save) depending on page
         Button? actionButton = null;
-        if (viewModel.CurrentPageIndex == 0 && viewModel.MenuViewModel != null)
+        if (viewModel is { CurrentPageIndex: 0, MenuViewModel: not null })
         {
-            actionButton = new Button
-            {
-                Content = "⟳",
-                FontSize = 24,
-                Width = 44,
-                Height = 44,
-                Background = Brushes.Transparent,
-                BorderBrush = Brushes.Transparent,
-                Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
-                Margin = new Thickness(0, 0, 4, 0)
-            };
-            actionButton.Click += async (_, _) => await viewModel.MenuViewModel.RefreshMenusCommand.ExecuteAsync(null);
+            actionButton = CreateIconButton("⟳", Color.Parse("#007AFF"), async () => await viewModel.MenuViewModel.RefreshMenusCommand.ExecuteAsync(null));
         }
-        else if (viewModel.CurrentPageIndex == 1 && viewModel.BillingViewModel != null)
+        else if (viewModel is { CurrentPageIndex: 1, BillingViewModel: not null })
         {
-            actionButton = new Button
-            {
-                Content = "⟳",
-                FontSize = 24,
-                Width = 44,
-                Height = 44,
-                Background = Brushes.Transparent,
-                BorderBrush = Brushes.Transparent,
-                Foreground = new SolidColorBrush(Color.Parse("#007AFF")),
-                Margin = new Thickness(0, 0, 4, 0)
-            };
-            actionButton.Click += async (_, _) => await viewModel.BillingViewModel.RefreshBillingCommand.ExecuteAsync(null);
+            actionButton = CreateIconButton("⟳", Color.Parse("#007AFF"), async () => await viewModel.BillingViewModel.RefreshBillingCommand.ExecuteAsync(null));
         }
-        else if (viewModel.CurrentPageIndex == 2 && viewModel.IsSettingsDirty)
+        else if (viewModel is { CurrentPageIndex: 2, IsSettingsDirty: true })
         {
-            actionButton = new Button
-            {
-                Content = "⎙",
-                FontSize = 22,
-                Width = 44,
-                Height = 44,
-                Background = Brushes.Transparent,
-                BorderBrush = Brushes.Transparent,
-                Foreground = new SolidColorBrush(Color.Parse("#34C759")),
-                Margin = new Thickness(0, 0, 4, 0)
-            };
-            actionButton.Click += (_, _) => viewModel.SaveSettingsCommand.Execute(null);
+            actionButton = CreateIconButton("⎙", Color.Parse("#34C759"), () => viewModel.SaveSettingsCommand.Execute(null));
         }
+
         if (actionButton != null)
         {
             Grid.SetColumn(actionButton, 2);
@@ -199,52 +168,208 @@ public static class MainViewIOS
         return border;
     }
 
-    private static Control CreatePageContent(MainViewModel viewModel)
+    private static Button CreateIconButton(string glyph, Color color, Action onClick)
     {
-        // Create content for each page using the iOS-specific views
-        var content = viewModel.CurrentPageIndex switch
+        var btn = new Button
         {
-            0 => MenuViewIOS.Create(viewModel),
-            1 => BillingViewIOS.Create(viewModel),
-            2 => SettingsViewIOS.Create(viewModel),
-            3 => AboutViewIOS.Create(viewModel),
-            _ => new TextBlock { Text = "Unbekannte Seite", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center }
+            Content = glyph,
+            FontSize = 24,
+            Width = 44,
+            Height = 44,
+            Background = Brushes.Transparent,
+            BorderBrush = Brushes.Transparent,
+            Foreground = new SolidColorBrush(color),
+            Margin = new Thickness(0, 0, 4, 0)
         };
-
-        return content;
+        btn.Click += (_, _) => onClick();
+        return btn;
     }
 
-    private static Control CreatePageIndicators(MainViewModel viewModel)
+    private static Border CreateTabBar(MainViewModel vm)
     {
-        var panel = new StackPanel
+        var border = new Border
         {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Spacing = 8,
-            Margin = new Thickness(0, 8, 0, 12)
+            Background = GetCardBackgroundBrush(),
+            BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.25),
+            BorderThickness = new Thickness(0, 0.5, 0, 0),
+            Padding = new Thickness(0, 4, 0, 4)
         };
 
-        for (int i = 0; i < 4; i++)
+        var grid = new Grid
         {
-            var ellipse = new Border
-            {
-                Width = viewModel.CurrentPageIndex == i ? 18 : 8,
-                Height = 8,
-                CornerRadius = new CornerRadius(4),
-                Background = viewModel.CurrentPageIndex == i
-                    ? new SolidColorBrush(Color.Parse("#007AFF"))
-                    : GetSecondaryTextBrush(),
-                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
-            };
-            int pageIndex = i;
-            ellipse.PointerPressed += (_, _) => viewModel.NavigateToPageCommand.Execute(pageIndex);
-            panel.Children.Add(ellipse);
+            ColumnDefinitions = new ColumnDefinitions("*,*,*"),
+            Height = 60
+        };
+
+        // Use base icon names that map to Assets/Icons/{name}-light.svg / {name}-dark.svg
+        grid.Children.Add(CreateTabBarItem("menu", 0, vm));
+        grid.Children.Add(CreateTabBarItem("billing", 1, vm));
+        grid.Children.Add(CreateTabBarItem("settings", 2, vm));
+
+        border.Child = grid;
+        return border;
+    }
+
+    private static string GetIconUri(string baseName)
+    {
+        var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
+        var suffix = isDarkTheme ? "dark" : "light";
+        return $"avares://GC.Views/Assets/Icons/{baseName}-{suffix}.svg";
+    }
+
+
+    private static Control CreateSvgIcon(string baseName, bool selected)
+    {
+        var uriString = GetIconUri(baseName);
+        var uri = new Uri(uriString);
+
+        if (!AssetLoader.Exists(uri))
+        {
+            Console.WriteLine($"[SVG] NOT FOUND: {uriString}");
+            return CreateMissingIconPlaceholder(uriString);
         }
 
-        return panel;
+        try
+        {
+            using var stream = AssetLoader.Open(uri);
+            if (stream == null || stream.Length == 0)
+            {
+                Console.WriteLine($"[SVG] EMPTY STREAM: {uriString}");
+                return CreateMissingIconPlaceholder(uriString, 'E');
+            }
+
+            // Use Image with SvgImage source for better iOS compatibility
+            var svgImage = new SvgImage { Source = SvgSource.Load(uriString, null) };
+            var image = new Image
+            {
+                Width = 26,
+                Height = 26,
+                Source = svgImage,
+                Opacity = selected ? 1.0 : 0.85,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            return image;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SVG] ERROR loading {uriString}: {ex.GetType().Name} {ex.Message}");
+            return CreateMissingIconPlaceholder(uriString, '!');
+        }
     }
 
-    private static Panel CreateErrorPanel(MainViewModel viewModel)
+    private static Control CreateMissingIconPlaceholder(string uriString, char symbol = '?') => new Border
+    {
+        Width = 26,
+        Height = 26,
+        Background = new SolidColorBrush(Color.Parse("#FF3B30"), 0.15),
+        BorderBrush = new SolidColorBrush(Color.Parse("#FF3B30")),
+        BorderThickness = new Thickness(1),
+        Child = new TextBlock
+        {
+            Text = symbol.ToString(),
+            Foreground = new SolidColorBrush(Color.Parse("#FF3B30")),
+            FontWeight = FontWeight.Bold,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            FontSize = 16
+        }
+    };
+
+    private static Button CreateTabBarItem(string baseIconName, int index, MainViewModel vm)
+    {
+        var isSelected = vm.CurrentPageIndex == index;
+
+        var stack = new StackPanel
+        {
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Spacing = 2,
+            Margin = new Thickness(0, 4)
+        };
+
+        stack.Children.Add(CreateSvgIcon(baseIconName, isSelected));
+
+        var button = new Button
+        {
+            Background = Brushes.Transparent,
+            BorderBrush = Brushes.Transparent,
+            Content = stack,
+            Cursor = new Cursor(StandardCursorType.Hand)
+        };
+        button.Click += (_, _) => vm.NavigateToPageCommand.Execute(index);
+
+        Grid.SetColumn(button, index);
+        return button;
+    }
+
+    private static Grid CreateOverlay(MainViewModel vm, Control innerContent)
+    {
+        var overlayGrid = new Grid
+        {
+            Background = new SolidColorBrush(Colors.Black, 0.4),
+        };
+
+        // Full-screen layout
+        overlayGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+        var card = new Border
+        {
+            Background = GetCardBackgroundBrush(),
+            CornerRadius = new CornerRadius(16),
+            Padding = new Thickness(0, 8, 0, 16),
+            Margin = new Thickness(20, 60, 20, 80),
+            BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
+            BorderThickness = new Thickness(1)
+        };
+
+        var layout = new Grid();
+        layout.RowDefinitions.Add(new RowDefinition(GridLength.Auto)); // header
+        layout.RowDefinitions.Add(new RowDefinition(GridLength.Star)); // content
+
+        var header = new Grid { Height = 44 };
+        header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        header.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+
+        var dragHandle = new Border
+        {
+            Width = 40,
+            Height = 4,
+            CornerRadius = new CornerRadius(2),
+            Background = new SolidColorBrush(Color.Parse("#3C3C43"), 0.3),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 4, 0, 4)
+        };
+        Grid.SetColumnSpan(dragHandle, 2);
+        header.Children.Add(dragHandle);
+
+        var closeBtn = CreateIconButton("✕", Color.Parse("#FF3B30"), () => vm.CloseOverlayCommand.Execute(null));
+        closeBtn.FontSize = 20;
+        closeBtn.Width = 40;
+        closeBtn.Height = 40;
+        closeBtn.Margin = new Thickness(0, 0, 4, 0);
+        Grid.SetColumn(closeBtn, 1);
+        header.Children.Add(closeBtn);
+
+        Grid.SetRow(header, 0);
+        layout.Children.Add(header);
+
+        innerContent.Margin = new Thickness(0, 0, 0, 0);
+        Grid.SetRow(innerContent, 1);
+        layout.Children.Add(innerContent);
+
+        card.Child = layout;
+        overlayGrid.Children.Add(card);
+
+        Grid.SetRow(overlayGrid, 0);
+        Grid.SetColumnSpan(overlayGrid, 1);
+
+        return overlayGrid;
+    }
+
+    private static StackPanel CreateErrorPanel(MainViewModel viewModel)
     {
         var border = new Border
         {

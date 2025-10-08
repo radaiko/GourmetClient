@@ -26,12 +26,12 @@
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+		<PackageReference Include="Avalonia.Svg.Skia" Version="$(AvaloniaVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />
-		<ProjectReference Include="..\GourmetClient.Core\GourmetClient.Core.csproj" />
+		<ProjectReference Include="..\GC.Core\GC.Core.csproj" />
 	</ItemGroup>
 
 </Project>
-

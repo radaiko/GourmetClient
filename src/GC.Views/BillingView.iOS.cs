@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using GC.ViewModels;
 using System;
 using System.Linq;
+using Avalonia.Input;
 
 namespace GC.Views;
 
@@ -35,7 +36,7 @@ public static class BillingViewIOS
     {
         if (viewModel.BillingViewModel == null)
         {
-            return CreatePlaceholderCard();
+            return CreatePlaceholderContent();
         }
 
         var billingViewModel = viewModel.BillingViewModel;
@@ -51,30 +52,67 @@ public static class BillingViewIOS
         var header = CreateMobileHeader(billingViewModel);
         mainPanel.Children.Add(header);
 
-        // Content
-        if (billingViewModel.IsLoading)
+        // Wrap content in RefreshContainer for pull-to-refresh
+        var refreshContainer = new RefreshContainer
         {
-            var loadingView = CreateLoadingView(billingViewModel.LoadingProgress);
-            mainPanel.Children.Add(loadingView);
-        }
-        else if (billingViewModel.AvailableMonths.Count == 0)
+            Background = GetBackgroundBrush(),
+            PullDirection = PullDirection.TopToBottom
+        };
+
+        refreshContainer.RefreshRequested += async (s, _) =>
         {
-            // Trigger load if not already loaded
-            if (!string.IsNullOrEmpty(viewModel.VentoPayUsername) && !string.IsNullOrEmpty(viewModel.VentoPayPassword))
+            await billingViewModel.RefreshBillingCommand.ExecuteAsync(null);
+        };
+
+        // Function to update content based on ViewModel state
+        void UpdateContent()
+        {
+            Control contentControl;
+            if (billingViewModel.IsLoading)
             {
-                Dispatcher.UIThread.Post(async () => await billingViewModel.LoadBillingCommand.ExecuteAsync(null));
-                mainPanel.Children.Add(CreateLoadingView(billingViewModel.LoadingProgress));
+                contentControl = CreateLoadingView(billingViewModel.LoadingProgress);
+            }
+            else if (billingViewModel.AvailableMonths.Count == 0)
+            {
+                // Trigger load if not already loaded
+                if (!string.IsNullOrEmpty(viewModel.VentoPayUsername) && !string.IsNullOrEmpty(viewModel.VentoPayPassword))
+                {
+                    Dispatcher.UIThread.Post(async () => await billingViewModel.LoadBillingCommand.ExecuteAsync(null));
+                    contentControl = CreateLoadingView(billingViewModel.LoadingProgress);
+                }
+                else
+                {
+                    contentControl = CreatePlaceholderContent();
+                }
             }
             else
             {
-                mainPanel.Children.Add(CreatePlaceholderCard());
+                contentControl = CreateBillingContentScrollable(billingViewModel);
             }
+
+            refreshContainer.Content = new ScrollViewer
+            {
+                Content = contentControl
+            };
         }
-        else
+
+        // Initial content
+        UpdateContent();
+
+        // Subscribe to property changes to update content reactively
+        billingViewModel.PropertyChanged += (_, e) =>
         {
-            var content = CreateBillingContent(billingViewModel);
-            mainPanel.Children.Add(content);
-        }
+            if (e.PropertyName == nameof(BillingViewModel.IsLoading) ||
+                e.PropertyName == nameof(BillingViewModel.LoadingProgress) ||
+                e.PropertyName == nameof(BillingViewModel.AvailableMonths) ||
+                e.PropertyName == nameof(BillingViewModel.MenuBillingPositions) ||
+                e.PropertyName == nameof(BillingViewModel.DrinkBillingPositions))
+            {
+                Dispatcher.UIThread.Post(UpdateContent);
+            }
+        };
+
+        mainPanel.Children.Add(refreshContainer);
 
         return mainPanel;
     }
@@ -174,7 +212,7 @@ public static class BillingViewIOS
         return headerPanel;
     }
 
-    private static Control CreateBillingContent(BillingViewModel billingViewModel)
+    private static Control CreateBillingContentScrollable(BillingViewModel billingViewModel)
     {
         var contentPanel = new StackPanel
         {
@@ -215,10 +253,7 @@ public static class BillingViewIOS
             contentPanel.Children.Add(emptyText);
         }
 
-        return new ScrollViewer
-        {
-            Content = contentPanel
-        };
+        return contentPanel;
     }
 
     private static Control CreateSummaryCard(BillingViewModel billingViewModel)
@@ -386,43 +421,39 @@ public static class BillingViewIOS
         return container;
     }
 
-    private static Control CreatePlaceholderCard()
+    private static Control CreatePlaceholderContent()
     {
-        return new ScrollViewer
+        return new StackPanel
         {
-            Background = GetBackgroundBrush(),
-            Content = new StackPanel
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Spacing = 12,
+            Margin = new Thickness(20),
+            Children =
             {
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                Spacing = 12,
-                Margin = new Thickness(20),
-                Children =
+                new TextBlock
                 {
-                    new TextBlock
-                    {
-                        Text = "💳",
-                        FontSize = 48,
-                        HorizontalAlignment = HorizontalAlignment.Center
-                    },
-                    new TextBlock
-                    {
-                        Text = "Keine Abrechnungsdaten verfügbar",
-                        FontSize = 16,
-                        Foreground = GetTextBrush(),
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        TextAlignment = TextAlignment.Center
-                    },
-                    new TextBlock
-                    {
-                        Text = "Bitte konfigurieren Sie Ihre VentoPay-Anmeldedaten in den Einstellungen.",
-                        FontSize = 14,
-                        Foreground = GetSecondaryTextBrush(),
-                        TextWrapping = TextWrapping.Wrap,
-                        TextAlignment = TextAlignment.Center,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        MaxWidth = 400
-                    }
+                    Text = "💳",
+                    FontSize = 48,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                },
+                new TextBlock
+                {
+                    Text = "Keine Abrechnungsdaten verfügbar",
+                    FontSize = 16,
+                    Foreground = GetTextBrush(),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    TextAlignment = TextAlignment.Center
+                },
+                new TextBlock
+                {
+                    Text = "Bitte konfigurieren Sie Ihre VentoPay-Anmeldedaten in den Einstellungen.",
+                    FontSize = 14,
+                    Foreground = GetSecondaryTextBrush(),
+                    TextWrapping = TextWrapping.Wrap,
+                    TextAlignment = TextAlignment.Center,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    MaxWidth = 400
                 }
             }
         };

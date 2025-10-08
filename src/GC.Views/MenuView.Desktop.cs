@@ -7,8 +7,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using GC.ViewModels;
-using GourmetClient.Core.Model;
-using Avalonia.Controls.Primitives; // Added for ScrollBarVisibility
+using Avalonia.Controls.Primitives;
+using GC.Core.Model; // Added for ScrollBarVisibility
 
 namespace GC.Views;
 

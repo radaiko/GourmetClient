@@ -20,6 +20,7 @@
     <ItemGroup>
         <ProjectReference Include="..\GC.Views\GC.Views.csproj" />
         <ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />
+        <ProjectReference Include="..\GC.Core\GC.Core.csproj" />
     </ItemGroup>
 </Project>
 
