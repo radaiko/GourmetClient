@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Input;
@@ -191,14 +192,13 @@ public static class MainViewIOS
         {
             Background = GetCardBackgroundBrush(),
             BorderBrush = new SolidColorBrush(Color.Parse("#3C3C43"), 0.25),
-            BorderThickness = new Thickness(0, 0.5, 0, 0),
-            Padding = new Thickness(0, 4, 0, 4)
         };
 
-        var grid = new Grid
+        var grid = new UniformGrid()
         {
-            ColumnDefinitions = new ColumnDefinitions("*,*,*"),
-            Height = 60
+            Rows = 1,
+            Columns = 3,
+            Height = 60,
         };
 
         // Use base icon names that map to Assets/Icons/{name}-light.svg / {name}-dark.svg
@@ -286,8 +286,7 @@ public static class MainViewIOS
             Orientation = Orientation.Vertical,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Spacing = 2,
-            Margin = new Thickness(0, 4)
+            Spacing = 2
         };
 
         stack.Children.Add(CreateSvgIcon(baseIconName, isSelected));
@@ -297,7 +296,12 @@ public static class MainViewIOS
             Background = Brushes.Transparent,
             BorderBrush = Brushes.Transparent,
             Content = stack,
-            Cursor = new Cursor(StandardCursorType.Hand)
+            Cursor = new Cursor(StandardCursorType.Hand),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(0, 8, 0, 8),
         };
         button.Click += (_, _) => vm.NavigateToPageCommand.Execute(index);
 
