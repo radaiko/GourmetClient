@@ -10,6 +10,7 @@ namespace GC.ViewModels;
 public partial class MainViewModel : ObservableObject {
   private readonly GourmetSettingsService? _settingsService;
   private readonly ILogger<MainViewModel>? _logger;
+  private bool _isLoadingSettings = false;
 
   // Design-time constructor for XAML previewer
   public MainViewModel() : this(null!, null!, null!, null!) {
@@ -67,9 +68,6 @@ public partial class MainViewModel : ObservableObject {
   [ObservableProperty]
   private DateTime? _lastMenuUpdate;
 
-  [ObservableProperty]
-  private bool _isSettingsDirty = false;
-
   // Settings properties
   [ObservableProperty]
   private string _gourmetUsername = "";
@@ -108,7 +106,7 @@ public partial class MainViewModel : ObservableObject {
 
   [RelayCommand]
   private void SaveSettings() {
-    if (_settingsService == null) return;
+    if (_settingsService == null || _isLoadingSettings) return;
     
     try {
       _logger?.LogInformation("Saving user settings");
@@ -122,7 +120,7 @@ public partial class MainViewModel : ObservableObject {
       };
       
       _settingsService.SaveUserSettings(userSettings);
-      IsSettingsDirty = false;
+      // Don't set IsSettingsDirty = false here to avoid UI refresh and focus loss
       _logger?.LogInformation("Settings saved successfully");
     }
     catch (Exception ex) {
@@ -150,19 +148,27 @@ public partial class MainViewModel : ObservableObject {
   }
 
   partial void OnGourmetUsernameChanged(string value) {
-    IsSettingsDirty = true;
+    if (!_isLoadingSettings) {
+      SaveSettings();
+    }
   }
 
   partial void OnGourmetPasswordChanged(string value) {
-    IsSettingsDirty = true;
+    if (!_isLoadingSettings) {
+      SaveSettings();
+    }
   }
 
   partial void OnVentoPayUsernameChanged(string value) {
-    IsSettingsDirty = true;
+    if (!_isLoadingSettings) {
+      SaveSettings();
+    }
   }
 
   partial void OnVentoPayPasswordChanged(string value) {
-    IsSettingsDirty = true;
+    if (!_isLoadingSettings) {
+      SaveSettings();
+    }
   }
 
   private void LoadSettings() {
@@ -172,19 +178,21 @@ public partial class MainViewModel : ObservableObject {
       _logger?.LogInformation("Loading user settings");
       var userSettings = _settingsService.GetCurrentUserSettings();
       
-      // Don't trigger dirty flag when loading initial settings
-      var wasDirty = IsSettingsDirty;
+      // Set flag to prevent auto-save during loading
+      _isLoadingSettings = true;
       
       GourmetUsername = userSettings.GourmetLoginUsername ?? string.Empty;
       GourmetPassword = userSettings.GourmetLoginPassword ?? string.Empty;
       VentoPayUsername = userSettings.VentopayUsername ?? string.Empty;
       VentoPayPassword = userSettings.VentopayPassword ?? string.Empty;
       
-      // Reset dirty flag after loading
-      IsSettingsDirty = wasDirty;
+      // Reset flag after loading
+      _isLoadingSettings = false;
+      
       _logger?.LogInformation("Settings loaded successfully");
     }
     catch (Exception ex) {
+      _isLoadingSettings = false;
       _logger?.LogError(ex, "Failed to load settings");
       ErrorMessage = $"Fehler beim Laden der Einstellungen: {ex.Message}";
     }

@@ -95,10 +95,8 @@ public static class MainViewDesktop
         {
             Content = "Speichern",
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            IsEnabled = vm.IsSettingsDirty,
             Margin = new Thickness(12, 8, 12, 0)
         };
-        ToolTip.SetTip(saveBtn, vm.IsSettingsDirty ? "Änderungen speichern" : "Keine Änderungen");
         saveBtn.Click += (_, _) => vm.SaveSettingsCommand.Execute(null);
         panel.Children.Add(saveBtn);
 

@@ -37,7 +37,6 @@ public class MainViewHostControl : UserControl {
     if (e.PropertyName == nameof(MainViewModel.CurrentPageIndex) ||
         e.PropertyName == nameof(MainViewModel.ErrorMessage) ||
         e.PropertyName == nameof(MainViewModel.UserName) ||
-        e.PropertyName == nameof(MainViewModel.IsSettingsDirty) ||
         e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
         e.PropertyName == nameof(MainViewModel.BillingViewModel) ||
         e.PropertyName == nameof(MainViewModel.ShowAboutOverlay) ||
@@ -54,7 +53,6 @@ public class MainViewHostControl : UserControl {
     if (e.PropertyName == nameof(MainViewModel.CurrentPageIndex) ||
         e.PropertyName == nameof(MainViewModel.ErrorMessage) ||
         e.PropertyName == nameof(MainViewModel.UserName) ||
-        e.PropertyName == nameof(MainViewModel.IsSettingsDirty) ||
         e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
         e.PropertyName == nameof(MainViewModel.BillingViewModel)) {
       UpdateContentDesktop();

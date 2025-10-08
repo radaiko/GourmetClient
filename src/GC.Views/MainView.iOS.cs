@@ -24,7 +24,7 @@ public static class MainViewIOS
 
     private static SolidColorBrush GetCardBackgroundBrush() =>
       new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
-        ? Color.Parse("#1C1C1E")
+        ? Color.Parse("#000000")
         : Colors.White);
 
     private static SolidColorBrush GetSecondaryTextBrush() => new(Color.Parse("#8E8E93"));
@@ -99,7 +99,7 @@ public static class MainViewIOS
 
     private static Border CreateTopBar(MainViewModel viewModel)
     {
-        var titles = new[] { "Gourmet", "Rechnung", "Einstellungen" }; // fixed corrupted first title
+        var titles = new[] { "Bestellen", "Rechnung", "Einstellungen" };
         var title = titles[Math.Clamp(viewModel.CurrentPageIndex, 0, titles.Length - 1)];
 
         var border = new Border
@@ -143,27 +143,6 @@ public static class MainViewIOS
         }
         Grid.SetColumn(leftPanel, 0);
         grid.Children.Add(leftPanel);
-
-        // Action button (refresh/save) depending on page
-        Button? actionButton = null;
-        if (viewModel is { CurrentPageIndex: 0, MenuViewModel: not null })
-        {
-            actionButton = CreateIconButton("⟳", Color.Parse("#007AFF"), async () => await viewModel.MenuViewModel.RefreshMenusCommand.ExecuteAsync(null));
-        }
-        else if (viewModel is { CurrentPageIndex: 1, BillingViewModel: not null })
-        {
-            actionButton = CreateIconButton("⟳", Color.Parse("#007AFF"), async () => await viewModel.BillingViewModel.RefreshBillingCommand.ExecuteAsync(null));
-        }
-        else if (viewModel is { CurrentPageIndex: 2, IsSettingsDirty: true })
-        {
-            actionButton = CreateIconButton("⎙", Color.Parse("#34C759"), () => viewModel.SaveSettingsCommand.Execute(null));
-        }
-
-        if (actionButton != null)
-        {
-            Grid.SetColumn(actionButton, 2);
-            grid.Children.Add(actionButton);
-        }
 
         border.Child = grid;
         return border;
