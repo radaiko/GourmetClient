@@ -33,6 +33,7 @@ public static class SettingsViewIOS
         return new ScrollViewer
         {
             Background = GetBackgroundBrush(),
+            Focusable = false,
             Content = new StackPanel
             {
                 Margin = new Thickness(12),
@@ -170,7 +171,8 @@ public static class SettingsViewIOS
         // Use proper Avalonia data binding with two-way mode
         textBox.Bind(TextBox.TextProperty, new Binding(propertyName)
         {
-            Mode = BindingMode.TwoWay
+            Mode = BindingMode.TwoWay,
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
         });
         
         return textBox;
@@ -193,7 +195,8 @@ public static class SettingsViewIOS
         // Use proper Avalonia data binding with two-way mode
         textBox.Bind(TextBox.TextProperty, new Binding(propertyName)
         {
-            Mode = BindingMode.TwoWay
+            Mode = BindingMode.TwoWay,
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
         });
         
         return textBox;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GC.Core.Settings;
@@ -29,6 +28,7 @@ public partial class MainViewModel : ObservableObject {
     // Subscribe to child ViewModel property changes to trigger UI updates on iOS
     if (menuViewModel != null) {
       menuViewModel.PropertyChanged += (_, e) => {
+        _logger?.LogDebug("MenuViewModel property changed: {Property}", e.PropertyName);
         // Notify that a child property changed, triggering UI refresh
         OnPropertyChanged(nameof(MenuViewModel));
       };
@@ -36,22 +36,22 @@ public partial class MainViewModel : ObservableObject {
     
     if (billingViewModel != null) {
       billingViewModel.PropertyChanged += (_, e) => {
+        _logger?.LogDebug("BillingViewModel property changed: {Property}", e.PropertyName);
         // Notify that a child property changed, triggering UI refresh
         OnPropertyChanged(nameof(BillingViewModel));
       };
     }
-    
-    if (settingsService != null) {
-      _logger?.LogInformation("Initializing MainViewModel");
-      LoadSettings();
-    }
+
+    _logger?.LogInformation("Initializing MainViewModel");
+    LoadSettings();
+    PreLoadData();
   }
 
   public MenuViewModel? MenuViewModel { get; }
   public BillingViewModel? BillingViewModel { get; }
 
   [ObservableProperty]
-  private string _greeting = "Welcome to Gourmet Client MVVM!";
+  private string _greeting = "Welcome to Gourmet Client";
 
   [ObservableProperty]
   private int _currentPageIndex = 0; // iOS bottom tab navigation: 0=Menu,1=Billing,2=Settings
@@ -90,17 +90,20 @@ public partial class MainViewModel : ObservableObject {
 
   [RelayCommand]
   private void UpdateGreeting() {
+    _logger?.LogInformation("Updating greeting");
     Greeting = $"Updated at {DateTime.Now:HH:mm:ss}";
   }
 
   [RelayCommand]
   private void NavigateToPage(int pageIndex) {
+    _logger?.LogInformation("Navigating to page index {PageIndex}", pageIndex);
     // Desktop still supports About page at index 3; iOS UI only exposes 0-2
     CurrentPageIndex = Math.Clamp(pageIndex, 0, 3);
   }
 
   [RelayCommand]
   private void ClearError() {
+    _logger?.LogInformation("Clearing error message");
     ErrorMessage = null;
   }
 
@@ -122,6 +125,7 @@ public partial class MainViewModel : ObservableObject {
       _settingsService.SaveUserSettings(userSettings);
       // Don't set IsSettingsDirty = false here to avoid UI refresh and focus loss
       _logger?.LogInformation("Settings saved successfully");
+      PreLoadData();
     }
     catch (Exception ex) {
       _logger?.LogError(ex, "Failed to save settings");
@@ -131,41 +135,48 @@ public partial class MainViewModel : ObservableObject {
 
   [RelayCommand]
   private void ShowAbout() {
+    _logger?.LogInformation("Showing about overlay");
     ShowChangelogOverlay = false;
     ShowAboutOverlay = true;
   }
 
   [RelayCommand]
   private void ShowChangelog() {
+    _logger?.LogInformation("Showing changelog overlay");
     ShowAboutOverlay = false;
     ShowChangelogOverlay = true;
   }
 
   [RelayCommand]
   private void CloseOverlay() {
+    _logger?.LogInformation("Closing overlay");
     ShowAboutOverlay = false;
     ShowChangelogOverlay = false;
   }
 
   partial void OnGourmetUsernameChanged(string value) {
+    _logger?.LogInformation("Gourmet username changed to {Value}", string.IsNullOrEmpty(value) ? "empty" : "set");
     if (!_isLoadingSettings) {
       SaveSettings();
     }
   }
 
   partial void OnGourmetPasswordChanged(string value) {
+    _logger?.LogInformation("Gourmet password changed");
     if (!_isLoadingSettings) {
       SaveSettings();
     }
   }
 
   partial void OnVentoPayUsernameChanged(string value) {
+    _logger?.LogInformation("VentoPay username changed to {Value}", string.IsNullOrEmpty(value) ? "empty" : "set");
     if (!_isLoadingSettings) {
       SaveSettings();
     }
   }
 
   partial void OnVentoPayPasswordChanged(string value) {
+    _logger?.LogInformation("VentoPay password changed");
     if (!_isLoadingSettings) {
       SaveSettings();
     }
@@ -189,12 +200,30 @@ public partial class MainViewModel : ObservableObject {
       // Reset flag after loading
       _isLoadingSettings = false;
       
-      _logger?.LogInformation("Settings loaded successfully");
+      _logger?.LogInformation("Settings loaded successfully: Gourmet user {GourmetSet}, VentoPay user {VentoPaySet}",
+        string.IsNullOrEmpty(GourmetUsername) ? "not set" : "set",
+        string.IsNullOrEmpty(VentoPayUsername) ? "not set" : "set");
     }
     catch (Exception ex) {
       _isLoadingSettings = false;
       _logger?.LogError(ex, "Failed to load settings");
       ErrorMessage = $"Fehler beim Laden der Einstellungen: {ex.Message}";
+    }
+  }
+  
+  private void PreLoadData() {
+    _logger?.LogDebug("PreLoadData called");
+    // Pre-load data in background to improve perceived performance
+    if (GourmetUsername != "" && GourmetPassword != "") {
+      _logger?.LogInformation("Pre-loading menu data");
+      _logger?.LogInformation("Executing LoadMenusCommand for background pre-loading");
+      MenuViewModel?.LoadMenusCommand?.Execute(null);
+      
+    } 
+    if (VentoPayUsername != "" && VentoPayPassword != "") {
+      _logger?.LogInformation("Pre-loading billing data");
+      _logger?.LogInformation("Executing LoadBillingCommand for background pre-loading");
+      BillingViewModel?.LoadBillingCommand?.Execute(null);
     }
   }
 }
