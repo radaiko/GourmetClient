@@ -15,6 +15,7 @@
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -22,5 +23,9 @@
         <ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />
         <ProjectReference Include="..\GC.Core\GC.Core.csproj" />
     </ItemGroup>
-</Project>
 
+    <!-- Ensure DataGrid assembly is rooted for trimming/AOT -->
+    <ItemGroup>
+        <TrimmerRootAssembly Include="Avalonia.Controls.DataGrid" />
+    </ItemGroup>
+</Project>

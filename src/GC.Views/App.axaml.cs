@@ -7,6 +7,15 @@ using GC.ViewModels.Services;
 namespace GC.Views;
 
 public partial class App : Application {
+  // Force reference to DataGrid assembly so it's not trimmed in AOT
+  private static readonly System.Type _forceDataGridType = typeof(Avalonia.Controls.DataGrid);
+  // Keep-alive instance to ensure AOT of template/generic code
+  private static readonly Avalonia.Controls.DataGrid _keepAliveDataGrid = new() {
+    IsVisible = false,
+    Width = 0,
+    Height = 0
+  };
+
   private IThemeService? _themeService;
 
   public override void Initialize() {
@@ -71,4 +80,3 @@ public partial class App : Application {
   // Desktop build provides no-op; iOS partial supplies implementation.
   partial void HookSingleViewLifetime(ISingleViewApplicationLifetime lifetime);
 }
-

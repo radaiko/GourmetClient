@@ -27,6 +27,8 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
 		<PackageReference Include="Avalonia.Svg.Skia" Version="$(AvaloniaVersion)" />
+		<!-- Explicitly include DataGrid to satisfy AOT module loading on iOS -->
+		<PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>

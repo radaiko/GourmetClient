@@ -17,7 +17,7 @@ public class MainViewHostControl : UserControl {
     // Get MainViewModel from DI container (which includes MenuViewModel and BillingViewModel)
     _viewModel = ServiceProviderHolder.Services.GetRequiredService<MainViewModel>();
     DataContext = _viewModel;
-    
+
 #if IOS
     // Use iOS-specific UI on iOS platform
     // Subscribe to property changes to rebuild the view
