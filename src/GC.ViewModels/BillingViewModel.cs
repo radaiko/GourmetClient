@@ -4,24 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GC.Cache;
 using GC.Core.Model;
-using GC.Core.Network;
-using GC.Core.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace GC.ViewModels;
 
 public partial class BillingViewModel : ObservableObject
 {
-    private readonly VentopayWebClient _ventopayClient;
-    private readonly GourmetSettingsService _settingsService;
     private readonly ILogger<BillingViewModel> _logger;
+    private readonly BillingService _billingService;
 
-    public BillingViewModel(VentopayWebClient ventopayClient, GourmetSettingsService settingsService, ILogger<BillingViewModel> logger)
+    public BillingViewModel(ILogger<BillingViewModel> logger, BillingService billingService)
     {
-        _ventopayClient = ventopayClient;
-        _settingsService = settingsService;
         _logger = logger;
+        _billingService = billingService;
     }
 
     [ObservableProperty]
@@ -83,44 +80,14 @@ public partial class BillingViewModel : ObservableObject
         }
 
         _logger.LogInformation("Starting to load billing data");
-        try
-        {
+        try {
             IsLoading = true;
             ErrorMessage = null;
 
-            var settings = _settingsService.GetCurrentUserSettings();
-            if (string.IsNullOrEmpty(settings.VentopayUsername) || string.IsNullOrEmpty(settings.VentopayPassword))
-            {
-                _logger.LogWarning("VentoPay credentials missing in settings");
-                ErrorMessage = "Bitte VentoPay-Anmeldedaten in den Einstellungen konfigurieren";
-                return;
-            }
-
-            _logger.LogInformation("Attempting login to VentoPay for user {Username}", settings.VentopayUsername);
-            var result = await _ventopayClient.Login(settings.VentopayUsername, settings.VentopayPassword);
-            if (!result.LoginSuccessful)
-            {
-                _logger.LogWarning("VentoPay login failed for user {Username}", settings.VentopayUsername);
-                ErrorMessage = "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten.";
-                return;
-            }
-            _logger.LogInformation("VentoPay login successful for user {Username}", settings.VentopayUsername);
-            
-            // Generate available months (last 12 months)
-            _logger.LogInformation("Generating available months");
-            var months = new System.Collections.Generic.List<DateTime>();
-            var currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-            for (int i = 0; i < 12; i++)
-            {
-                months.Add(currentMonth.AddMonths(-i));
-            }
-
-            AvailableMonths = new ObservableCollection<DateTime>(months);
-            _logger.LogInformation("Generated {Count} available months", months.Count);
-
-            // Select current month
-            SelectedMonth = currentMonth;
-            _logger.LogInformation("Selected current month: {Month}", currentMonth);
+            await _billingService.InitializeAsync();
+            AvailableMonths = _billingService.AvailableMonths;
+            SelectedMonth = _billingService.SelectedMonth;
+            ErrorMessage = _billingService.ErrorMessage;
         }
         catch (Exception ex)
         {
@@ -140,18 +107,9 @@ public partial class BillingViewModel : ObservableObject
         {
             IsLoading = true;
             ErrorMessage = null;
-            LoadingProgress = 0;
-
-            // Get first and last day of the month
-            var fromDate = new DateTime(month.Year, month.Month, 1);
-            var toDate = fromDate.AddMonths(1).AddDays(-1);
-            _logger.LogInformation("Billing period: {From} to {To}", fromDate, toDate);
-
-            // Create progress reporter that updates the LoadingProgress property
-            var progress = new Progress<int>(value => LoadingProgress = value);
 
             _logger.LogInformation("Fetching billing positions");
-            var positions = await _ventopayClient.GetBillingPositions(fromDate, toDate, progress);
+            var positions = await _billingService.GetBillingPositionsAsync(month);
             _logger.LogInformation("Fetched {Count} billing positions", positions.Count);
 
             // Build grouped results off the UI thread

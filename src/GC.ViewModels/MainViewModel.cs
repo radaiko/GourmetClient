@@ -72,7 +72,7 @@ public partial class MainViewModel : ObservableObject {
   [ObservableProperty]
   private string _gourmetUsername = "";
 
-  [ObservableProperty]
+  [ObservableProperty] 
   private string _gourmetPassword = "";
 
   [ObservableProperty]
@@ -80,6 +80,9 @@ public partial class MainViewModel : ObservableObject {
 
   [ObservableProperty]
   private string _ventoPayPassword = "";
+  
+  [ObservableProperty]
+  private bool? _debugMode = false;
 
   // Overlay state (About / Changelog)
   [ObservableProperty]
@@ -119,7 +122,8 @@ public partial class MainViewModel : ObservableObject {
         GourmetLoginUsername = GourmetUsername ?? string.Empty,
         GourmetLoginPassword = GourmetPassword ?? string.Empty,
         VentopayUsername = VentoPayUsername ?? string.Empty,
-        VentopayPassword = VentoPayPassword ?? string.Empty
+        VentopayPassword = VentoPayPassword ?? string.Empty,
+        DebugMode = DebugMode ?? false
       };
       
       _settingsService.SaveUserSettings(userSettings);
@@ -196,6 +200,7 @@ public partial class MainViewModel : ObservableObject {
       GourmetPassword = userSettings.GourmetLoginPassword ?? string.Empty;
       VentoPayUsername = userSettings.VentopayUsername ?? string.Empty;
       VentoPayPassword = userSettings.VentopayPassword ?? string.Empty;
+      DebugMode = userSettings.DebugMode;
       
       // Reset flag after loading
       _isLoadingSettings = false;

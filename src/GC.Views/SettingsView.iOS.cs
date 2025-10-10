@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Media;
 using GC.ViewModels;
@@ -43,6 +44,7 @@ public static class SettingsViewIOS
                     CreateHeader(),
                     CreateGourmetSection(),
                     CreateVentoPaySection(),
+                    CreateGeneralSection(),
                     CreateInfoSection(viewModel)
                 }
             }
@@ -200,5 +202,48 @@ public static class SettingsViewIOS
         });
         
         return textBox;
+    }
+    
+    private static Control CreateGeneralSection()
+    {
+        return new Border
+        {
+            Background = GetCardBackgroundBrush(),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(16),
+            Child = new StackPanel
+            {
+                Spacing = 12,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Allgemeine Einstellungen",
+                        FontSize = 18,
+                        FontWeight = FontWeight.SemiBold,
+                        Foreground = GetTextBrush()
+                    },
+                    CreateBoundCheckBox("Debugmodus aktivieren", nameof(MainViewModel.DebugMode))
+                }
+            }
+        };
+    }
+
+    private static Control CreateBoundCheckBox(string content, string propertyName)
+    {
+        var checkBox = new CheckBox
+        {
+            Content = content,
+            FontSize = 17,
+            Padding = new Thickness(4),
+            Foreground = GetTextBrush()
+        };
+
+        checkBox.Bind(ToggleButton.IsCheckedProperty, new Binding(propertyName)
+        {
+            Mode = BindingMode.TwoWay
+        });
+
+        return checkBox;
     }
 }

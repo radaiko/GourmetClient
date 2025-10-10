@@ -1,7 +1,9 @@
 using Avalonia.Svg.Skia;
+using GC.Cache;
 using GC.Core.Network;
 using GC.Core.Settings;
 using GC.Core.Utils;
+using GC.Database;
 using GC.Desktop.Services;
 using GC.ViewModels;
 using GC.ViewModels.Services;
@@ -37,6 +39,8 @@ public class DesktopApp : App
         // Core services
         services.AddSingleton<IFilePathProvider, FilePathProvider>();
         services.AddSingleton<GourmetSettingsService>();
+        services.AddSingleton<SqliteService>();
+        services.AddSingleton<BillingService>();
         
         // Network clients
         services.AddSingleton<GourmetWebClient>();

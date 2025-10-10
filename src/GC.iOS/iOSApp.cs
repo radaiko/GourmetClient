@@ -18,36 +18,13 @@ public class iOSApp : App
         // Force-link Svg types (helps prevent trimming on iOS)
         _ = typeof(SvgImage);
         _ = typeof(Avalonia.Svg.Skia.Svg);
-        // Initialize dependency injection
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        var serviceProvider = services.BuildServiceProvider();
-        ServiceProviderHolder.Initialize(serviceProvider);
     }
 
-    private void ConfigureServices(IServiceCollection services)
+    protected override void ConfigureServices(ServiceCollection services)
     {
-        // Logging
-        services.AddLogging(builder =>
-        {
-            builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Information);
-        });
-
-        // Core services
+        base.ConfigureServices(services);
+        // Platform-specific services
         services.AddSingleton<IFilePathProvider, FilePathProvider>();
-        services.AddSingleton<GourmetSettingsService>();
-        
-        // Network clients
-        services.AddSingleton<GourmetWebClient>();
-        services.AddSingleton<VentopayWebClient>();
-        
-        // ViewModels
-        services.AddSingleton<MenuViewModel>();
-        services.AddSingleton<BillingViewModel>();
-        services.AddSingleton<MainViewModel>();
-        
-        // Platform services
         services.AddSingleton<IThemeService, iOSThemeService>();
     }
 

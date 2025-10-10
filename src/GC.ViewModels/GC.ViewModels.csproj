@@ -15,7 +15,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\GC.Core\GC.Core.csproj" />
+        <ProjectReference Include="..\GC.Cache\GC.Cache.csproj" />
     </ItemGroup>
 
 </Project>
-

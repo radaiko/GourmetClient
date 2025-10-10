@@ -23,9 +23,4 @@
         <ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />
         <ProjectReference Include="..\GC.Core\GC.Core.csproj" />
     </ItemGroup>
-
-    <!-- Ensure DataGrid assembly is rooted for trimming/AOT -->
-    <ItemGroup>
-        <TrimmerRootAssembly Include="Avalonia.Controls.DataGrid" />
-    </ItemGroup>
 </Project>

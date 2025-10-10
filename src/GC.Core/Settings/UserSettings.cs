@@ -11,6 +11,7 @@ public class UserSettings
         VentopayUsername = string.Empty;
         VentopayPassword = string.Empty;
         CacheValidity = TimeSpan.FromHours(4);
+        DebugMode = false;
     }
 
     public string GourmetLoginUsername { get; set; }
@@ -22,4 +23,6 @@ public class UserSettings
     public string VentopayPassword { get; set; }
 
     public TimeSpan CacheValidity { get; set; }
+    
+    public bool DebugMode { get; set; }
 }

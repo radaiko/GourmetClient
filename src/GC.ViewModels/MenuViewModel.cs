@@ -4,26 +4,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GC.Cache.Menu;
 using GC.Core.Model;
 using GC.Core.Network;
 using GC.Core.Settings;
+using GC.Database;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace GC.ViewModels;
 
-public partial class MenuViewModel : ObservableObject
-{
-    private readonly GourmetWebClient _gourmetClient;
-    private readonly GourmetSettingsService _settingsService;
-    private readonly ILogger<MenuViewModel> _logger;
+public partial class MenuViewModel(GourmetWebClient gourmetClient, GourmetSettingsService settingsService, ILogger<MenuViewModel> logger, SqliteService sqliteService)
+    : ObservableObject {
+    private readonly MenuCacheBase _menuCache = new MenuCache(sqliteService); // or MenuCacheDebug based on condition
     private GourmetUserInformation? _userInformation; // user context for ordering
-
-    public MenuViewModel(GourmetWebClient gourmetClient, GourmetSettingsService settingsService, ILogger<MenuViewModel> logger)
-    {
-        _gourmetClient = gourmetClient;
-        _settingsService = settingsService;
-        _logger = logger;
-    }
 
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private string? _errorMessage;
@@ -45,7 +39,7 @@ public partial class MenuViewModel : ObservableObject
     [RelayCommand]
     private async Task RefreshMenusAsync()
     {
-        _logger.LogInformation("Refreshing menus");
+        logger.LogInformation("Refreshing menus");
         MenuDays.Clear();
         ErrorMessage = null;
         await LoadMenusAsync();
@@ -56,17 +50,17 @@ public partial class MenuViewModel : ObservableObject
     {
         if (IsLoading || (MenuDays.Count > 0 && ErrorMessage == null)) return;
 
-        _logger.LogInformation("Starting to load menus");
+        logger.LogInformation("Starting to load menus");
         IsLoading = true;
         ErrorMessage = null;
         LoadingProgress = 0;
 
         try
         {
-            var settings = _settingsService.GetCurrentUserSettings();
+            var settings = settingsService.GetCurrentUserSettings();
             if (string.IsNullOrEmpty(settings.GourmetLoginUsername) || string.IsNullOrEmpty(settings.GourmetLoginPassword))
             {
-                _logger.LogWarning("Credentials missing in settings");
+                logger.LogWarning("Credentials missing in settings");
                 ErrorMessage = "Bitte Anmeldedaten in den Einstellungen konfigurieren";
                 return;
             }
@@ -79,7 +73,7 @@ public partial class MenuViewModel : ObservableObject
 
             if (!string.IsNullOrEmpty(result.Error))
             {
-                _logger.LogError("Failed to load menus: {Error}", result.Error);
+                logger.LogError("Failed to load menus: {Error}", result.Error);
                 ErrorMessage = result.Error;
                 return;
             }
@@ -96,11 +90,11 @@ public partial class MenuViewModel : ObservableObject
             if (CurrentMenuDayIndex < 0)
                 CurrentMenuDayIndex = 0;
 
-            _logger.LogInformation("Menus loaded successfully, {Count} days", MenuDays.Count);
+            logger.LogInformation("Menus loaded successfully, {Count} days", MenuDays.Count);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load menus");
+            logger.LogError(ex, "Failed to load menus");
             ErrorMessage = $"Fehler beim Laden der Menüs: {ex.Message}";
         }
         finally
@@ -113,72 +107,108 @@ public partial class MenuViewModel : ObservableObject
     {
         try
         {
-            _logger.LogInformation("Attempting login for user {Username}", username);
+            // Check cache first
+            var cachedDataJson = await _menuCache.GetCachedDataAsync();
+            if (cachedDataJson != null)
+            {
+                var lastWrite = await _menuCache.GetLastWriteAsync();
+                if (lastWrite.HasValue && (DateTime.UtcNow - lastWrite.Value).TotalHours < 1)
+                {
+                    try
+                    {
+                        var cachedData = JsonSerializer.Deserialize<CachedMenuData>(cachedDataJson);
+                        if (cachedData?.MenuResult != null && cachedData.OrderedResult != null)
+                        {
+                            logger.LogInformation("Using cached menu data");
+                            progress.Report(80);
+                            var result = ProcessMenuData(cachedData.MenuResult, cachedData.OrderedResult);
+                            return result;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Failed to deserialize cached menu data");
+                    }
+                }
+            }
+
+            logger.LogInformation("Attempting login for user {Username}", username);
             progress.Report(10);
-            var loginResult = await _gourmetClient.Login(username, password);
+            var loginResult = await gourmetClient.Login(username, password);
             if (!loginResult.LoginSuccessful)
             {
-                _logger.LogWarning("Login failed for user {Username}", username);
+                logger.LogWarning("Login failed for user {Username}", username);
                 return new LoadMenusWorkResult { Error = "Anmeldung fehlgeschlagen. Bitte überprüfen Sie Ihre Zugangsdaten." };
             }
-            _logger.LogInformation("Login successful for user {Username}", username);
+            logger.LogInformation("Login successful for user {Username}", username);
 
-            _logger.LogInformation("Fetching menus");
+            logger.LogInformation("Fetching menus");
             progress.Report(30);
-            var menuResult = await _gourmetClient.GetMenus();
+            var menuResult = await gourmetClient.GetMenus();
 
-            _logger.LogInformation("Fetching ordered menus");
+            logger.LogInformation("Fetching ordered menus");
             progress.Report(60);
-            var orderedMenuResult = await _gourmetClient.GetOrderedMenus();
+            var orderedMenuResult = await gourmetClient.GetOrderedMenus();
 
-            _logger.LogInformation("Processing menu data");
+            // Save to cache
+            var cachedDataToSave = new CachedMenuData { MenuResult = menuResult, OrderedResult = orderedMenuResult };
+            var json = JsonSerializer.Serialize(cachedDataToSave);
+            await _menuCache.SetCachedDataAsync(json);
+
+            logger.LogInformation("Processing menu data");
             progress.Report(80);
-            var menuDaysDict = menuResult.Menus
-                .GroupBy(m => m.Day.Date)
-                .OrderBy(g => g.Key)
-                .ToList();
-
-            var list = new System.Collections.Generic.List<MenuDayViewModel>();
-            foreach (var dayGroup in menuDaysDict)
-            {
-                var menuVMs = dayGroup
-                    .Select(menu =>
-                    {
-                        var ordered = orderedMenuResult.OrderedMenus.FirstOrDefault(om => om.MatchesMenu(menu));
-                        return new MenuItemViewModel
-                        {
-                            MenuId = menu.MenuId,
-                            MenuDescription = menu.Description,
-                            Allergens = menu.Allergens,
-                            IsAvailable = menu.IsAvailable,
-                            IsOrdered = ordered != null,
-                            IsOrderApproved = ordered?.IsOrderApproved ?? false,
-                            IsOrderCancelable = ordered?.IsOrderCancelable ?? false,
-                            Category = menu.Category,
-                            SourceMenu = menu
-                        };
-                    })
-                    .ToList();
-
-                list.Add(new MenuDayViewModel
-                {
-                    Date = dayGroup.Key,
-                    Menus = new ObservableCollection<MenuItemViewModel>(menuVMs)
-                });
-            }
-
-            _logger.LogInformation("Menu processing completed, {DayCount} days processed", list.Count);
-            return new LoadMenusWorkResult
-            {
-                UserInformation = menuResult.UserInformation,
-                MenuDays = list
-            };
+            var processedResult = ProcessMenuData(menuResult, orderedMenuResult);
+            return processedResult;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in InternalLoadMenusAsync");
+            logger.LogError(ex, "Error in InternalLoadMenusAsync");
             return new LoadMenusWorkResult { Error = $"Fehler beim Laden der Menüs: {ex.Message}" };
         }
+    }
+
+    private LoadMenusWorkResult ProcessMenuData(GourmetMenuResult menuResult, GourmetOrderedMenuResult orderedMenuResult)
+    {
+        var menuDaysDict = menuResult.Menus
+            .GroupBy(m => m.Day.Date)
+            .OrderBy(g => g.Key)
+            .ToList();
+
+        var list = new System.Collections.Generic.List<MenuDayViewModel>();
+        foreach (var dayGroup in menuDaysDict)
+        {
+            var menuVMs = dayGroup
+                .Select(menu =>
+                {
+                    var ordered = orderedMenuResult.OrderedMenus.FirstOrDefault(om => om.MatchesMenu(menu));
+                    return new MenuItemViewModel
+                    {
+                        MenuId = menu.MenuId,
+                        MenuDescription = menu.Description,
+                        Allergens = menu.Allergens,
+                        IsAvailable = menu.IsAvailable,
+                        IsOrdered = ordered != null,
+                        IsOrderApproved = ordered?.IsOrderApproved ?? false,
+                        IsOrderCancelable = ordered?.IsOrderCancelable ?? false,
+                        Category = menu.Category,
+                        SourceMenu = menu
+                    };
+                })
+                .ToList();
+
+            list.Add(new MenuDayViewModel
+            {
+                Date = dayGroup.Key,
+                Menus = new ObservableCollection<MenuItemViewModel>(menuVMs)
+            });
+        }
+
+        logger.LogInformation("Menu processing completed, {DayCount} days processed", list.Count);
+        return new LoadMenusWorkResult
+        {
+            UserInformation = menuResult.UserInformation,
+            MenuDays = list
+        };
     }
 
     private class LoadMenusWorkResult
@@ -188,21 +218,27 @@ public partial class MenuViewModel : ObservableObject
         public System.Collections.Generic.List<MenuDayViewModel>? MenuDays { get; set; }
     }
 
+    private class CachedMenuData
+    {
+        public GourmetMenuResult? MenuResult { get; set; }
+        public GourmetOrderedMenuResult? OrderedResult { get; set; }
+    }
+
     [RelayCommand]
     private Task ToggleMenuOrder(ToggleMenuOrderParameter parameter)
     {
         try
         {
             var menu = parameter.Menu;
-            _logger.LogInformation("Toggling order for menu {MenuId}", menu.MenuId);
+            logger.LogInformation("Toggling order for menu {MenuId}", menu.MenuId);
             if (!menu.IsAvailable)
             {
-                _logger.LogWarning("Menu {MenuId} is not available, cannot toggle", menu.MenuId);
+                logger.LogWarning("Menu {MenuId} is not available, cannot toggle", menu.MenuId);
                 return Task.CompletedTask;
             }
             if (menu.IsOrdered && !menu.IsOrderCancelable)
             {
-                _logger.LogWarning("Menu {MenuId} is ordered but not cancelable, cannot toggle", menu.MenuId);
+                logger.LogWarning("Menu {MenuId} is ordered but not cancelable, cannot toggle", menu.MenuId);
                 return Task.CompletedTask;
             }
             if (menu.IsMarkedForOrder) menu.IsMarkedForOrder = false;
@@ -211,12 +247,12 @@ public partial class MenuViewModel : ObservableObject
             else menu.IsMarkedForOrder = true;
             OnPropertyChanged(nameof(MenuDays));
             RaisePendingChanges();
-            _logger.LogInformation("Order toggled for menu {MenuId}, new state: {State}", menu.MenuId, menu.State);
+            logger.LogInformation("Order toggled for menu {MenuId}, new state: {State}", menu.MenuId, menu.State);
             return Task.CompletedTask;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to toggle menu order for {MenuId}", parameter.Menu.MenuId);
+            logger.LogError(ex, "Failed to toggle menu order for {MenuId}", parameter.Menu.MenuId);
             ErrorMessage = $"Fehler: {ex.Message}";
             return Task.CompletedTask;
         }
@@ -227,7 +263,7 @@ public partial class MenuViewModel : ObservableObject
     {
         if (IsApplyingChanges || _userInformation == null)
         {
-            if (_userInformation == null) _logger.LogWarning("Cannot apply changes: missing user info");
+            if (_userInformation == null) logger.LogWarning("Cannot apply changes: missing user info");
             return;
         }
 
@@ -235,29 +271,29 @@ public partial class MenuViewModel : ObservableObject
         var cancellations = MenuDays.SelectMany(d => d.Menus).Where(m => m.IsMarkedForCancel && m.IsOrdered).ToList();
         if (additions.Count == 0 && cancellations.Count == 0)
         {
-            _logger.LogInformation("No changes to apply");
+            logger.LogInformation("No changes to apply");
             return;
         }
 
-        _logger.LogInformation("Applying order changes: {Additions} additions, {Cancellations} cancellations", additions.Count, cancellations.Count);
+        logger.LogInformation("Applying order changes: {Additions} additions, {Cancellations} cancellations", additions.Count, cancellations.Count);
         try
         {
             IsApplyingChanges = true;
             IsLoading = true;
             LoadingProgress = 5;
 
-            var orderedResult = await _gourmetClient.GetOrderedMenus();
+            var orderedResult = await gourmetClient.GetOrderedMenus();
             var orderedMenus = orderedResult.OrderedMenus;
             LoadingProgress = 15;
 
             int totalAdd = additions.Count; int processed = 0;
             foreach (var add in additions)
             {
-                _logger.LogInformation("Adding menu {MenuId} to order", add.MenuId);
+                logger.LogInformation("Adding menu {MenuId} to order", add.MenuId);
                 if (add.SourceMenu != null)
                 {
-                    var apiResult = await _gourmetClient.AddMenuToOrderedMenu(_userInformation, add.SourceMenu);
-                    _logger.LogInformation("AddMenu {MenuId} success={Success} message={Message}", add.MenuId, apiResult.Success, apiResult.Message);
+                    var apiResult = await gourmetClient.AddMenuToOrderedMenu(_userInformation, add.SourceMenu);
+                    logger.LogInformation("AddMenu {MenuId} success={Success} message={Message}", add.MenuId, apiResult.Success, apiResult.Message);
                 }
                 processed++;
                 LoadingProgress = 15 + (int)(processed / Math.Max(1.0, totalAdd) * 35); // up to 50
@@ -266,16 +302,16 @@ public partial class MenuViewModel : ObservableObject
             LoadingProgress = 55;
             if (cancellations.Any())
             {
-                _logger.LogInformation("Cancelling {Count} orders", cancellations.Count);
+                logger.LogInformation("Cancelling {Count} orders", cancellations.Count);
                 var toCancel = orderedMenus
                     .Where(om => cancellations.Any(c => c.SourceMenu != null && om.MatchesMenu(c.SourceMenu)))
                     .ToList();
-                if (toCancel.Any()) await _gourmetClient.CancelOrders(toCancel);
+                if (toCancel.Any()) await gourmetClient.CancelOrders(toCancel);
             }
 
             LoadingProgress = 75;
-            _logger.LogInformation("Confirming order");
-            await _gourmetClient.ConfirmOrder();
+            logger.LogInformation("Confirming order");
+            await gourmetClient.ConfirmOrder();
 
             foreach (var day in MenuDays)
                 foreach (var item in day.Menus)
@@ -289,11 +325,11 @@ public partial class MenuViewModel : ObservableObject
             MenuDays.Clear();
             await LoadMenusAsync();
             LoadingProgress = 100;
-            _logger.LogInformation("Order changes applied successfully");
+            logger.LogInformation("Order changes applied successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ApplyOrderChanges failed");
+            logger.LogError(ex, "ApplyOrderChanges failed");
             ErrorMessage = $"Fehler beim Bestätigen: {ex.Message}";
         }
         finally

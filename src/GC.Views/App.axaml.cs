@@ -3,6 +3,13 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using GC.ViewModels.Services;
+using Microsoft.Extensions.DependencyInjection;
+using GC.Cache;
+using GC.Core.Network;
+using GC.Core.Settings;
+using GC.Database;
+using GC.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace GC.Views;
 
@@ -17,12 +24,19 @@ public partial class App : Application {
   };
 
   private IThemeService? _themeService;
+  private ServiceProvider? _serviceProvider;
 
   public override void Initialize() {
     AvaloniaXamlLoader.Load(this);
   }
 
   public override void OnFrameworkInitializationCompleted() {
+    // Setup DI
+    var services = new ServiceCollection();
+    ConfigureServices(services);
+    _serviceProvider = services.BuildServiceProvider();
+    GC.ViewModels.Services.ServiceProviderHolder.Initialize(_serviceProvider);
+
     // Initialize theme service from platform-specific implementation
     _themeService = GetPlatformThemeService();
     
@@ -79,4 +93,27 @@ public partial class App : Application {
 
   // Desktop build provides no-op; iOS partial supplies implementation.
   partial void HookSingleViewLifetime(ISingleViewApplicationLifetime lifetime);
+
+  // Virtual method to allow platform-specific overrides for service configuration
+  protected virtual void ConfigureServices(ServiceCollection services) {
+    services.AddLogging();
+    services.AddSingleton<SqliteService>();
+    services.AddSingleton<GourmetWebClient>();
+    services.AddSingleton<GourmetSettingsService>();
+    services.AddSingleton<MenuViewModel>();
+    services.AddSingleton<VentopayWebClient>();
+    services.AddSingleton<BillingService>();
+    services.AddSingleton<BillingViewModel>();
+    services.AddSingleton<MainViewModel>();
+    // Register logger for MenuViewModel
+    services.AddSingleton(typeof(ILogger<MenuViewModel>), sp =>
+        sp.GetRequiredService<ILoggerFactory>().CreateLogger<MenuViewModel>());
+    // Register logger for BillingViewModel
+    services.AddSingleton(typeof(ILogger<BillingViewModel>), sp =>
+        sp.GetRequiredService<ILoggerFactory>().CreateLogger<BillingViewModel>());
+    // Register logger for MainViewModel
+    services.AddSingleton(typeof(ILogger<MainViewModel>), sp =>
+        sp.GetRequiredService<ILoggerFactory>().CreateLogger<MainViewModel>());
+    // ... add other registrations as needed ...
+  }
 }

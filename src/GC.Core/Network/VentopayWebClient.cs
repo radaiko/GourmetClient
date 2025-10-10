@@ -70,7 +70,7 @@ public partial class VentopayWebClient : WebClientBase
         }
     }
 
-    public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(DateTime fromDate, DateTime toDate, IProgress<int> progress)
+    public async Task<IReadOnlyList<BillingPosition>> GetBillingPositions(DateTime fromDate, DateTime toDate, IProgress<int>? progress)
     {
         var parameters = new Dictionary<string, string>
         {
@@ -116,7 +116,7 @@ public partial class VentopayWebClient : WebClientBase
         return parameters;
     }
 
-    private async Task<IReadOnlyList<BillingPosition>> GetBillingPositionsFromHtml(string html, IProgress<int> progress)
+    private async Task<IReadOnlyList<BillingPosition>> GetBillingPositionsFromHtml(string html, IProgress<int>? progress)
     {
         var document = new HtmlDocument();
         document.LoadHtml(html);
@@ -137,7 +137,10 @@ public partial class VentopayWebClient : WebClientBase
             billingPositions.AddRange(entries);
 
             rowCounter++;
-            progress.Report((int)((rowCounter / rowNodes.Length) * 100));
+            if (progress != null && rowNodes.Length > 0)
+            {
+                progress.Report((int)((rowCounter / rowNodes.Length) * 100));
+            }
         }
 
         return billingPositions;
