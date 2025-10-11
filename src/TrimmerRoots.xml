@@ -1,0 +1,7 @@
+<linker>
+    <assembly fullname="GC.iOS">
+        <type fullname="GC.ViewModels*" preserve="all"/>
+        <type fullname="GC.Views*" preserve="all"/>
+        <type fullname="GC.iOS*" preserve="all"/>
+    </assembly>
+</linker>
