@@ -13,6 +13,7 @@ Vereinfachte Essenbestellung für Gourmet.
 ## Todos
 - [ ] pull-down support
 - [ ] display save button for MenuView
+- [ ] prevent ordering after 9am Vienna time
 - [ ] implement intelligent caching for menu
 - [ ] implement BillingView
 - [ ] update desktop application
