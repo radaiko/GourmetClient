@@ -10,6 +10,13 @@ Vereinfachte Essenbestellung für Gourmet.
 - Nächste Schritte
 - Beiträge
 
+## Todos
+- [ ] pull-down support
+- [ ] display save button for MenuView
+- [ ] implement intelligent caching for menu
+- [ ] implement BillingView
+- [ ] update desktop application
+
 ## Download (Endanwender)
 1. Aktuelle Version herunterladen: https://github.com/radaiko/GourmetClient/releases/latest (Datei `GourmetClient.zip`).
 2. ZIP in einen beliebigen Ordner entpacken (nicht unter `C:\Programme` oder `C:\Programme (x86)` – sonst können Updates scheitern).
