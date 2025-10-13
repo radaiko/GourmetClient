@@ -39,7 +39,7 @@ internal static class AboutViewShared {
     };
 
     versionStack.Children.Add(new TextBlock {
-      Text = "Version: 1.0.0",
+      Text = "Version: 0.0.1",
       FontSize = 16,
       FontWeight = FontWeight.Medium,
       Foreground = GetTextBrush()
