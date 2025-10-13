@@ -1,30 +1,25 @@
+using System.Diagnostics;
 using Avalonia;
-using Avalonia.Animation;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
 using Avalonia.Input;
-using Avalonia.Input.GestureRecognizers;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using GC.ViewModels;
+using GC.Core.Utils;
 
 namespace GC.Views;
 
 /// <summary>
 ///   iOS-optimized menu view with vertical paged layout
 /// </summary>
+// ReSharper disable once InconsistentNaming
 public static class MenuViewIOS {
   private static SolidColorBrush GetBackgroundBrush() =>
     new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
-      ? Color.Parse("#0d1117")
+      ? Color.Parse("#000000")
       : Color.Parse("#ffffff"));
-
-  private static SolidColorBrush GetCardBackgroundBrush() =>
-    new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
-      ? Color.Parse("#1C1C1E")
-      : Colors.White);
 
   private static SolidColorBrush GetTextBrush() =>
     new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
@@ -35,10 +30,14 @@ public static class MenuViewIOS {
 
   public static Control Create(MainViewModel viewModel) {
     if (viewModel.MenuViewModel == null) {
-      return CreateWelcomeCard(viewModel);
+      return CreateWelcomeCard();
     }
 
     var menuViewModel = viewModel.MenuViewModel;
+
+    if (menuViewModel.LoginFailed) {
+      return CreateErrorView(menuViewModel.ErrorMessage ?? "Anmeldung fehlgeschlagen. Bitte Einstellungen überprüfen.");
+    }
 
     if (menuViewModel.IsLoading) {
       return CreateLoadingView(menuViewModel.LoadingProgress);
@@ -47,13 +46,14 @@ public static class MenuViewIOS {
     if (menuViewModel.MenuDays.Count == 0) {
       // Trigger load if not already loaded
       if (!string.IsNullOrEmpty(viewModel.GourmetUsername) && !string.IsNullOrEmpty(viewModel.GourmetPassword)) {
-        Dispatcher.UIThread.Post(async () => await menuViewModel.LoadMenusCommand.ExecuteAsync(null));
+        // Avoid 'async void' lambda - assign the returned Task to a discard so exceptions can be observed by the task scheduler
+        Dispatcher.UIThread.Post(() => _ = menuViewModel.LoadMenusCommand.ExecuteAsync(null));
         return CreateLoadingView(menuViewModel.LoadingProgress);
       }
-      return CreateWelcomeCard(viewModel);
+      return CreateWelcomeCard();
     }
 
-    return CreateMobileMenuView(viewModel, menuViewModel);
+    return CreateMobileMenuView(menuViewModel);
   }
 
   private static Control CreateLoadingView(int progress = 0) {
@@ -86,7 +86,7 @@ public static class MenuViewIOS {
     return stackPanel;
   }
 
-  private static Control CreateWelcomeCard(MainViewModel viewModel) =>
+  private static Control CreateWelcomeCard() =>
     new ScrollViewer {
       Background = GetBackgroundBrush(),
       Content = new StackPanel {
@@ -119,7 +119,59 @@ public static class MenuViewIOS {
       }
     };
 
-  private static Control CreateMobileMenuView(MainViewModel mainViewModel, MenuViewModel menuViewModel) {
+  private static Control CreateErrorView(string message) =>
+    new ScrollViewer {
+      Background = GetBackgroundBrush(),
+      Content = new StackPanel {
+        HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Center,
+        Spacing = 32,
+        Margin = new Thickness(60),
+        Children = {
+          new TextBlock {
+            Text = "Fehler",
+            FontSize = 32,
+            FontWeight = FontWeight.Light,
+            Foreground = GetTextBrush(),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextAlignment = TextAlignment.Center
+          },
+          new TextBlock {
+            Text = message,
+            FontSize = 16,
+            FontWeight = FontWeight.Normal,
+            Foreground = GetTextBrush(),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.Wrap,
+            MaxWidth = 400,
+            LineHeight = 24,
+            Opacity = 0.7
+          }
+        }
+      }
+    };
+
+  private static Control CreateMobileMenuView(MenuViewModel menuViewModel) {
+    var contentControl = new ContentControl();
+
+    void UpdateContent() {
+      contentControl.Content = menuViewModel.IsLoading 
+        ? CreateLoadingView(menuViewModel.LoadingProgress) 
+        : CreateMobileMenuViewInternal(menuViewModel);
+    }
+
+    menuViewModel.PropertyChanged += (_, e) => {
+      if (e.PropertyName == nameof(MenuViewModel.IsLoading)) {
+        UpdateContent();
+      }
+    };
+
+    UpdateContent();
+    return contentControl;
+  }
+
+  private static Control CreateMobileMenuViewInternal(MenuViewModel menuViewModel) {
     var today = DateTime.Today;
     var targetIndex = menuViewModel.CurrentMenuDayIndex >= 0 && menuViewModel.CurrentMenuDayIndex < menuViewModel.MenuDays.Count
       ? menuViewModel.CurrentMenuDayIndex
@@ -130,115 +182,91 @@ public static class MenuViewIOS {
     if (targetIndex < 0)
       targetIndex = 0;
 
-    var carousel = new Carousel {
-      Background = GetBackgroundBrush(),
-      PageTransition = new PageSlide(TimeSpan.FromMilliseconds(300), PageSlide.SlideAxis.Vertical),
-      IsHitTestVisible = true
+    // Setup carousel
+    Debug.WriteLine($"[MenuViewIOS] Menu has {menuViewModel.MenuDays.Count} days, setting targetIndex to {targetIndex}");
+    Log.Write($"Creating carousel with targetIndex={targetIndex}");
+    var carousel = new GC.Views.Controls.Carousel();
+    foreach (var day in menuViewModel.MenuDays) {
+      var dayCard = CreateMenuDayCard(day, menuViewModel, false);
+      carousel.Items.Add(dayCard);
+    }
+    carousel.SetupSwipe();
+    
+    // Setup indicator dots
+    Log.Write($"Creating indicator dots for {carousel.Items.Count} items");
+    var indicatorDots = new Controls.IndicatorDots {
+      Total = carousel.Items.Count,
+      CurrentIndex = targetIndex
+    };
+    Log.Write($"Indicator dots created with Total={indicatorDots.Total}, CurrentIndex={indicatorDots.CurrentIndex}");
+    indicatorDots.DotClicked += (_, index) => {
+      Log.Write($"Indicator dot clicked: {index}");
+      carousel.GoToIndex(index);
     };
     
-    // Prevent multiple page changes from a single continuous swipe
-    var isGestureHandled = false;
-    
-    // Swipe to change page
-    carousel.GestureRecognizers.Add(new ScrollGestureRecognizer { CanHorizontallyScroll = false });
-    carousel.AddHandler(Gestures.ScrollGestureEvent, (s, e) => {
-      // If a page change was already triggered recently, ignore further scroll events until reset
-      if (isGestureHandled) return;
-
-      const double requiredDelta = 10;
-      if (e.Delta.Y < -requiredDelta) {
-        isGestureHandled = true;
-        carousel.Previous();
-      } else if (e.Delta.Y > requiredDelta) {
-        isGestureHandled = true;
-        carousel.Next();
-      } else {
-        return;
-      }
-
-      // Reset the guard after the transition duration + small buffer to avoid multiple advances
-      var resetTimer = new System.Timers.Timer(350) { AutoReset = false };
-      resetTimer.Elapsed += (_, __) => {
-        Dispatcher.UIThread.Post(() => { isGestureHandled = false; });
-        resetTimer.Dispose();
-      };
-      resetTimer.Start();
-    });
-    
-    PopulateCarousel();
-
-    carousel.SelectedIndex = targetIndex;
-
-    // Indicator UI
-    var indicatorDotsPanel = new StackPanel {
-      Orientation = Orientation.Horizontal,
-      HorizontalAlignment = HorizontalAlignment.Left,
+    // Setup progress text
+    Log.Write($"Creating progress text for item {targetIndex + 1} of {carousel.Items.Count}");
+    var progressText = new TextBlock {
+      Text = $"{targetIndex + 1} / {carousel.Items.Count}",
+      FontSize = 14,
+      FontWeight = FontWeight.Normal,
+      Foreground = GetTextBrush(),
       VerticalAlignment = VerticalAlignment.Center,
+      Opacity = 0.7
+    };
+    Log.Write($"Progress text created: {progressText.Text}");
+    
+    // Attach index changed handler to update indicator and progress text
+    carousel.OnIndexChanged += (_, currentIndex) => {
+      Log.Write($"Carousel index changed to {currentIndex}");
+      indicatorDots.CurrentIndex = currentIndex;
+      progressText.Text = $"{currentIndex+ 1} / {carousel.Items.Count}";
+      menuViewModel.CurrentMenuDayIndex = currentIndex;
+    };
+    Log.Write($"OnIndexChanged handler attached");
+    
+    carousel.OnPullDown += (_, _) => {
+      Log.Write("Pull-down refresh triggered");
+      // Trigger refresh
+      if (!menuViewModel.IsLoading) {
+        Log.Write("Executing RefreshMenusCommand");
+        menuViewModel.RefreshMenusCommand.Execute(null);
+      }
+    };
+    Log.Write($"OnPullDown handler attached");
+
+    // Layout: indicator row on top, scrollViewer below
+    var layoutGrid = new Grid {
+      RowDefinitions = [
+        new RowDefinition(GridLength.Auto),
+        new RowDefinition(GridLength.Star)
+      ]
+    };
+    Log.Write($"Layout grid created with {layoutGrid.RowDefinitions.Count} rows");
+
+    var topIndicatorPanel = new StackPanel {
+      Orientation = Orientation.Horizontal,
+      HorizontalAlignment = HorizontalAlignment.Center,
+      VerticalAlignment = VerticalAlignment.Center,
+      Margin = new Thickness(12, 8, 8, 8),
       Spacing = 6
     };
-    var total = menuViewModel.MenuDays.Count;
-    for (var i = 0; i < total; i++) indicatorDotsPanel.Children.Add(CreateIndicatorDot(false));
+    topIndicatorPanel.Children.Add(indicatorDots);
+    topIndicatorPanel.Children.Add(progressText);
+    Log.Write($"Top indicator panel created with {topIndicatorPanel.Children.Count} children");
 
-    var progressText = new TextBlock {
-      FontSize = 12,
-      Foreground = GetTextBrush(),
-      Margin = new Thickness(8, 0, 0, 0)
-    };
+    layoutGrid.Children.Add(topIndicatorPanel);
+    Grid.SetRow(topIndicatorPanel, 0);
+    Log.Write($"Top indicator panel added to grid at row 0");
 
-    var indicatorRow = new StackPanel {
-      Orientation = Orientation.Horizontal,
-      HorizontalAlignment = HorizontalAlignment.Left,
-      VerticalAlignment = VerticalAlignment.Center,
-      Margin = new Thickness(12, 8, 12, 8)
-    };
-    indicatorRow.Children.Add(indicatorDotsPanel);
-    indicatorRow.Children.Add(progressText);
-
-    var grid = new Grid();
-    grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-    grid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
-    grid.Children.Add(indicatorRow);
+    layoutGrid.Children.Add(carousel);
     Grid.SetRow(carousel, 1);
-    grid.Children.Add(carousel);
+    Log.Write($"Carousel added to grid at row 1");
 
-    carousel.SelectionChanged += (_, __) => {
-      menuViewModel.CurrentMenuDayIndex = carousel.SelectedIndex;
-      UpdateIndicators();
-    };
+    carousel.AttachedToVisualTree += (_, _) => carousel.GoToIndex(targetIndex);
 
-    carousel.AttachedToVisualTree += (_, __) => UpdateIndicators();
-
-    return grid;
-
-    // Helpers
-    void UpdateIndicators() {
-      var page = carousel.SelectedIndex;
-      for (var i = 0; i < indicatorDotsPanel.Children.Count; i++) {
-        if (indicatorDotsPanel.Children[i] is Ellipse el) {
-          var active = i == page;
-          el.Fill = active ? new SolidColorBrush(Color.FromRgb(255, 255, 255)) : new SolidColorBrush(Color.FromArgb(90, 255, 255, 255));
-          el.Width = el.Height = active ? 10 : 8;
-        }
-      }
-      var remaining = Math.Max(0, total - page - 1);
-      progressText.Text = $"Day {page + 1} of {total} ({remaining} left)";
-    }
-
-    void PopulateCarousel() {
-      carousel.Items.Clear();
-      foreach (var day in menuViewModel.MenuDays) {
-        var dayCard = CreateMenuDayCard(day, menuViewModel, false);
-        carousel.Items.Add(dayCard);
-      }
-    }
+    return layoutGrid;
   }
-
-  private static Ellipse CreateIndicatorDot(bool active) => new() {
-    Width = active ? 10 : 8,
-    Height = active ? 10 : 8,
-    Fill = active ? new SolidColorBrush(Color.FromRgb(255, 255, 255)) : new SolidColorBrush(Color.FromArgb(90, 255, 255, 255)),
-    StrokeThickness = 0
-  };
 
   private static Control CreateMenuDayCard(MenuDayViewModel menuDay, MenuViewModel menuViewModel, bool showReserved) {
     var dayPanel = new StackPanel {
@@ -276,7 +304,7 @@ public static class MenuViewIOS {
                       (menu.State != MenuState.Ordered || menu.IsOrderCancelable);
 
     var cardBorder = new Border {
-      Background = GetMinimalistBackgroundBrush(menu.State),
+      Background = GetMinimalistBackgroundBrush(),
       BorderBrush = GetMinimalistBorderBrush(menu.State),
       BorderThickness = new Thickness(0, 0, 0, 2),
       Padding = new Thickness(0, 20, 0, 20),
@@ -298,7 +326,7 @@ public static class MenuViewIOS {
     var leftStack = new StackPanel { Orientation = Orientation.Vertical, Spacing = 6 };
     leftStack.Children.Add(descriptionText);
 
-    if (menu.Allergens?.Length > 0) {
+    if (menu.Allergens.Length > 0) {
       var allergensText = new TextBlock {
         Text = string.Join(" ", menu.Allergens),
         FontSize = 10,
@@ -319,10 +347,10 @@ public static class MenuViewIOS {
     leftStack.Children.Add(statusText);
 
     var mainGrid = new Grid {
-      ColumnDefinitions = new ColumnDefinitions {
+      ColumnDefinitions = [
         new ColumnDefinition(GridLength.Star),
         new ColumnDefinition(GridLength.Auto)
-      }
+      ]
     };
 
     mainGrid.Children.Add(leftStack);
@@ -335,12 +363,11 @@ public static class MenuViewIOS {
       VerticalAlignment = VerticalAlignment.Top,
       HorizontalAlignment = HorizontalAlignment.Right
     };
-    checkBox.Click += async (s, e) => { await menuViewModel.ToggleMenuOrderCommand.ExecuteAsync(new ToggleMenuOrderParameter(day, menu)); };
+    checkBox.Click += async (_, _) => { await menuViewModel.ToggleMenuOrderCommand.ExecuteAsync(new ToggleMenuOrderParameter(day, menu)); };
     mainGrid.Children.Add(checkBox);
     Grid.SetColumn(checkBox, 1);
 
     cardBorder.Child = mainGrid;
-
 
     if (!canInteract) {
       cardBorder.Opacity = 0.4;
@@ -356,12 +383,36 @@ public static class MenuViewIOS {
     };
     ToolTip.SetTip(cardBorder, tooltipText);
 
+    // Update UI when menu state changes
+    menu.PropertyChanged += (_, e) => {
+      if (e.PropertyName == nameof(MenuItemViewModel.State)) {
+        checkBox.IsChecked = menu.State == MenuState.Ordered || menu.State == MenuState.MarkedForOrder;
+        var newCanInteract = menu.State != MenuState.NotAvailable &&
+                             (menu.State != MenuState.Ordered || menu.IsOrderCancelable);
+        checkBox.IsEnabled = newCanInteract;
+        cardBorder.Opacity = newCanInteract ? 1.0 : 0.4;
+        cardBorder.Background = GetMinimalistBackgroundBrush();
+        cardBorder.BorderBrush = GetMinimalistBorderBrush(menu.State);
+        statusText.Text = GetMinimalistStatusText(menu.State);
+        statusText.Foreground = GetMinimalistStatusBrush(menu.State);
+        var newTooltip = menu.State switch {
+          MenuState.MarkedForOrder => "Entfernen",
+          MenuState.MarkedForCancel => "Behalten",
+          MenuState.Ordered when menu.IsOrderCancelable => "Stornieren",
+          MenuState.Ordered when !menu.IsOrderCancelable => "Bestellt",
+          MenuState.NotAvailable => "Nicht verfügbar",
+          _ => "Bestellen"
+        };
+        ToolTip.SetTip(cardBorder, newTooltip);
+      }
+    };
+
     return cardBorder;
   }
 
-  private static SolidColorBrush GetMinimalistBackgroundBrush(MenuState state) {
+  private static SolidColorBrush GetMinimalistBackgroundBrush() {
     var isDark = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
-    return new SolidColorBrush(isDark ? Color.Parse("#0d1117") : Color.Parse("#ffffff"));
+    return new SolidColorBrush(isDark ? Color.Parse("#000000") : Color.Parse("#ffffff"));
   }
 
   private static SolidColorBrush GetMinimalistBorderBrush(MenuState state) {

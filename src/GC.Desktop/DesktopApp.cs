@@ -1,4 +1,3 @@
-using Avalonia.Svg.Skia;
 using GC.Cache;
 using GC.Core.Network;
 using GC.Core.Settings;
@@ -17,9 +16,6 @@ public class DesktopApp : App
 {
     public DesktopApp()
     {
-        // Force-link Svg types (helps with trimming / AOT)
-        _ = typeof(SvgImage);
-        _ = typeof(Avalonia.Svg.Skia.Svg);
         // Initialize dependency injection
         var services = new ServiceCollection();
         ConfigureServices(services);

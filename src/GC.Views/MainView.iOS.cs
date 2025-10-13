@@ -3,11 +3,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Input;
 using Avalonia.Styling;
 using GC.ViewModels;
 using Avalonia.Platform;
-using Avalonia.Svg.Skia;
 
 namespace GC.Views;
 
@@ -193,47 +193,43 @@ public static class MainViewIOS
     {
         var isDarkTheme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
         var suffix = isDarkTheme ? "dark" : "light";
-        return $"avares://GC.Views/Assets/Icons/{baseName}-{suffix}.svg";
+        return $"avares://GC.Views/Assets/Icons/{baseName}-{suffix}.png";
     }
-
-
-    private static Control CreateSvgIcon(string baseName, bool selected)
+    
+    private static Control CreatePngIcon(string baseName, bool selected)
     {
         var uriString = GetIconUri(baseName);
         var uri = new Uri(uriString);
 
         if (!AssetLoader.Exists(uri))
         {
-            Console.WriteLine($"[SVG] NOT FOUND: {uriString}");
+            Console.WriteLine($"[PNG] NOT FOUND: {uriString}");
             return CreateMissingIconPlaceholder(uriString);
         }
 
         try
         {
             using var stream = AssetLoader.Open(uri);
-            if (stream == null || stream.Length == 0)
+            if (stream.Length == 0)
             {
-                Console.WriteLine($"[SVG] EMPTY STREAM: {uriString}");
+                Console.WriteLine($"[PNG] EMPTY STREAM: {uriString}");
                 return CreateMissingIconPlaceholder(uriString, 'E');
             }
 
-            // Use Image with SvgImage source for better iOS compatibility
-            var svgImage = new SvgImage { Source = SvgSource.Load(uriString, null) };
             var image = new Image
             {
+                Source = new Bitmap(stream),
                 Width = 26,
                 Height = 26,
-                Source = svgImage,
                 Opacity = selected ? 1.0 : 0.85,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
-
             return image;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[SVG] ERROR loading {uriString}: {ex.GetType().Name} {ex.Message}");
+            Console.WriteLine($"[PNG] ERROR loading {uriString}: {ex.GetType().Name} {ex.Message}");
             return CreateMissingIconPlaceholder(uriString, '!');
         }
     }
@@ -268,7 +264,7 @@ public static class MainViewIOS
             Spacing = 2
         };
 
-        stack.Children.Add(CreateSvgIcon(baseIconName, isSelected));
+        stack.Children.Add(CreatePngIcon(baseIconName, isSelected));
 
         var button = new Button
         {

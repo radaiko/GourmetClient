@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <AvaloniaVersion>11.2.0</AvaloniaVersion>
+    <AvaloniaVersion>11.3.7</AvaloniaVersion>
     <!-- Centralize nullable and lang version if desired -->
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

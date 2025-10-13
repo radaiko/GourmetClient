@@ -29,8 +29,10 @@ public partial class MainViewModel : ObservableObject {
     if (menuViewModel != null) {
       menuViewModel.PropertyChanged += (_, e) => {
         _logger?.LogDebug("MenuViewModel property changed: {Property}", e.PropertyName);
-        // Notify that a child property changed, triggering UI refresh
-        OnPropertyChanged(nameof(MenuViewModel));
+        // Notify that a child property changed, triggering UI refresh only for IsLoading
+        if (e.PropertyName == nameof(MenuViewModel.IsLoading)) {
+          OnPropertyChanged(nameof(MenuViewModel));
+        }
       };
     }
     
@@ -43,6 +45,8 @@ public partial class MainViewModel : ObservableObject {
     }
 
     _logger?.LogInformation("Initializing MainViewModel");
+    if (settingsService.GetCurrentUserSettings().DebugMode) 
+      Core.Utils.Log.IsEnabled = true;
     LoadSettings();
     PreLoadData();
   }
@@ -185,6 +189,14 @@ public partial class MainViewModel : ObservableObject {
       SaveSettings();
     }
   }
+  
+  partial void OnDebugModeChanged(bool? value) {
+    _logger?.LogInformation("Debug mode changed to {Value}", value == true ? "enabled" : "disabled");
+    Core.Utils.Log.IsEnabled = value == true;
+    if (!_isLoadingSettings) {
+      SaveSettings();
+    }
+  }
 
   private void LoadSettings() {
     if (_settingsService == null) return;
@@ -222,13 +234,14 @@ public partial class MainViewModel : ObservableObject {
     if (GourmetUsername != "" && GourmetPassword != "") {
       _logger?.LogInformation("Pre-loading menu data");
       _logger?.LogInformation("Executing LoadMenusCommand for background pre-loading");
-      MenuViewModel?.LoadMenusCommand?.Execute(null);
-      
+      if (MenuViewModel != null)
+        MenuViewModel.LoginFailed = false;
+      MenuViewModel?.LoadMenusCommand.Execute(null);
     } 
     if (VentoPayUsername != "" && VentoPayPassword != "") {
       _logger?.LogInformation("Pre-loading billing data");
       _logger?.LogInformation("Executing LoadBillingCommand for background pre-loading");
-      BillingViewModel?.LoadBillingCommand?.Execute(null);
+      BillingViewModel?.LoadBillingCommand.Execute(null);
     }
   }
 }

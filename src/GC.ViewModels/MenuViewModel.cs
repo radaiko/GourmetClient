@@ -25,6 +25,7 @@ public partial class MenuViewModel(GourmetWebClient gourmetClient, GourmetSettin
     [ObservableProperty] private ObservableCollection<MenuDayViewModel> _menuDays = new();
     [ObservableProperty] private int _currentMenuDayIndex = -1;
     [ObservableProperty] private bool _isApplyingChanges;
+    [ObservableProperty] private bool _LoginFailed;
 
     public bool HasPendingChanges => MenuDays.Any(d => d.Menus.Any(m => m.IsMarkedForOrder || m.IsMarkedForCancel));
     public int PendingAdditionsCount => MenuDays.Sum(d => d.Menus.Count(m => m.IsMarkedForOrder));
@@ -42,13 +43,14 @@ public partial class MenuViewModel(GourmetWebClient gourmetClient, GourmetSettin
         logger.LogInformation("Refreshing menus");
         MenuDays.Clear();
         ErrorMessage = null;
-        await LoadMenusAsync();
+        if (!LoginFailed) 
+            await LoadMenusAsync();
     }
 
     [RelayCommand]
     private async Task LoadMenusAsync()
     {
-        if (IsLoading || (MenuDays.Count > 0 && ErrorMessage == null)) return;
+        if (IsLoading || (MenuDays.Count > 0 && ErrorMessage == null) || LoginFailed) return;
 
         logger.LogInformation("Starting to load menus");
         IsLoading = true;
@@ -75,6 +77,7 @@ public partial class MenuViewModel(GourmetWebClient gourmetClient, GourmetSettin
             {
                 logger.LogError("Failed to load menus: {Error}", result.Error);
                 ErrorMessage = result.Error;
+                LoginFailed = true;
                 return;
             }
 
@@ -96,6 +99,7 @@ public partial class MenuViewModel(GourmetWebClient gourmetClient, GourmetSettin
         {
             logger.LogError(ex, "Failed to load menus");
             ErrorMessage = $"Fehler beim Laden der Menüs: {ex.Message}";
+            LoginFailed = true;
         }
         finally
         {
