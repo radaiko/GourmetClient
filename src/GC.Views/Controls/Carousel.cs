@@ -16,7 +16,7 @@ public class Carousel : UserControl {
   public IList<Control> Items { get; set; } = new List<Control>();
 
   public int CurrentIndex { get; private set; }
-  
+
   public EventHandler<int> OnIndexChanged { get; set; } = (_, _) => { };
   public EventHandler OnPullDown { get; set; } = (_, _) => { };
   #endregion
@@ -127,7 +127,7 @@ public class Carousel : UserControl {
         Previous();
       }
     }
-    
+
     // Confirm pull down and threshold
     else if (Math.Abs(deltaY) >= SwipeThreshold && Math.Abs(deltaY) > Math.Abs(deltaX) && deltaY > 0) {
       Log.Write($"Pull-down recognized deltaY={deltaY:F1} -> OnPullDown");

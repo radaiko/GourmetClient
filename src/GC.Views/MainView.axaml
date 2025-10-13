@@ -8,18 +8,17 @@
              x:DataType="vm:MainViewModel">
 
     <Design.DataContext>
-        <vm:MainViewModel/>
+        <vm:MainViewModel />
     </Design.DataContext>
 
     <StackPanel Margin="20" Spacing="10">
-        <TextBlock Text="{Binding Greeting}" 
-                   FontSize="24" 
-                   HorizontalAlignment="Center"/>
-        
-        <Button Content="Update Greeting" 
+        <TextBlock Text="{Binding Greeting}"
+                   FontSize="24"
+                   HorizontalAlignment="Center" />
+
+        <Button Content="Update Greeting"
                 Command="{Binding UpdateGreetingCommand}"
-                HorizontalAlignment="Center"/>
+                HorizontalAlignment="Center" />
     </StackPanel>
 
 </UserControl>
-

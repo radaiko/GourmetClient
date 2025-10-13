@@ -18,11 +18,11 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
     </ItemGroup>
-    
+
     <ItemGroup Condition="'$(Configuration)' == 'Debug'">
         <TrimmerRootDescriptor Include="../TrimmerRoots.xml" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <ProjectReference Include="..\GC.Views\GC.Views.csproj" />
         <ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />

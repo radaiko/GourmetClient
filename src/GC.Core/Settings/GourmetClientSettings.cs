@@ -1,16 +1,14 @@
 ﻿namespace GC.Core.Settings;
 
-public class GourmetClientSettings
-{
-    public GourmetClientSettings()
-    {
-        UserSettings = new UserSettings();
-        UpdateSettings = new UpdateSettings();
-    }
+public class GourmetClientSettings {
+  public GourmetClientSettings() {
+    UserSettings = new UserSettings();
+    UpdateSettings = new UpdateSettings();
+  }
 
-    public UserSettings UserSettings { get; set; }
+  public UserSettings UserSettings { get; set; }
 
-    public WindowSettings? WindowSettings { get; set; }
+  public WindowSettings? WindowSettings { get; set; }
 
-    public UpdateSettings UpdateSettings { get; set; }
+  public UpdateSettings UpdateSettings { get; set; }
 }

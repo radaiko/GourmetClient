@@ -19,14 +19,14 @@ public static class ChangelogViewIOS {
   private static SolidColorBrush GetSecondaryBrush() => new(Color.Parse("#8E8E93"));
 
   public static Control Create(MainViewModel vm) {
-    var stack = new StackPanel { Orientation = Orientation.Vertical, Spacing = 14, Margin = new Thickness(16,8) };
+    var stack = new StackPanel { Orientation = Orientation.Vertical, Spacing = 14, Margin = new Thickness(16, 8) };
 
     stack.Children.Add(new TextBlock {
       Text = "Changelog",
       FontSize = 22,
       FontWeight = FontWeight.SemiBold,
       Foreground = GetTextBrush(),
-      Margin = new Thickness(0,0,0,4)
+      Margin = new Thickness(0, 0, 0, 4)
     });
 
     stack.Children.Add(new TextBlock {

@@ -132,4 +132,3 @@ internal static class AboutViewShared {
       Cursor = new Cursor(StandardCursorType.Hand)
     };
 }
-

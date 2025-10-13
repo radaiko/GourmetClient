@@ -1,8 +1,7 @@
 ﻿namespace GC.Core.Notifications;
 
-public enum NotificationType
-{
-    Information,
-    Warning,
-    Error
+public enum NotificationType {
+  Information,
+  Warning,
+  Error
 }

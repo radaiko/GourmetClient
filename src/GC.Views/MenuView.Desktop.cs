@@ -82,7 +82,7 @@ public static class MenuViewDesktop {
         Text = day.Date.ToString("ddd, dd.MM."),
         FontSize = 14,
         FontWeight = FontWeight.SemiBold,
-        Margin = new Thickness(4,4,8,4),
+        Margin = new Thickness(4, 4, 8, 4),
         VerticalAlignment = VerticalAlignment.Top,
         Foreground = BaseText()
       };
@@ -105,7 +105,7 @@ public static class MenuViewDesktop {
     var tableContainer = new Border {
       HorizontalAlignment = HorizontalAlignment.Center,
       MaxWidth = DesktopLayout.WideTableMaxWidth,
-      Padding = new Thickness(4,0),
+      Padding = new Thickness(4, 0),
       Child = grid
     };
 
@@ -113,7 +113,7 @@ public static class MenuViewDesktop {
     var legendContainer = new Border {
       HorizontalAlignment = HorizontalAlignment.Center,
       MaxWidth = DesktopLayout.WideTableMaxWidth,
-      Margin = new Thickness(4,8,4,16),
+      Margin = new Thickness(4, 8, 4, 16),
       Child = legend
     };
 
@@ -140,18 +140,18 @@ public static class MenuViewDesktop {
       Foreground = Brushes.White,
       FontSize = 16,
       VerticalAlignment = VerticalAlignment.Center,
-      Margin = new Thickness(12,0,0,0)
+      Margin = new Thickness(12, 0, 0, 0)
     };
     DockPanel.SetDock(title, Dock.Left);
     bar.Children.Add(title);
 
     var applyBtn = new Button {
       Content = "✔ Anwenden",
-      Margin = new Thickness(8,4,0,4),
+      Margin = new Thickness(8, 4, 0, 4),
       VerticalAlignment = VerticalAlignment.Center,
       Background = new SolidColorBrush(Color.Parse("#34C759")),
       Foreground = Brushes.White,
-      Padding = new Thickness(10,2)
+      Padding = new Thickness(10, 2)
     };
     applyBtn.Bind(Button.IsVisibleProperty, new Binding(nameof(MenuViewModel.HasPendingChanges)));
     // Disabled when applying changes
@@ -162,7 +162,7 @@ public static class MenuViewDesktop {
 
     var refreshBtn = new Button {
       Content = "⟳",
-      Margin = new Thickness(8,4,12,4),
+      Margin = new Thickness(8, 4, 12, 4),
       VerticalAlignment = VerticalAlignment.Center,
       HorizontalAlignment = HorizontalAlignment.Right,
       Width = 40
@@ -181,11 +181,12 @@ public static class MenuViewDesktop {
     var border = new Border {
       Background = HeaderBackground(),
       BorderBrush = HeaderBorder(),
-      BorderThickness = new Thickness(0,0,1,1),
-      Padding = new Thickness(8,6),
+      BorderThickness = new Thickness(0, 0, 1, 1),
+      Padding = new Thickness(8, 6),
       Child = new TextBlock { Text = text, FontSize = 13, FontWeight = FontWeight.SemiBold, Foreground = BaseText() }
     };
-    Grid.SetRow(border, row); Grid.SetColumn(border, col);
+    Grid.SetRow(border, row);
+    Grid.SetColumn(border, col);
     grid.Children.Add(border);
   }
 
@@ -193,9 +194,9 @@ public static class MenuViewDesktop {
     if (menu == null) {
       return new Border {
         BorderBrush = NeutralBorder(),
-        BorderThickness = new Thickness(0,0,1,1),
+        BorderThickness = new Thickness(0, 0, 1, 1),
         MinWidth = 160,
-        Padding = new Thickness(8,6),
+        Padding = new Thickness(8, 6),
         Background = DefaultCellBackground(rowIndex),
         Child = new TextBlock { Text = "-", FontSize = 12, Opacity = 0.5, HorizontalAlignment = HorizontalAlignment.Center, Foreground = BaseText() }
       };
@@ -239,8 +240,8 @@ public static class MenuViewDesktop {
     var cell = new Border {
       Background = visuals.bg ?? DefaultCellBackground(rowIndex),
       BorderBrush = visuals.border ?? NeutralBorder(),
-      BorderThickness = new Thickness(0,0,1,1),
-      Padding = new Thickness(6,4),
+      BorderThickness = new Thickness(0, 0, 1, 1),
+      Padding = new Thickness(6, 4),
       MinWidth = 140,
       Child = stack,
       Cursor = menu.IsAvailable ? new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand) : Avalonia.Input.Cursor.Default,
@@ -250,9 +251,7 @@ public static class MenuViewDesktop {
     ToolTip.SetTip(cell, visuals.tooltip);
 
     if (menu.IsAvailable && (state != MenuState.Ordered || menu.IsOrderCancelable)) {
-      cell.PointerReleased += async (_, _) => {
-        await vm.ToggleMenuOrderCommand.ExecuteAsync(new ToggleMenuOrderParameter(day, menu));
-      };
+      cell.PointerReleased += async (_, _) => { await vm.ToggleMenuOrderCommand.ExecuteAsync(new ToggleMenuOrderParameter(day, menu)); };
     }
 
     return cell;
@@ -318,7 +317,7 @@ public static class MenuViewDesktop {
     var panel = new StackPanel {
       Orientation = Orientation.Horizontal,
       Spacing = 18,
-      Margin = new Thickness(16,4,16,8)
+      Margin = new Thickness(16, 4, 16, 8)
     };
 
     if (IsDark()) {
@@ -326,7 +325,8 @@ public static class MenuViewDesktop {
       panel.Children.Add(LegendItem("Markiert", Color.Parse("#153F2B")));
       panel.Children.Add(LegendItem("Storno", Color.Parse("#4A1F23")));
       panel.Children.Add(LegendItem("Nicht verfügbar", Color.Parse("#2E2E2E")));
-    } else {
+    }
+    else {
       panel.Children.Add(LegendItem("Bestellt", Color.Parse("#FFF4E5")));
       panel.Children.Add(LegendItem("Markiert", Color.Parse("#E9F7EF")));
       panel.Children.Add(LegendItem("Storno", Color.Parse("#FDECEA")));

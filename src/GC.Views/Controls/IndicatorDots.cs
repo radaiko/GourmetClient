@@ -24,7 +24,6 @@ public class IndicatorDots : UserControl {
   public int CurrentIndex { get => GetValue(CurrentIndexProperty); set => SetValue(CurrentIndexProperty, value); }
 
   public event EventHandler<int>? DotClicked;
-  
   #endregion
 
   #region Constructors ---------------------------------------------------------

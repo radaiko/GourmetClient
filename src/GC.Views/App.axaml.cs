@@ -39,11 +39,11 @@ public partial class App : Application {
 
     // Initialize theme service from platform-specific implementation
     _themeService = GetPlatformThemeService();
-    
+
     if (_themeService != null) {
       // Set initial theme
       RequestedThemeVariant = _themeService.GetSystemTheme();
-      
+
       // Listen for theme changes
       _themeService.ThemeChanged += OnSystemThemeChanged;
       _themeService.StartMonitoring();
@@ -52,14 +52,14 @@ public partial class App : Application {
     if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
       // Desktop main window
       desktop.MainWindow = new MainWindow();
-      
+
       // Handle application shutdown to clean up theme monitoring
       desktop.ShutdownRequested += OnShutdownRequested;
     }
     else if (ApplicationLifetime is ISingleViewApplicationLifetime lifetime) {
       // Delegate iOS SingleView setup to platform-specific partial implementation
       HookSingleViewLifetime(lifetime);
-      
+
       // Handle iOS app lifecycle for cleanup since iOS doesn't have shutdown events
       SetupMobileLifecycleCleanup();
     }
@@ -71,7 +71,8 @@ public partial class App : Application {
     // Update the application theme on the main thread
     if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess()) {
       RequestedThemeVariant = newTheme;
-    } else {
+    }
+    else {
       Avalonia.Threading.Dispatcher.UIThread.Post(() => RequestedThemeVariant = newTheme);
     }
   }
@@ -107,13 +108,13 @@ public partial class App : Application {
     services.AddSingleton<MainViewModel>();
     // Register logger for MenuViewModel
     services.AddSingleton(typeof(ILogger<MenuViewModel>), sp =>
-        sp.GetRequiredService<ILoggerFactory>().CreateLogger<MenuViewModel>());
+      sp.GetRequiredService<ILoggerFactory>().CreateLogger<MenuViewModel>());
     // Register logger for BillingViewModel
     services.AddSingleton(typeof(ILogger<BillingViewModel>), sp =>
-        sp.GetRequiredService<ILoggerFactory>().CreateLogger<BillingViewModel>());
+      sp.GetRequiredService<ILoggerFactory>().CreateLogger<BillingViewModel>());
     // Register logger for MainViewModel
     services.AddSingleton(typeof(ILogger<MainViewModel>), sp =>
-        sp.GetRequiredService<ILoggerFactory>().CreateLogger<MainViewModel>());
+      sp.GetRequiredService<ILoggerFactory>().CreateLogger<MainViewModel>());
     // ... add other registrations as needed ...
   }
 }

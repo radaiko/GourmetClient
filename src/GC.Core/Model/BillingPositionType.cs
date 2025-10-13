@@ -1,8 +1,7 @@
 ﻿namespace GC.Core.Model;
 
-public enum BillingPositionType
-{
-    Unknown,
-    Menu,
-    Drink
+public enum BillingPositionType {
+  Unknown,
+  Menu,
+  Drink
 }

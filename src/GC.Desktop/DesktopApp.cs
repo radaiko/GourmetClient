@@ -12,47 +12,42 @@ using Microsoft.Extensions.Logging;
 
 namespace GC.Desktop;
 
-public class DesktopApp : App
-{
-    public DesktopApp()
-    {
-        // Initialize dependency injection
-        var services = new ServiceCollection();
-        ConfigureServices(services);
-        var serviceProvider = services.BuildServiceProvider();
-        ServiceProviderHolder.Initialize(serviceProvider);
-    }
+public class DesktopApp : App {
+  public DesktopApp() {
+    // Initialize dependency injection
+    var services = new ServiceCollection();
+    ConfigureServices(services);
+    var serviceProvider = services.BuildServiceProvider();
+    ServiceProviderHolder.Initialize(serviceProvider);
+  }
 
-    private void ConfigureServices(IServiceCollection services)
-    {
-        // Logging
-        services.AddLogging(builder =>
-        {
-            builder.AddConsole();
-            builder.SetMinimumLevel(LogLevel.Information);
-        });
+  private void ConfigureServices(IServiceCollection services) {
+    // Logging
+    services.AddLogging(builder => {
+      builder.AddConsole();
+      builder.SetMinimumLevel(LogLevel.Information);
+    });
 
-        // Core services
-        services.AddSingleton<IFilePathProvider, FilePathProvider>();
-        services.AddSingleton<GourmetSettingsService>();
-        services.AddSingleton<SqliteService>();
-        services.AddSingleton<BillingService>();
-        
-        // Network clients
-        services.AddSingleton<GourmetWebClient>();
-        services.AddSingleton<VentopayWebClient>();
-        
-        // ViewModels
-        services.AddSingleton<MenuViewModel>();
-        services.AddSingleton<BillingViewModel>();
-        services.AddSingleton<MainViewModel>(); // Added for desktop dynamic view host
-        
-        // Platform services
-        services.AddSingleton<IThemeService, DesktopThemeService>();
-    }
+    // Core services
+    services.AddSingleton<IFilePathProvider, FilePathProvider>();
+    services.AddSingleton<GourmetSettingsService>();
+    services.AddSingleton<SqliteService>();
+    services.AddSingleton<BillingService>();
 
-    protected override IThemeService? GetPlatformThemeService()
-    {
-        return ServiceProviderHolder.Services.GetRequiredService<IThemeService>();
-    }
+    // Network clients
+    services.AddSingleton<GourmetWebClient>();
+    services.AddSingleton<VentopayWebClient>();
+
+    // ViewModels
+    services.AddSingleton<MenuViewModel>();
+    services.AddSingleton<BillingViewModel>();
+    services.AddSingleton<MainViewModel>(); // Added for desktop dynamic view host
+
+    // Platform services
+    services.AddSingleton<IThemeService, DesktopThemeService>();
+  }
+
+  protected override IThemeService? GetPlatformThemeService() {
+    return ServiceProviderHolder.Services.GetRequiredService<IThemeService>();
+  }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -156,8 +158,8 @@ public static class MenuViewIOS {
     var contentControl = new ContentControl();
 
     void UpdateContent() {
-      contentControl.Content = menuViewModel.IsLoading 
-        ? CreateLoadingView(menuViewModel.LoadingProgress) 
+      contentControl.Content = menuViewModel.IsLoading
+        ? CreateLoadingView(menuViewModel.LoadingProgress)
         : CreateMobileMenuViewInternal(menuViewModel);
     }
 
@@ -191,7 +193,7 @@ public static class MenuViewIOS {
       carousel.Items.Add(dayCard);
     }
     carousel.SetupSwipe();
-    
+
     // Setup indicator dots
     Log.Write($"Creating indicator dots for {carousel.Items.Count} items");
     var indicatorDots = new Controls.IndicatorDots {
@@ -203,7 +205,7 @@ public static class MenuViewIOS {
       Log.Write($"Indicator dot clicked: {index}");
       carousel.GoToIndex(index);
     };
-    
+
     // Setup progress text
     Log.Write($"Creating progress text for item {targetIndex + 1} of {carousel.Items.Count}");
     var progressText = new TextBlock {
@@ -215,16 +217,16 @@ public static class MenuViewIOS {
       Opacity = 0.7
     };
     Log.Write($"Progress text created: {progressText.Text}");
-    
+
     // Attach index changed handler to update indicator and progress text
     carousel.OnIndexChanged += (_, currentIndex) => {
       Log.Write($"Carousel index changed to {currentIndex}");
       indicatorDots.CurrentIndex = currentIndex;
-      progressText.Text = $"{currentIndex+ 1} / {carousel.Items.Count}";
+      progressText.Text = $"{currentIndex + 1} / {carousel.Items.Count}";
       menuViewModel.CurrentMenuDayIndex = currentIndex;
     };
     Log.Write($"OnIndexChanged handler attached");
-    
+
     carousel.OnPullDown += (_, _) => {
       Log.Write("Pull-down refresh triggered");
       // Trigger refresh

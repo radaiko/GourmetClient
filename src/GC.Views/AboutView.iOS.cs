@@ -13,7 +13,7 @@ public static class AboutViewIOS {
     var contentPanel = AboutViewShared.CreateContentPanel();
     contentPanel.Margin = new Thickness(12);
 
-    var scroll = new ScrollViewer { 
+    var scroll = new ScrollViewer {
       Content = contentPanel,
       HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
     };

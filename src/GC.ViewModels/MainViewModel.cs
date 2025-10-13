@@ -12,11 +12,10 @@ public partial class MainViewModel : ObservableObject {
   private bool _isLoadingSettings = false;
 
   // Design-time constructor for XAML previewer
-  public MainViewModel() : this(null!, null!, null!, null!) {
-  }
+  public MainViewModel() : this(null!, null!, null!, null!) { }
 
   public MainViewModel(
-    GourmetSettingsService settingsService, 
+    GourmetSettingsService settingsService,
     ILogger<MainViewModel> logger,
     MenuViewModel? menuViewModel,
     BillingViewModel? billingViewModel) {
@@ -24,7 +23,7 @@ public partial class MainViewModel : ObservableObject {
     _logger = logger;
     MenuViewModel = menuViewModel;
     BillingViewModel = billingViewModel;
-    
+
     // Subscribe to child ViewModel property changes to trigger UI updates on iOS
     if (menuViewModel != null) {
       menuViewModel.PropertyChanged += (_, e) => {
@@ -35,7 +34,7 @@ public partial class MainViewModel : ObservableObject {
         }
       };
     }
-    
+
     if (billingViewModel != null) {
       billingViewModel.PropertyChanged += (_, e) => {
         _logger?.LogDebug("BillingViewModel property changed: {Property}", e.PropertyName);
@@ -45,7 +44,7 @@ public partial class MainViewModel : ObservableObject {
     }
 
     _logger?.LogInformation("Initializing MainViewModel");
-    if (settingsService.GetCurrentUserSettings().DebugMode) 
+    if (settingsService.GetCurrentUserSettings().DebugMode)
       Core.Utils.Log.IsEnabled = true;
     LoadSettings();
     PreLoadData();
@@ -76,7 +75,7 @@ public partial class MainViewModel : ObservableObject {
   [ObservableProperty]
   private string _gourmetUsername = "";
 
-  [ObservableProperty] 
+  [ObservableProperty]
   private string _gourmetPassword = "";
 
   [ObservableProperty]
@@ -84,7 +83,7 @@ public partial class MainViewModel : ObservableObject {
 
   [ObservableProperty]
   private string _ventoPayPassword = "";
-  
+
   [ObservableProperty]
   private bool? _debugMode = false;
 
@@ -117,10 +116,10 @@ public partial class MainViewModel : ObservableObject {
   [RelayCommand]
   private void SaveSettings() {
     if (_settingsService == null || _isLoadingSettings) return;
-    
+
     try {
       _logger?.LogInformation("Saving user settings");
-      
+
       // Map from ViewModel properties to UserSettings
       var userSettings = new UserSettings {
         GourmetLoginUsername = GourmetUsername ?? string.Empty,
@@ -129,7 +128,7 @@ public partial class MainViewModel : ObservableObject {
         VentopayPassword = VentoPayPassword ?? string.Empty,
         DebugMode = DebugMode ?? false
       };
-      
+
       _settingsService.SaveUserSettings(userSettings);
       // Don't set IsSettingsDirty = false here to avoid UI refresh and focus loss
       _logger?.LogInformation("Settings saved successfully");
@@ -189,7 +188,7 @@ public partial class MainViewModel : ObservableObject {
       SaveSettings();
     }
   }
-  
+
   partial void OnDebugModeChanged(bool? value) {
     _logger?.LogInformation("Debug mode changed to {Value}", value == true ? "enabled" : "disabled");
     Core.Utils.Log.IsEnabled = value == true;
@@ -200,23 +199,23 @@ public partial class MainViewModel : ObservableObject {
 
   private void LoadSettings() {
     if (_settingsService == null) return;
-    
+
     try {
       _logger?.LogInformation("Loading user settings");
       var userSettings = _settingsService.GetCurrentUserSettings();
-      
+
       // Set flag to prevent auto-save during loading
       _isLoadingSettings = true;
-      
+
       GourmetUsername = userSettings.GourmetLoginUsername ?? string.Empty;
       GourmetPassword = userSettings.GourmetLoginPassword ?? string.Empty;
       VentoPayUsername = userSettings.VentopayUsername ?? string.Empty;
       VentoPayPassword = userSettings.VentopayPassword ?? string.Empty;
       DebugMode = userSettings.DebugMode;
-      
+
       // Reset flag after loading
       _isLoadingSettings = false;
-      
+
       _logger?.LogInformation("Settings loaded successfully: Gourmet user {GourmetSet}, VentoPay user {VentoPaySet}",
         string.IsNullOrEmpty(GourmetUsername) ? "not set" : "set",
         string.IsNullOrEmpty(VentoPayUsername) ? "not set" : "set");
@@ -227,7 +226,7 @@ public partial class MainViewModel : ObservableObject {
       ErrorMessage = $"Fehler beim Laden der Einstellungen: {ex.Message}";
     }
   }
-  
+
   private void PreLoadData() {
     _logger?.LogDebug("PreLoadData called");
     // Pre-load data in background to improve perceived performance
@@ -237,7 +236,7 @@ public partial class MainViewModel : ObservableObject {
       if (MenuViewModel != null)
         MenuViewModel.LoginFailed = false;
       MenuViewModel?.LoadMenusCommand.Execute(null);
-    } 
+    }
     if (VentoPayUsername != "" && VentoPayPassword != "") {
       _logger?.LogInformation("Pre-loading billing data");
       _logger?.LogInformation("Executing LoadBillingCommand for background pre-loading");

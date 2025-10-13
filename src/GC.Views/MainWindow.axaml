@@ -11,9 +11,9 @@
         Width="1100" Height="780" MinWidth="900" MinHeight="640">
 
     <Design.DataContext>
-        <vm:MainViewModel/>
+        <vm:MainViewModel />
     </Design.DataContext>
 
-    <views:MainViewHostControl/>
+    <views:MainViewHostControl />
 
 </Window>

@@ -12,4 +12,3 @@ public class AppDelegate : AvaloniaAppDelegate<iOSApp> {
       .LogToTrace();
   }
 }
-

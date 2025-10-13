@@ -4,18 +4,18 @@ using System.Collections.Generic;
 namespace GC.Core.Model;
 
 public record GourmetCache(
-    DateTime Timestamp,
-    GourmetUserInformation UserInformation,
-    IReadOnlyCollection<GourmetMenu> Menus,
-    IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);
+  DateTime Timestamp,
+  GourmetUserInformation UserInformation,
+  IReadOnlyCollection<GourmetMenu> Menus,
+  IReadOnlyCollection<GourmetOrderedMenu> OrderedMenus);
 
 public record InvalidatedGourmetCache()
-    : GourmetCache(
-        Timestamp: DateTime.MinValue,
-        UserInformation: new GourmetUserInformation(
-            NameOfUser: string.Empty,
-            ShopModelId: string.Empty,
-            EaterId: string.Empty,
-            StaffGroupId: string.Empty),
-        Menus: [],
-        OrderedMenus: []);
+  : GourmetCache(
+    Timestamp: DateTime.MinValue,
+    UserInformation: new GourmetUserInformation(
+      NameOfUser: string.Empty,
+      ShopModelId: string.Empty,
+      EaterId: string.Empty,
+      StaffGroupId: string.Empty),
+    Menus: [],
+    OrderedMenus: []);
