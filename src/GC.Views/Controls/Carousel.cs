@@ -3,6 +3,8 @@ using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using GC.Core.Utils;
 
 namespace GC.Views.Controls;
