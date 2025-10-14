@@ -23,8 +23,23 @@
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-		<!-- Explicitly include DataGrid to satisfy AOT module loading on iOS -->
-		<PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../GC.ViewModels/GC.ViewModels.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Main\Settings\About\AboutViewMobile.axaml.cs">
+		  <DependentUpon>AboutViewMobile.axaml</DependentUpon>
+		  <SubType>Code</SubType>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Main\Billing\" />
+	  <Folder Include="Main\Menu\" />
+	  <Folder Include="Main\Settings\" />
 	</ItemGroup>
 
 </Project>

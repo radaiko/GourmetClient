@@ -1,7 +1,6 @@
 using System;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace GC.ViewModels.Services;
+namespace GC.Core.Services;
 
 /// <summary>
 /// Static holder for the application service provider.
@@ -17,3 +16,4 @@ public static class ServiceProviderHolder {
   public static IServiceProvider Services => _serviceProvider
                                              ?? throw new InvalidOperationException("ServiceProvider not initialized. Call Initialize() first.");
 }
+

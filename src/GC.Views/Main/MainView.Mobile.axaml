@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GC.Views.Main.MainViewMobile">
+  <Grid RowDefinitions="Auto, *">
+    <StackPanel Orientation="Vertical" Margin="12" Grid.Row="0">
+      <TextBlock Text="Gourmet (Mobile)" FontWeight="Bold" FontSize="18" />
+      <TextBlock Text="Compact mobile view" Margin="0,4,0,0"/>
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" Margin="12">
+      <StackPanel Spacing="8">
+        <TextBlock Text="Main content goes here"/>
+        <Button Content="Menu" />
+        <Button Content="Billing" />
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>
