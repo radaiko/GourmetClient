@@ -10,7 +10,7 @@ namespace GC.Views;
 /// <summary>
 /// iOS billing view: simple display of error message if present.
 /// </summary>
-public static class BillingViewIOS {
+public static class BillingViewMobile {
   private static SolidColorBrush GetBackgroundBrush() =>
     new(Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark
       ? Color.Parse("#000000")

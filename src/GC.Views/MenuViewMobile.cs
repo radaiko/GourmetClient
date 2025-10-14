@@ -17,7 +17,7 @@ namespace GC.Views;
 ///   iOS-optimized menu view with vertical paged layout
 /// </summary>
 // ReSharper disable once InconsistentNaming
-public static class MenuViewIOS {
+public static class MenuViewMobile {
   private static SolidColorBrush GetBackgroundBrush() =>
     new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
       ? Color.Parse("#000000")

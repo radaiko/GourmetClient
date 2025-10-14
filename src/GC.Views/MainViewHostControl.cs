@@ -24,9 +24,6 @@ public class MainViewHostControl : UserControl {
     _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     UpdateContentIOS();
 #else
-    // Desktop: use desktop-specific dynamic builder for shared navigation-based UI
-    _viewModel.PropertyChanged += OnViewModelPropertyChangedDesktop;
-    UpdateContentDesktop();
 #endif
   }
 
@@ -46,21 +43,9 @@ public class MainViewHostControl : UserControl {
   }
 
   private void UpdateContentIOS() {
-    Content = MainViewIOS.Create(_viewModel);
+    Content = MainViewMobile.Create(_viewModel);
   }
 #else
-  private void OnViewModelPropertyChangedDesktop(object? sender, PropertyChangedEventArgs e) {
-    if (e.PropertyName == nameof(MainViewModel.CurrentPageIndex) ||
-        e.PropertyName == nameof(MainViewModel.ErrorMessage) ||
-        e.PropertyName == nameof(MainViewModel.UserName) ||
-        e.PropertyName == nameof(MainViewModel.MenuViewModel) ||
-        e.PropertyName == nameof(MainViewModel.BillingViewModel)) {
-      UpdateContentDesktop();
-    }
-  }
-
-  private void UpdateContentDesktop() {
-    Content = MainViewDesktop.Create(_viewModel);
-  }
+  
 #endif
 }

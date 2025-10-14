@@ -14,7 +14,7 @@ public partial class MainView : UserControl {
   protected override void OnDataContextChanged(EventArgs e) {
     base.OnDataContextChanged(e);
     if (OperatingSystem.IsIOS() && DataContext is MainViewModel viewModel) {
-      Content = MainViewIOS.Create(viewModel);
+      Content = MainViewMobile.Create(viewModel);
     }
   }
 }

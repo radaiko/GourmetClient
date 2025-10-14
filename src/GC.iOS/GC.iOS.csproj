@@ -10,6 +10,11 @@
         <InvariantGlobalization>false</InvariantGlobalization>
         <UseInterpreter>true</UseInterpreter>
         <PublishTrimmed>true</PublishTrimmed>
+        <Version>0.0.1</Version>
+        <RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+        <CodesignKey>Apple Distribution: Aiko Radlingmayr (555V4MNLK3)</CodesignKey>
+        <CodesignProvision>GourmetClient_Distribution_Profile</CodesignProvision>
+        <ProvisioningType>manual</ProvisioningType>
     </PropertyGroup>
 
     <ItemGroup>

@@ -10,7 +10,7 @@ namespace GC.Views;
 /// <summary>
 /// iOS-optimized settings view with mobile-friendly form layout
 /// </summary>
-public static class SettingsViewIOS {
+public static class SettingsViewMobile {
   private static SolidColorBrush GetSecondaryTextBrush() => new(Color.Parse("#8E8E93"));
 
   private static SolidColorBrush GetBackgroundBrush() =>

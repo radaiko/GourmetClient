@@ -18,7 +18,7 @@ namespace GC.Views;
 ///   iOS-optimized main view with bottom tab bar navigation (Menu, Billing, Settings) and overlay modals (About, Changelog)
 /// </summary>
 // ReSharper disable once InconsistentNaming
-public static class MainViewIOS {
+public static class MainViewMobile {
   private static SolidColorBrush GetBackgroundBrush() =>
     new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark
       ? Color.Parse("#000000")
@@ -72,11 +72,11 @@ public static class MainViewIOS {
 
     // Overlays (About / Changelog)
     if (viewModel.ShowAboutOverlay) {
-      var aboutOverlay = CreateOverlay(viewModel, AboutViewIOS.Create(viewModel));
+      var aboutOverlay = CreateOverlay(viewModel, AboutViewMobile.Create(viewModel));
       rootGrid.Children.Add(aboutOverlay);
     }
     else if (viewModel.ShowChangelogOverlay) {
-      var changelogOverlay = CreateOverlay(viewModel, ChangelogViewIOS.Create(viewModel));
+      var changelogOverlay = CreateOverlay(viewModel, ChangelogViewMobile.Create(viewModel));
       rootGrid.Children.Add(changelogOverlay);
     }
 
@@ -85,9 +85,9 @@ public static class MainViewIOS {
 
   private static Control CreateContentForPage(MainViewModel vm) {
     return vm.CurrentPageIndex switch {
-      0 => MenuViewIOS.Create(vm),
-      1 => BillingViewIOS.Create(vm),
-      2 => SettingsViewIOS.Create(vm),
+      0 => MenuViewMobile.Create(vm),
+      1 => BillingViewMobile.Create(vm),
+      2 => SettingsViewMobile.Create(vm),
       _ => new TextBlock { Text = "Unbekannte Seite", Foreground = GetTextBrush(), Margin = new Thickness(16) }
     };
   }

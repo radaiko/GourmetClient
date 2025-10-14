@@ -19,21 +19,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<TrimmerRootDescriptor Include="../TrimmerRoots.xml" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
 		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
 		<!-- Explicitly include DataGrid to satisfy AOT module loading on iOS -->
 		<PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\GC.ViewModels\GC.ViewModels.csproj" />
-		<ProjectReference Include="..\GC.Core\GC.Core.csproj" />
 	</ItemGroup>
 
 </Project>

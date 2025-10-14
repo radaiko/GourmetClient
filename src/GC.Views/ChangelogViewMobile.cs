@@ -12,7 +12,7 @@ namespace GC.Views;
 /// <summary>
 /// Simple iOS styled changelog view displayed inside an overlay card.
 /// </summary>
-public static class ChangelogViewIOS {
+public static class ChangelogViewMobile {
   private static SolidColorBrush GetTextBrush() =>
     new(Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? Colors.White : Colors.Black);
 
