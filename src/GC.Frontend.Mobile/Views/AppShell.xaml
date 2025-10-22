@@ -13,15 +13,15 @@
 
     <TabBar>
         <Tab Title="Bestellen"
-             Icon="{AppThemeBinding Light='order_light.png', Dark='order_dark.png'}">
+             Icon="{AppThemeBinding Light='order_light_24.png', Dark='order_dark_24.png'}">
             <ShellContent ContentTemplate="{DataTemplate views:MenuPage}" />
         </Tab>
         <Tab Title="Abrechnung"
-             Icon="{AppThemeBinding Light='billing_light.png', Dark='billing_dark.png'}">
+             Icon="{AppThemeBinding Light='billing_light_24.png', Dark='billing_dark_24.png'}">
             <ShellContent ContentTemplate="{DataTemplate views:BillingPage}" />
         </Tab>
         <Tab Title="Einstellungen"
-             Icon="{AppThemeBinding Light='settings_light.png', Dark='settings_dark.png'}">
+             Icon="{AppThemeBinding Light='settings_light_24.png', Dark='settings_dark_24.png'}">
             <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
         </Tab>
     </TabBar>
