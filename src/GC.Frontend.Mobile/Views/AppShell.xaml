@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="GC.Frontend.Mobile.Views.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GC.Frontend.Mobile.Views"
+    xmlns:vm="clr-namespace:GC.Frontend.ViewModels;assembly=GC.Frontend"
+    FlyoutBehavior="Disabled">
+
+    <Shell.BindingContext>
+        <vm:MainViewModel />
+    </Shell.BindingContext>
+
+    <TabBar>
+        <Tab Title="Bestellen"
+             Icon="{AppThemeBinding Light='order_light.png', Dark='order_dark.png'}">
+            <ShellContent ContentTemplate="{DataTemplate views:MenuPage}" />
+        </Tab>
+        <Tab Title="Abrechnung"
+             Icon="{AppThemeBinding Light='billing_light.png', Dark='billing_dark.png'}">
+            <ShellContent ContentTemplate="{DataTemplate views:BillingPage}" />
+        </Tab>
+        <Tab Title="Einstellungen"
+             Icon="{AppThemeBinding Light='settings_light.png', Dark='settings_dark.png'}">
+            <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
+        </Tab>
+    </TabBar>
+
+</Shell>

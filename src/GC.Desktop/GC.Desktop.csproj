@@ -21,6 +21,5 @@
 
     <ItemGroup>
         <ProjectReference Include="..\GC.Frontend.Desktop\GC.Frontend.Desktop.csproj" />
-        <ProjectReference Include="..\GC.Frontend\GC.Frontend.csproj"/>
     </ItemGroup>
 </Project>

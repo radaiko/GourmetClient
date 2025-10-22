@@ -4,5 +4,6 @@
         <AvaloniaVersion>11.3.7</AvaloniaVersion>
         <AvaloniaMauiVersion>11.1.0</AvaloniaMauiVersion>
         <MVVMToolkitVersion>8.4.0</MVVMToolkitVersion>
+        <MauiVersion>9.0.120</MauiVersion>
     </PropertyGroup>
 </Project>
