@@ -22,6 +22,23 @@
                     <Entry Placeholder="Password" IsPassword="True" Text="{Binding Settings.GourmetPassword}" />
                 </VerticalStackLayout>
             </Border>
+            <Label Text="Ventopay" />
+            <Border>
+                <VerticalStackLayout Spacing="0">
+                    <Entry Placeholder="Username" Text="{Binding Settings.VentoUsername}" />
+                    <controls:Seperator />
+                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Settings.VentoPassword}" />
+                </VerticalStackLayout>
+            </Border>
+            <Label Text="Allgemein" />
+            <Border>
+                <VerticalStackLayout Spacing="0">
+                    <Grid ColumnDefinitions="*,Auto" HorizontalOptions="FillAndExpand">
+                        <Label Text="Debug Mode" Grid.Column="0" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding Settings.DebugMode}" Grid.Column="1" VerticalOptions="Center" HorizontalOptions="End" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
