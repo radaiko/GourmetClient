@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+  <!-- Merge iOS color tokens so styles can reference them directly -->
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="Colors.ios.xaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!-- iOS 26-inspired styles: slightly larger type, increased touch targets,
+       softer shadows, rounder corners, and more generous spacing. -->
+
+  <!-- Base page/card background for grouped lists -->
+  <Style TargetType="ContentPage">
+    <!-- keep the same semantic background but add safe padding for iOS layout -->
+    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
+    <Setter Property="Padding" Value="12" />
+  </Style>
+
+  <!-- Grouped card border (cards are a bit rounder, thinner stroke, softer shadow) -->
+  <Style TargetType="Border">
+    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray600Brush}}" />
+    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
+    <Setter Property="StrokeThickness" Value="1" />
+    <Setter Property="Padding" Value="16" />
+    <Setter Property="StrokeShape">
+      <RoundRectangle CornerRadius="16" />
+    </Setter>
+    <Setter Property="Shadow">
+      <Setter.Value>
+        <!-- Softer, larger shadow for modern elevated card look -->
+        <Shadow Brush="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Black}}" Offset="0,2" Opacity="0.08" Radius="6" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Labels: modern iOS sizing (body 17pt), use semibold for headlines -->
+  <Style TargetType="Label" x:Key="Label">
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="LineHeight" Value="1.2" />
+  </Style>
+
+  <Style TargetType="Label" x:Key="Headline">
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="FontFamily" Value="SFProTextSemibold" />
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="LineHeight" Value="1.1" />
+  </Style>
+
+  <!-- Buttons: slightly taller, more rounded, subtle elevation -->
+  <Style TargetType="Button">
+    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="16,10" />
+    <Setter Property="FontFamily" Value="SFProTextSemibold" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+    <Setter Property="Shadow">
+      <Setter.Value>
+        <Shadow Brush="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Black}}" Offset="0,2" Opacity="0.10" Radius="6" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Secondary (ghost) button: outline with subtle stroke and rounded corners -->
+  <Style TargetType="Button" x:Key="SecondaryButton">
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="Padding" Value="16,10" />
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+    <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
+    <Setter Property="BorderWidth" Value="1" />
+  </Style>
+
+  <!-- Entries: larger touch area and clearer placeholder contrast -->
+  <Style TargetType="Entry">
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray600}}" />
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+
+  <!-- Editor: larger default height for comfortable typing -->
+  <Style TargetType="Editor">
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray600}}" />
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="MinimumHeightRequest" Value="96" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+
+  <!-- Picker / DatePicker / TimePicker: larger, aligned with labels -->
+  <Style TargetType="Picker">
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+  </Style>
+
+  <Style TargetType="DatePicker">
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+  </Style>
+
+  <Style TargetType="TimePicker">
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+  </Style>
+
+  <!-- Switch: keep iOS-like tint but slightly more prominent -->
+  <Style TargetType="Switch">
+    <Setter Property="OnColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+    <Setter Property="ThumbColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
+  </Style>
+
+  <!-- CheckBox/RadioButton: increased hit area and modern look -->
+  <Style TargetType="CheckBox">
+    <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+    <Setter Property="MinimumHeightRequest" Value="40" />
+    <Setter Property="MinimumWidthRequest" Value="40" />
+  </Style>
+
+  <Style TargetType="RadioButton">
+    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+  </Style>
+
+  <!-- Slider: thin track, softer thumb contrast -->
+  <Style TargetType="Slider">
+    <Setter Property="MinimumTrackColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+    <Setter Property="MaximumTrackColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
+    <Setter Property="ThumbColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
+  </Style>
+
+  <!-- ProgressBar -->
+  <Style TargetType="ProgressBar">
+    <Setter Property="ProgressColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+  </Style>
+
+  <!-- ActivityIndicator -->
+  <Style TargetType="ActivityIndicator">
+    <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}" />
+  </Style>
+
+  <!-- CollectionView: neutral background so cards can float with shadow -->
+  <Style TargetType="CollectionView">
+    <Setter Property="BackgroundColor" Value="Transparent" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+
+  <!-- SearchBar: gentle background and larger height for touch targets -->
+  <Style TargetType="SearchBar">
+    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}" />
+    <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray600}}" />
+    <Setter Property="FontFamily" Value="SFProTextRegular" />
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="MinimumHeightRequest" Value="50" />
+    <Setter Property="Margin" Value="0" />
+  </Style>
+
+  <!-- Separator (iOS): centralized style for the Seperator control -->
+  <Style TargetType="BoxView" x:Key="SeperatorBox">
+    <Setter Property="HeightRequest" Value="1" />
+    <Setter Property="HorizontalOptions" Value="Fill" />
+    <Setter Property='Margin' Value='0,0' />
+    <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Gray200},Dark={StaticResource Gray600}}" />
+  </Style>
+
+</ResourceDictionary>

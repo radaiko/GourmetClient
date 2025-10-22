@@ -2,11 +2,26 @@
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    x:Class="GC.Frontend.Mobile.Views.SettingsPage">
+    xmlns:ctx="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:GC.Frontend.ViewModels;assembly=GC.Frontend"
+    xmlns:controls="clr-namespace:GC.Frontend.Mobile.Controls"
+    x:Class="GC.Frontend.Mobile.Views.SettingsPage"
+    x:DataType="vm:SettingsViewModel">
 
-    <VerticalStackLayout Padding="20">
-        <Label Text="Page" FontSize="24" HorizontalOptions="Center" />
-        <Label Text="This page can host shared content reused from GC.Android/GC.iOS." />
-    </VerticalStackLayout>
-
+    <ContentPage.BindingContext>
+        <vm:SettingsViewModel />
+    </ContentPage.BindingContext>
+    
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="0">
+            <Label Text="Gourmet" />
+            <Border>
+                <VerticalStackLayout Spacing="0">
+                    <Entry Placeholder="Username" Text="{Binding Settings.GourmetUsername}" />
+                    <controls:Seperator />
+                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Settings.GourmetPassword}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

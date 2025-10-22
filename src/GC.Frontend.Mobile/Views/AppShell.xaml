@@ -20,7 +20,7 @@
              Icon="{AppThemeBinding Light='billing_light_24.png', Dark='billing_dark_24.png'}">
             <ShellContent ContentTemplate="{DataTemplate views:BillingPage}" />
         </Tab>
-        <Tab Title="Einstellungen"
+        <Tab x:Name="SettingsTab" Title="Einstellungen"
              Icon="{AppThemeBinding Light='settings_light_24.png', Dark='settings_dark_24.png'}">
             <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
         </Tab>
