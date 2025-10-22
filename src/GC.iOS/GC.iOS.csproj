@@ -5,6 +5,9 @@
         <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
         <RootNamespace>GC.iOS</RootNamespace>
+        <!-- For quicker builds -->
+        <UseInterpreter>true</UseInterpreter>
+        <PublishTrimmed>true</PublishTrimmed>
     </PropertyGroup>
 
     <!-- iOS specific properties -->
