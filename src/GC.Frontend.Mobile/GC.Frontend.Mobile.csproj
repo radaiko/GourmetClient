@@ -24,6 +24,10 @@
       <Compile Update="Views\MainView.axaml.cs">
         <DependentUpon>MainView.axaml</DependentUpon>
       </Compile>
+      <Compile Update="App.axaml.cs">
+        <DependentUpon>App.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <ItemGroup>

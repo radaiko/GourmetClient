@@ -1,7 +1,7 @@
 ﻿#region
 using System;
 using Avalonia;
-using GC.Frontend;
+using GC.Frontend.Desktop;
 #endregion
 
 namespace GC.Desktop;

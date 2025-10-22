@@ -12,5 +12,8 @@
         <viewModels:MainViewModel />
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <StackPanel>
+        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBlock Text="This is the Desktop version!" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,30,0,0"/>
+    </StackPanel>
 </UserControl>

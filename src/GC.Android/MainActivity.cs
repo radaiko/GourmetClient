@@ -3,7 +3,7 @@ using Android.App;
 using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
-using GC.Frontend;
+using GC.Frontend.Mobile;
 #endregion
 
 namespace GC.Android;

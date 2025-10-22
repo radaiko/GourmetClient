@@ -2,7 +2,7 @@
 using Avalonia;
 using Avalonia.iOS;
 using Foundation;
-using GC.Frontend;
+using GC.Frontend.Mobile;
 #endregion
 
 namespace GC.iOS;
