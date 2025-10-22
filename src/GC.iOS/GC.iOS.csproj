@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0-ios26.0</TargetFramework>
+        <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+        <OutputType>Exe</OutputType>
+        <RootNamespace>GC.iOS</RootNamespace>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UseMaui>true</UseMaui>
+    </PropertyGroup>
+
+    <!-- iOS specific properties -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios26.0'">
+        <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+        <NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GC.Frontend.Mobile\GC.Frontend.Mobile.csproj" />
+    </ItemGroup>
+
+</Project>
