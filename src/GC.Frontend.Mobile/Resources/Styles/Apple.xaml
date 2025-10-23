@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- =========================================================
+         iOS-inspired Design Tokens (AppTheme-aware)
+         ========================================================= -->
+
+    <!-- Brand / Accent -->
+    <AppThemeColor x:Key="Color.Primary">
+        <AppThemeColor.Light>#0054E9</AppThemeColor.Light>
+        <AppThemeColor.Dark>#4D79F6</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <!-- Surfaces / Backgrounds -->
+    <AppThemeColor x:Key="Color.SystemBackground">
+        <AppThemeColor.Light>#FFFFFFFF</AppThemeColor.Light>
+        <AppThemeColor.Dark>#FF000000</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <AppThemeColor x:Key="Color.SecondaryBackground">
+        <AppThemeColor.Light>#FFF2F2F7</AppThemeColor.Light>
+        <AppThemeColor.Dark>#FF1C1C1E</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <AppThemeColor x:Key="Color.TertiaryBackground">
+        <AppThemeColor.Light>#FFFFFFFF</AppThemeColor.Light>
+        <AppThemeColor.Dark>#FF2C2C2E</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <!-- Text colors -->
+    <AppThemeColor x:Key="Color.Label">
+        <AppThemeColor.Light>#FF000000</AppThemeColor.Light>
+        <AppThemeColor.Dark>#FFFFFFFF</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <AppThemeColor x:Key="Color.SecondaryLabel">
+        <AppThemeColor.Light>#993C3C43</AppThemeColor.Light>
+        <AppThemeColor.Dark>#99EBEBF5</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <AppThemeColor x:Key="Color.TertiaryLabel">
+        <AppThemeColor.Light>#4D3C3C43</AppThemeColor.Light>
+        <AppThemeColor.Dark>#4DEBEBF5</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <!-- Separators -->
+    <AppThemeColor x:Key="Color.Separator">
+        <AppThemeColor.Light>#3C3C4348</AppThemeColor.Light>
+        <AppThemeColor.Dark>#64646499</AppThemeColor.Dark>
+    </AppThemeColor>
+
+    <!-- Semantic colors -->
+    <Color x:Key="Color.Success">#2DD55B</Color>
+    <Color x:Key="Color.Warning">#FFC409</Color>
+    <Color x:Key="Color.Danger">#C5000F</Color>
+    <Color x:Key="Color.Medium">#636469</Color>
+
+    <!-- Shadows -->
+    <Color x:Key="Color.ShadowLight">#33000000</Color>
+    <Color x:Key="Color.ShadowDark">#66111111</Color>
+
+    <!-- Radii & Spacing -->
+    <x:Double x:Key="Radius.Control">14</x:Double>
+    <x:Double x:Key="Radius.Card">18</x:Double>
+    <x:Double x:Key="Radius.Pill">24</x:Double>
+
+    <x:Double x:Key="Space.XS">4</x:Double>
+    <x:Double x:Key="Space.S">8</x:Double>
+    <x:Double x:Key="Space.M">12</x:Double>
+    <x:Double x:Key="Space.L">16</x:Double>
+    <x:Double x:Key="Space.XL">20</x:Double>
+
+    <!-- Typography -->
+    <Style x:Key="Text.Caption" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{DynamicResource Color.SecondaryLabel}" />
+    </Style>
+
+    <!-- Global Styles -->
+    <Style TargetType="ContentPage">
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.SystemBackground}" />
+    </Style>
+
+    <Style TargetType="NavigationPage">
+        <Setter Property="BarBackgroundColor" Value="{DynamicResource Color.SystemBackground}" />
+        <Setter Property="BarTextColor" Value="{DynamicResource Color.Label}" />
+    </Style>
+
+    <Style TargetType="Shell">
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.SystemBackground}" />
+        <Setter Property="TabBarBackgroundColor" Value="{DynamicResource Color.SecondaryBackground}" />
+        <Setter Property="TabBarTitleColor" Value="{DynamicResource Color.Label}" />
+        <Setter Property="TabBarForegroundColor" Value="{DynamicResource Color.Primary}" />
+    </Style>
+
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{DynamicResource Color.Label}" />
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="CornerRadius" Value="{StaticResource Radius.Control}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.TertiaryBackground}" />
+        <Setter Property="TextColor" Value="{DynamicResource Color.Label}" />
+        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="Shadow">
+            <Setter.Value>
+                <Shadow Brush="{DynamicResource Color.ShadowLight}" Radius="8" Opacity="0.35" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Filled Button -->
+    <Style x:Key="FilledButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.Primary}" />
+        <Setter Property="TextColor" Value="White" />
+    </Style>
+
+    <!-- Pill -->
+    <Style x:Key="Pill" TargetType="Border">
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="{StaticResource Radius.Pill}" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.SecondaryBackground}" />
+        <Setter Property="Stroke" Value="{DynamicResource Color.Separator}" />
+        <Setter Property="StrokeThickness" Value="0.5" />
+        <Setter Property="Padding" Value="10,6" />
+    </Style>
+
+    <!-- Entry -->
+    <Style TargetType="Entry">
+        <Setter Property="TextColor" Value="{DynamicResource Color.Label}" />
+        <Setter Property="PlaceholderColor" Value="{DynamicResource Color.TertiaryLabel}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.SecondaryBackground}" />
+        <Setter Property="ClearButtonVisibility" Value="WhileEditing" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="Stroke" Value="{DynamicResource Color.Separator}" />
+        <Setter Property="StrokeThickness" Value="0.5" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="{StaticResource Radius.Control}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Frame -->
+    <Style TargetType="Frame">
+        <Setter Property="CornerRadius" Value="{StaticResource Radius.Card}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Color.TertiaryBackground}" />
+        <Setter Property="HasShadow" Value="True" />
+        <Setter Property="Shadow">
+            <Setter.Value>
+                <Shadow Brush="{DynamicResource Color.ShadowLight}" Radius="12" Opacity="0.35" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Padding" Value="{StaticResource Space.L}" />
+    </Style>
+
+</ResourceDictionary>
+``
