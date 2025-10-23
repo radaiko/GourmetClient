@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+  <!-- ============================= -->
+  <!-- iOS 26 "Liquid Glass" Tokens -->
+  <!-- ============================= -->
+
+  <!-- Radii & spacing -->
+  <x:Double x:Key="iOS.CornerRadius.Control">12</x:Double>
+  <x:Double x:Key="iOS.CornerRadius.Card">16</x:Double>
+  <Thickness x:Key="iOS.Padding.Control">12,10</Thickness>
+  <Thickness x:Key="iOS.Padding.Field">12,10</Thickness>
+  <Thickness x:Key="iOS.Padding.Card">14</Thickness>
+
+  <!-- Typography (approx. iOS text sizes) -->
+  <x:Double x:Key="iOS.FontSize.Title">22</x:Double>      <!-- page/section -->
+  <x:Double x:Key="iOS.FontSize.Body">17</x:Double>       <!-- default body -->
+  <x:Double x:Key="iOS.FontSize.Secondary">15</x:Double>
+  <x:Double x:Key="iOS.FontSize.Caption">13</x:Double>
+
+  <!-- SF Pro on iOS; fallbacks elsewhere -->
+  <OnPlatform x:TypeArguments="x:String" x:Key="iOS.FontFamily.Default">
+    <On Platform="iOS" Value="SF Pro Text" />
+    <On Platform="Android" Value="sans-serif" />
+    <On Platform="WinUI" Value="Segoe UI Variable" />
+    <On Platform="MacCatalyst" Value="SF Pro Text" />
+  </OnPlatform>
+
+  <!-- Semantic color brushes (light/dark via AppThemeBinding) -->
+  <!-- System background layers -->
+  <SolidColorBrush x:Key="Brush.SystemBackground">
+    <SolidColorBrush.Color>
+      <AppThemeBinding Light="#FFFFFFFF" Dark="#0D0D0F" />
+      <!-- Dark ~ iOS systemBackground in dark context -->
+    </SolidColorBrush.Color>
+  </SolidColorBrush>
+
+  <SolidColorBrush x:Key="Brush.SecondarySystemBackground">
+    <SolidColorBrush.Color>
+      <AppThemeBinding Light="#F2F2F7" Dark="#1C1C1E" />
+    </SolidColorBrush.Color>
+  </SolidColorBrush>
+
+  <SolidColorBrush x:Key="Brush.TertiarySystemBackground">
+    <SolidColorBrush.Color>
+      <AppThemeBinding Light="#FFFFFF" Dark="#2C2C2E" />
+    </SolidColorBrush.Color>
+  </SolidColorBrush>
+
+  <!-- Label colors -->
+  <Color x:Key="Color.Label">
+    <AppThemeBinding Light="#000000" Dark="#FFFFFF" />
+  </Color>
+  <Color x:Key="Color.SecondaryLabel">
+    <AppThemeBinding Light="#3C3C4399" Dark="#EBEBF599" />
+  </Color>
+  <Color x:Key="Color.TertiaryLabel">
+    <AppThemeBinding Light="#3C3C434C" Dark="#EBEBF54D" />
+  </Color>
+
+  <!-- Separators -->
+  <Color x:Key="Color.Separator">
+    <AppThemeBinding Light="#3C3C4349" Dark="#54545899" />
+  </Color>
+
+  <!-- Fills (systemFill family approximations) -->
+  <SolidColorBrush x:Key="Brush.SystemFill">
+    <SolidColorBrush.Color>
+      <AppThemeBinding Light="#78788033" Dark="#7878805C" />
+    </SolidColorBrush.Color>
+  </SolidColorBrush>
+  <SolidColorBrush x:Key="Brush.QuaternaryFill">
+    <SolidColorBrush.Color>
+      <AppThemeBinding Light="#7878801A" Dark="#7676802E" />
+    </SolidColorBrush.Color>
+  </SolidColorBrush>
+
+  <!-- "Liquid Glass" surface approximation: translucent white/black with soft stroke -->
+  <SolidColorBrush x:Key="Brush.Glass.Surface">
+    <SolidColorBrush.Color>
+      <AppThemeBinding Light="#CCFFFFFF" Dark="#66000000" />
+      <!-- Light: ~80% white; Dark: ~40% black -->
+    </SolidColorBrush.Color>
+  </SolidColorBrush>
+  <Color x:Key="Color.Glass.Stroke">
+    <AppThemeBinding Light="#33FFFFFF" Dark="#33FFFFFF" />
+  </Color>
+
+  <!-- Tint (accent). Can be switched to a “tinted” look per iOS 26 preferences. -->
+  <Color x:Key="Color.Tint">#0A84FF</Color> <!-- iOS system blue-like -->
+
+  <!-- Common shadow used for elevated (card-like) surfaces -->
+  <Shadow x:Key="Shadow.Card" Radius="16" Offset="0,6" Opacity="0.12" />
+
+  <!-- ============================= -->
+  <!--           Text Styles        -->
+  <!-- ============================= -->
+  <Style TargetType="Label" x:Key="iOS.Label.Body">
+    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
+    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
+    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
+  </Style>
+
+  <Style TargetType="Label" x:Key="iOS.Label.Secondary" BasedOn="{StaticResource iOS.Label.Body}">
+    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Secondary}" />
+    <Setter Property="TextColor" Value="{StaticResource Color.SecondaryLabel}" />
+  </Style>
+
+  <Style TargetType="Label" x:Key="iOS.Label.Caption" BasedOn="{StaticResource iOS.Label.Body}">
+    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Caption}" />
+    <Setter Property="TextColor" Value="{StaticResource Color.TertiaryLabel}" />
+  </Style>
+
+  <!-- ============================= -->
+  <!--          Control Styles       -->
+  <!-- ============================= -->
+
+  <!-- Buttons: rounded, glass-like, press feedback -->
+  <Style TargetType="Button">
+    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
+    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
+    <Setter Property="CornerRadius" Value="{StaticResource iOS.CornerRadius.Control}" />
+    <Setter Property="Padding" Value="{StaticResource iOS.Padding.Control}" />
+    <Setter Property="Background" Value="{StaticResource Brush.Glass.Surface}" />
+    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
+    <Setter Property="BorderColor" Value="{StaticResource Color.Glass.Stroke}" />
+    <Setter Property="BorderWidth" Value="1" />
+    <Setter Property="Shadow" Value="{StaticResource Shadow.Card}" />
+    <Setter Property="VisualStateManager.VisualStateGroups">
+      <VisualStateGroupList>
+        <VisualStateGroup x:Name="CommonStates">
+          <VisualState x:Name="Normal" />
+          <VisualState x:Name="Pressed">
+            <VisualState.Setters>
+              <Setter Property="Scale" Value="0.98"/>
+              <Setter Property="Background">
+                <Setter.Value>
+                  <SolidColorBrush>
+                    <SolidColorBrush.Color>
+                      <AppThemeBinding Light="#E6FFFFFF" Dark="#7A000000" />
+                    </SolidColorBrush.Color>
+                  </SolidColorBrush>
+                </Setter.Value>
+              </Setter>
+            </VisualState.Setters>
+          </VisualState>
+          <VisualState x:Name="Disabled">
+            <VisualState.Setters>
+              <Setter Property="Opacity" Value="0.5"/>
+            </VisualState.Setters>
+          </VisualState>
+        </VisualStateGroup>
+      </VisualStateGroupList>
+    </Setter>
+  </Style>
+
+  <!-- Primary button (tinted) -->
+  <Style TargetType="Button" x:Key="iOS.Button.Primary" BasedOn="{StaticResource {x:Type Button}}">
+    <Setter Property="BackgroundColor" Value="{StaticResource Color.Tint}" />
+    <Setter Property="TextColor" Value="White" />
+    <Setter Property="BorderWidth" Value="0" />
+  </Style>
+
+  <!-- Text inputs -->
+  <Style TargetType="Entry">
+    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
+    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
+    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
+    <Setter Property="PlaceholderColor" Value="{StaticResource Color.TertiaryLabel}" />
+    <Setter Property="Background" Value="{StaticResource Brush.QuaternaryFill}" />
+    <Setter Property="Padding" Value="{StaticResource iOS.Padding.Field}" />
+    <Setter Property="HeightRequest" Value="44" />
+    <Setter Property="CornerRadius" Value="{StaticResource iOS.CornerRadius.Control}" />
+    <Setter Property="BorderColor" Value="Transparent" />
+  </Style>
+
+  <Style TargetType="Editor" BasedOn="{StaticResource {x:Type Entry}}">
+    <Setter Property="HeightRequest" Value="120" />
+  </Style>
+
+  <Style TargetType="Picker" BasedOn="{StaticResource {x:Type Entry}}"/>
+  <Style TargetType="DatePicker" BasedOn="{StaticResource {x:Type Entry}}"/>
+  <Style TargetType="TimePicker" BasedOn="{StaticResource {x:Type Entry}}"/>
+
+  <!-- SearchBar (pairs with iOS-specific style in page/shell) -->
+  <Style TargetType="SearchBar">
+    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
+    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
+    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
+    <Setter Property="PlaceholderColor" Value="{StaticResource Color.TertiaryLabel}" />
+    <Setter Property="Background" Value="{StaticResource Brush.QuaternaryFill}" />
+    <Setter Property="HeightRequest" Value="44" />
+  </Style>
+
+  <!-- Toggle & progress controls -->
+  <Style TargetType="Switch">
+    <Setter Property="OnColor" Value="{StaticResource Color.Tint}" />
+    <Setter Property="ThumbColor">
+      <OnAppTheme x:TypeArguments="Color" Light="#FFFFFF" Dark="#FFFFFF" />
+    </Setter>
+  </Style>
+
+  <Style TargetType="Slider">
+    <Setter Property="MinimumTrackColor" Value="{StaticResource Color.Tint}" />
+    <Setter Property="MaximumTrackColor" Value="#3C3C434C" />
+    <Setter Property="ThumbColor" Value="{StaticResource Color.Tint}" />
+  </Style>
+
+  <Style TargetType="ProgressBar">
+    <Setter Property="ProgressColor" Value="{StaticResource Color.Tint}" />
+    <Setter Property="BackgroundColor" Value="#3C3C434C" />
+    <Setter Property="HeightRequest" Value="3" />
+  </Style>
+
+  <!-- Cards / surfaces -->
+  <Style TargetType="Frame">
+    <Setter Property="HasShadow" Value="False"/>
+    <Setter Property="CornerRadius" Value="{StaticResource iOS.CornerRadius.Card}" />
+    <Setter Property="Padding" Value="{StaticResource iOS.Padding.Card}" />
+    <Setter Property="Background" Value="{StaticResource Brush.Glass.Surface}" />
+    <Setter Property="BorderColor" Value="{StaticResource Color.Glass.Stroke}" />
+    <Setter Property="Shadow" Value="{StaticResource Shadow.Card}" />
+  </Style>
+
+  <Style TargetType="Border">
+    <Setter Property="Stroke" Value="{StaticResource Color.Glass.Stroke}" />
+    <Setter Property="StrokeThickness" Value="1" />
+    <Setter Property="Background" Value="{StaticResource Brush.Glass.Surface}" />
+    <Setter Property="StrokeShape">
+      <RoundRectangle CornerRadius="{StaticResource iOS.CornerRadius.Card}" />
+    </Setter>
+    <Setter Property="Shadow" Value="{StaticResource Shadow.Card}" />
+  </Style>
+
+  <!-- Lists -->
+  <Style TargetType="CollectionView">
+    <Setter Property="Background" Value="{StaticResource Brush.SystemBackground}"/>
+    <Setter Property="Margin" Value="0"/>
+  </Style>
+
+  <!-- Page-level defaults -->
+  <Style TargetType="ContentPage">
+    <Setter Property="Background" Value="{StaticResource Brush.SystemBackground}"/>
+    <Setter Property="Padding" Value="0"/>
+  </Style>
+</ResourceDictionary>
