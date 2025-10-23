@@ -2,11 +2,11 @@
 <ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:ctx="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:GC.Frontend.ViewModels;assembly=GC.Frontend"
     xmlns:controls="clr-namespace:GC.Frontend.Mobile.Controls"
     x:Class="GC.Frontend.Mobile.Views.SettingsPage"
-    x:DataType="vm:SettingsViewModel">
+    x:DataType="vm:SettingsViewModel"
+    x:Name="RootPage">
 
     <ContentPage.BindingContext>
         <vm:SettingsViewModel />
@@ -14,31 +14,26 @@
     
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="0">
-            <Label Text="Gourmet" />
-            <Border>
+            <controls:Group Header="Gourmet">
                 <VerticalStackLayout Spacing="0">
-                    <Entry Placeholder="Username" Text="{Binding Settings.GourmetUsername}" />
-                    <controls:Seperator />
-                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Settings.GourmetPassword}" />
+                    <Entry Placeholder="Benutzername" Text="{Binding GourmetUsername, Mode=TwoWay}" />
+                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding GourmetPassword, Mode=TwoWay}" />
                 </VerticalStackLayout>
-            </Border>
-            <Label Text="Ventopay" />
-            <Border>
+            </controls:Group>
+            <controls:Group Header="Ventopay">
                 <VerticalStackLayout Spacing="0">
-                    <Entry Placeholder="Username" Text="{Binding Settings.VentoUsername}" />
-                    <controls:Seperator />
-                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding Settings.VentoPassword}" />
+                    <Entry Placeholder="Benutzername" Text="{Binding VentoUsername, Mode=TwoWay}" />
+                    <Entry Placeholder="Password" IsPassword="True" Text="{Binding VentoPassword, Mode=TwoWay}" />
                 </VerticalStackLayout>
-            </Border>
-            <Label Text="Allgemein" />
-            <Border>
-                <VerticalStackLayout Spacing="0">
-                    <Grid ColumnDefinitions="*,Auto" HorizontalOptions="FillAndExpand">
-                        <Label Text="Debug Mode" Grid.Column="0" VerticalOptions="Center" />
-                        <Switch IsToggled="{Binding Settings.DebugMode}" Grid.Column="1" VerticalOptions="Center" HorizontalOptions="End" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
+            </controls:Group>
+            <controls:Group Header="Allgemein">
+                <Grid HorizontalOptions="FillAndExpand">
+                    <Label Text="Debug Mode" VerticalOptions="Center" />
+                    <Switch IsToggled="{Binding DebugMode, Mode=TwoWay}" HorizontalOptions="End" />
+                </Grid>
+            </controls:Group>
+           
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

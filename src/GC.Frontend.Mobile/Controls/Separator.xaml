@@ -2,10 +2,10 @@
 <ContentView
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    x:Class="GC.Frontend.Mobile.Controls.Seperator">
+    x:Class="GC.Frontend.Mobile.Controls.Separator">
 
     <ContentView.Content>
-        <BoxView Style="{DynamicResource SeperatorBox}" />
+        <BoxView Style="{DynamicResource Separator}" />
     </ContentView.Content>
 
 </ContentView>

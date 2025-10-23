@@ -21,6 +21,7 @@
 
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
+        <PackageReference Include="M.BindableProperty.Generator" Version="0.11.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5"/>
     </ItemGroup>
@@ -46,10 +47,6 @@
         <DependentUpon>SettingsPage.xaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\GC.Frontend\GC.Frontend.csproj" />
     </ItemGroup>
 
 </Project>

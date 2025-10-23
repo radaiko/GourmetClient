@@ -1,248 +1,189 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    
 
-  <!-- ============================= -->
-  <!-- iOS 26 "Liquid Glass" Tokens -->
-  <!-- ============================= -->
 
-  <!-- Radii & spacing -->
-  <x:Double x:Key="iOS.CornerRadius.Control">12</x:Double>
-  <x:Double x:Key="iOS.CornerRadius.Card">16</x:Double>
-  <Thickness x:Key="iOS.Padding.Control">12,10</Thickness>
-  <Thickness x:Key="iOS.Padding.Field">12,10</Thickness>
-  <Thickness x:Key="iOS.Padding.Card">14</Thickness>
+    <!-- Apple predefined colors (iOS-like semantic palette) -->
+    <!-- Light / Dark pairs follow Apple's semantic style: label, secondary/tertiary/quaternary, system fills, backgrounds, separators and links. -->
 
-  <!-- Typography (approx. iOS text sizes) -->
-  <x:Double x:Key="iOS.FontSize.Title">22</x:Double>      <!-- page/section -->
-  <x:Double x:Key="iOS.FontSize.Body">17</x:Double>       <!-- default body -->
-  <x:Double x:Key="iOS.FontSize.Secondary">15</x:Double>
-  <x:Double x:Key="iOS.FontSize.Caption">13</x:Double>
+    <Color x:Key="LightLabelColor">#000000</Color>
+    <Color x:Key="DarkLabelColor">#FFFFFFFF</Color>
 
-  <!-- SF Pro on iOS; fallbacks elsewhere -->
-  <OnPlatform x:TypeArguments="x:String" x:Key="iOS.FontFamily.Default">
-    <On Platform="iOS" Value="SF Pro Text" />
-    <On Platform="Android" Value="sans-serif" />
-    <On Platform="WinUI" Value="Segoe UI Variable" />
-    <On Platform="MacCatalyst" Value="SF Pro Text" />
-  </OnPlatform>
+    <!-- Secondary/tertiary/quaternary label colors: corrected to AARRGGBB (alpha first) -->
+    <Color x:Key="LightSecondaryLabelColor">#99000000</Color>
+    <Color x:Key="DarkSecondaryLabelColor">#99FFFFFF</Color>
 
-  <!-- Semantic color brushes (light/dark via AppThemeBinding) -->
-  <!-- System background layers -->
-  <SolidColorBrush x:Key="Brush.SystemBackground">
-    <SolidColorBrush.Color>
-      <AppThemeBinding Light="#FFFFFFFF" Dark="#0D0D0F" />
-      <!-- Dark ~ iOS systemBackground in dark context -->
-    </SolidColorBrush.Color>
-  </SolidColorBrush>
+    <Color x:Key="LightTertiaryLabelColor">#66000000</Color>
+    <Color x:Key="DarkTertiaryLabelColor">#66FFFFFF</Color>
 
-  <SolidColorBrush x:Key="Brush.SecondarySystemBackground">
-    <SolidColorBrush.Color>
-      <AppThemeBinding Light="#F2F2F7" Dark="#1C1C1E" />
-    </SolidColorBrush.Color>
-  </SolidColorBrush>
+    <Color x:Key="LightQuaternaryLabelColor">#33000000</Color>
+    <Color x:Key="DarkQuaternaryLabelColor">#33FFFFFF</Color>
 
-  <SolidColorBrush x:Key="Brush.TertiarySystemBackground">
-    <SolidColorBrush.Color>
-      <AppThemeBinding Light="#FFFFFF" Dark="#2C2C2E" />
-    </SolidColorBrush.Color>
-  </SolidColorBrush>
+    <!-- System fill colors (alpha moved to front) -->
+    <Color x:Key="LightSystemFillColor">#33787880</Color>
+    <Color x:Key="DarkSystemFillColor">#5C767680</Color>
 
-  <!-- Label colors -->
-  <Color x:Key="Color.Label">
-    <AppThemeBinding Light="#000000" Dark="#FFFFFF" />
-  </Color>
-  <Color x:Key="Color.SecondaryLabel">
-    <AppThemeBinding Light="#3C3C4399" Dark="#EBEBF599" />
-  </Color>
-  <Color x:Key="Color.TertiaryLabel">
-    <AppThemeBinding Light="#3C3C434C" Dark="#EBEBF54D" />
-  </Color>
+    <Color x:Key="LightSecondarySystemFillColor">#29787880</Color>
+    <Color x:Key="DarkSecondarySystemFillColor">#52767680</Color>
 
-  <!-- Separators -->
-  <Color x:Key="Color.Separator">
-    <AppThemeBinding Light="#3C3C4349" Dark="#54545899" />
-  </Color>
+    <Color x:Key="LightTertiarySystemFillColor">#1F767680</Color>
+    <Color x:Key="DarkTertiarySystemFillColor">#3D767680</Color>
 
-  <!-- Fills (systemFill family approximations) -->
-  <SolidColorBrush x:Key="Brush.SystemFill">
-    <SolidColorBrush.Color>
-      <AppThemeBinding Light="#78788033" Dark="#7878805C" />
-    </SolidColorBrush.Color>
-  </SolidColorBrush>
-  <SolidColorBrush x:Key="Brush.QuaternaryFill">
-    <SolidColorBrush.Color>
-      <AppThemeBinding Light="#7878801A" Dark="#7676802E" />
-    </SolidColorBrush.Color>
-  </SolidColorBrush>
+    <Color x:Key="LightQuaternarySystemFillColor">#14747480</Color>
+    <Color x:Key="DarkQuaternarySystemFillColor">#2E747480</Color>
 
-  <!-- "Liquid Glass" surface approximation: translucent white/black with soft stroke -->
-  <SolidColorBrush x:Key="Brush.Glass.Surface">
-    <SolidColorBrush.Color>
-      <AppThemeBinding Light="#CCFFFFFF" Dark="#66000000" />
-      <!-- Light: ~80% white; Dark: ~40% black -->
-    </SolidColorBrush.Color>
-  </SolidColorBrush>
-  <Color x:Key="Color.Glass.Stroke">
-    <AppThemeBinding Light="#33FFFFFF" Dark="#33FFFFFF" />
-  </Color>
+    <!-- Placeholder text (alpha-first) -->
+    <Color x:Key="LightPlaceholderTextColor">#40000000</Color>
+    <Color x:Key="DarkPlaceholderTextColor">#40FFFFFF</Color>
 
-  <!-- Tint (accent). Can be switched to a “tinted” look per iOS 26 preferences. -->
-  <Color x:Key="Color.Tint">#0A84FF</Color> <!-- iOS system blue-like -->
+    <!-- System backgrounds -->
+    <Color x:Key="LightSystemBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="DarkSystemBackgroundColor">#000000</Color>
 
-  <!-- Common shadow used for elevated (card-like) surfaces -->
-  <Shadow x:Key="Shadow.Card" Radius="16" Offset="0,6" Opacity="0.12" />
+    <Color x:Key="LightSecondarySystemBackgroundColor">#F2F2F7</Color> <!-- iOS light grouped background tone -->
+    <Color x:Key="DarkSecondarySystemBackgroundColor">#1C1C1E</Color>
 
-  <!-- ============================= -->
-  <!--           Text Styles        -->
-  <!-- ============================= -->
-  <Style TargetType="Label" x:Key="iOS.Label.Body">
-    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
-    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
-    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
-  </Style>
+    <Color x:Key="LightTertiarySystemBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="DarkTertiarySystemBackgroundColor">#2C2C2E</Color>
 
-  <Style TargetType="Label" x:Key="iOS.Label.Secondary" BasedOn="{StaticResource iOS.Label.Body}">
-    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Secondary}" />
-    <Setter Property="TextColor" Value="{StaticResource Color.SecondaryLabel}" />
-  </Style>
+    <Color x:Key="LightSystemGroupedBackgroundColor">#F2F2F7</Color>
+    <Color x:Key="DarkSystemGroupedBackgroundColor">#1C1C1E</Color>
 
-  <Style TargetType="Label" x:Key="iOS.Label.Caption" BasedOn="{StaticResource iOS.Label.Body}">
-    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Caption}" />
-    <Setter Property="TextColor" Value="{StaticResource Color.TertiaryLabel}" />
-  </Style>
+    <Color x:Key="LightSecondarySystemGroupedBackgroundColor">#FFFFFF</Color>
+    <Color x:Key="DarkSecondarySystemGroupedBackgroundColor">#1C1C1E</Color>
 
-  <!-- ============================= -->
-  <!--          Control Styles       -->
-  <!-- ============================= -->
+    <Color x:Key="LightTertiarySystemGroupedBackgroundColor">#F2F2F7</Color>
+    <Color x:Key="DarkTertiarySystemGroupedBackgroundColor">#2C2C2E</Color>
 
-  <!-- Buttons: rounded, glass-like, press feedback -->
-  <Style TargetType="Button">
-    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
-    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
-    <Setter Property="CornerRadius" Value="{StaticResource iOS.CornerRadius.Control}" />
-    <Setter Property="Padding" Value="{StaticResource iOS.Padding.Control}" />
-    <Setter Property="Background" Value="{StaticResource Brush.Glass.Surface}" />
-    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
-    <Setter Property="BorderColor" Value="{StaticResource Color.Glass.Stroke}" />
-    <Setter Property="BorderWidth" Value="1" />
-    <Setter Property="Shadow" Value="{StaticResource Shadow.Card}" />
-    <Setter Property="VisualStateManager.VisualStateGroups">
-      <VisualStateGroupList>
-        <VisualStateGroup x:Name="CommonStates">
-          <VisualState x:Name="Normal" />
-          <VisualState x:Name="Pressed">
-            <VisualState.Setters>
-              <Setter Property="Scale" Value="0.98"/>
-              <Setter Property="Background">
-                <Setter.Value>
-                  <SolidColorBrush>
-                    <SolidColorBrush.Color>
-                      <AppThemeBinding Light="#E6FFFFFF" Dark="#7A000000" />
-                    </SolidColorBrush.Color>
-                  </SolidColorBrush>
-                </Setter.Value>
-              </Setter>
-            </VisualState.Setters>
-          </VisualState>
-          <VisualState x:Name="Disabled">
-            <VisualState.Setters>
-              <Setter Property="Opacity" Value="0.5"/>
-            </VisualState.Setters>
-          </VisualState>
-        </VisualStateGroup>
-      </VisualStateGroupList>
-    </Setter>
-  </Style>
+    <!-- Separators: light = pale gray, dark = darker gray (consistent with iOS separators) -->
+    <Color x:Key="LightSeparatorColor">#C6C6C8</Color>
+    <Color x:Key="DarkSeparatorColor">#38383A</Color>
 
-  <!-- Primary button (tinted) -->
-  <Style TargetType="Button" x:Key="iOS.Button.Primary" BasedOn="{StaticResource {x:Type Button}}">
-    <Setter Property="BackgroundColor" Value="{StaticResource Color.Tint}" />
-    <Setter Property="TextColor" Value="White" />
-    <Setter Property="BorderWidth" Value="0" />
-  </Style>
+    <Color x:Key="LightSeparatorColorStandard">#C6C6C8</Color>
+    <Color x:Key="DarkSeparatorColorStandard">#38383A</Color>
+    <Color x:Key="LightOpaqueSeparatorColor">#C6C6C8</Color>
+    <Color x:Key="DarkOpaqueSeparatorColor">#38383A</Color>
 
-  <!-- Text inputs -->
-  <Style TargetType="Entry">
-    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
-    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
-    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
-    <Setter Property="PlaceholderColor" Value="{StaticResource Color.TertiaryLabel}" />
-    <Setter Property="Background" Value="{StaticResource Brush.QuaternaryFill}" />
-    <Setter Property="Padding" Value="{StaticResource iOS.Padding.Field}" />
-    <Setter Property="HeightRequest" Value="44" />
-    <Setter Property="CornerRadius" Value="{StaticResource iOS.CornerRadius.Control}" />
-    <Setter Property="BorderColor" Value="Transparent" />
-  </Style>
+    <!-- System/link color (system blue) -->
+    <Color x:Key="LightLinkColor">#007AFF</Color>
+    <Color x:Key="DarkLinkColor">#0A84FF</Color>
 
-  <Style TargetType="Editor" BasedOn="{StaticResource {x:Type Entry}}">
-    <Setter Property="HeightRequest" Value="120" />
-  </Style>
+    
+    
 
-  <Style TargetType="Picker" BasedOn="{StaticResource {x:Type Entry}}"/>
-  <Style TargetType="DatePicker" BasedOn="{StaticResource {x:Type Entry}}"/>
-  <Style TargetType="TimePicker" BasedOn="{StaticResource {x:Type Entry}}"/>
+    <!-- Predefined values for consistent theming -->
+    <x:Double x:Key="DefaultFontSize">17</x:Double>
+    <x:Double x:Key="SecondaryFontSize">15</x:Double>
+    <x:Double x:Key="TertiaryFontSize">13</x:Double>
+    <x:Double x:Key="DefaultCornerRadius">8</x:Double>
+    <Thickness x:Key="ButtonPadding">12,8</Thickness>
+    <Thickness x:Key="InputPadding">8</Thickness>
+    <Thickness x:Key="CollectionPadding">16</Thickness>
 
-  <!-- SearchBar (pairs with iOS-specific style in page/shell) -->
-  <Style TargetType="SearchBar">
-    <Setter Property="FontFamily" Value="{StaticResource iOS.FontFamily.Default}" />
-    <Setter Property="FontSize" Value="{StaticResource iOS.FontSize.Body}" />
-    <Setter Property="TextColor" Value="{StaticResource Color.Label}" />
-    <Setter Property="PlaceholderColor" Value="{StaticResource Color.TertiaryLabel}" />
-    <Setter Property="Background" Value="{StaticResource Brush.QuaternaryFill}" />
-    <Setter Property="HeightRequest" Value="44" />
-  </Style>
+    <!-- DataTemplates for CollectionView headers and footers -->
+    <DataTemplate x:Key="CollectionViewHeaderTemplate">
+        <Label Text="{Binding}" HorizontalTextAlignment="Start" FontSize="{StaticResource TertiaryFontSize}" TextColor="{AppThemeBinding Light={StaticResource LightTertiaryLabelColor}, Dark={StaticResource DarkTertiaryLabelColor}}" />
+    </DataTemplate>
+    <DataTemplate x:Key="CollectionViewFooterTemplate">
+        <Label Text="{Binding}" HorizontalTextAlignment="Start" FontSize="{StaticResource TertiaryFontSize}" TextColor="{AppThemeBinding Light={StaticResource LightTertiaryLabelColor}, Dark={StaticResource DarkTertiaryLabelColor}}" />
+    </DataTemplate>
 
-  <!-- Toggle & progress controls -->
-  <Style TargetType="Switch">
-    <Setter Property="OnColor" Value="{StaticResource Color.Tint}" />
-    <Setter Property="ThumbColor">
-      <OnAppTheme x:TypeArguments="Color" Light="#FFFFFF" Dark="#FFFFFF" />
-    </Setter>
-  </Style>
-
-  <Style TargetType="Slider">
-    <Setter Property="MinimumTrackColor" Value="{StaticResource Color.Tint}" />
-    <Setter Property="MaximumTrackColor" Value="#3C3C434C" />
-    <Setter Property="ThumbColor" Value="{StaticResource Color.Tint}" />
-  </Style>
-
-  <Style TargetType="ProgressBar">
-    <Setter Property="ProgressColor" Value="{StaticResource Color.Tint}" />
-    <Setter Property="BackgroundColor" Value="#3C3C434C" />
-    <Setter Property="HeightRequest" Value="3" />
-  </Style>
-
-  <!-- Cards / surfaces -->
-  <Style TargetType="Frame">
-    <Setter Property="HasShadow" Value="False"/>
-    <Setter Property="CornerRadius" Value="{StaticResource iOS.CornerRadius.Card}" />
-    <Setter Property="Padding" Value="{StaticResource iOS.Padding.Card}" />
-    <Setter Property="Background" Value="{StaticResource Brush.Glass.Surface}" />
-    <Setter Property="BorderColor" Value="{StaticResource Color.Glass.Stroke}" />
-    <Setter Property="Shadow" Value="{StaticResource Shadow.Card}" />
-  </Style>
-
-  <Style TargetType="Border">
-    <Setter Property="Stroke" Value="{StaticResource Color.Glass.Stroke}" />
-    <Setter Property="StrokeThickness" Value="1" />
-    <Setter Property="Background" Value="{StaticResource Brush.Glass.Surface}" />
-    <Setter Property="StrokeShape">
-      <RoundRectangle CornerRadius="{StaticResource iOS.CornerRadius.Card}" />
-    </Setter>
-    <Setter Property="Shadow" Value="{StaticResource Shadow.Card}" />
-  </Style>
-
-  <!-- Lists -->
-  <Style TargetType="CollectionView">
-    <Setter Property="Background" Value="{StaticResource Brush.SystemBackground}"/>
-    <Setter Property="Margin" Value="0"/>
-  </Style>
-
-  <!-- Page-level defaults -->
-  <Style TargetType="ContentPage">
-    <Setter Property="Background" Value="{StaticResource Brush.SystemBackground}"/>
-    <Setter Property="Padding" Value="0"/>
-  </Style>
+    <!-- Apple-inspired styles for Maui controls -->
+    <!-- These styles provide Apple-inspired theming for Maui controls based on UIKit guidelines.
+         These are implicit styles that apply automatically to all controls of the TargetType when this ResourceDictionary is merged into the app's resources.
+         Ensure the Apple.xaml ResourceDictionary is included in your app's MergedDictionaries. -->
+    
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+    </Style>
+    
+    <Style TargetType="Label" x:Key="SecondaryLabel">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightSecondaryLabelColor}, Dark={StaticResource DarkSecondaryLabelColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource SecondaryFontSize}" />
+    </Style>
+    
+    <Style TargetType="Label" x:Key="TertiaryLabel">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTertiaryLabelColor}, Dark={StaticResource DarkTertiaryLabelColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource TertiaryFontSize}" />
+    </Style>
+    
+    <Style TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightSystemGroupedBackgroundColor}, Dark={StaticResource DarkSystemGroupedBackgroundColor}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape">
+            <Setter.Value>
+                <RoundRectangle CornerRadius="{StaticResource DefaultCornerRadius}" />
+            </Setter.Value>
+        </Setter>
+        
+    </Style>
+    
+    <Style TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+        <Setter Property="CornerRadius" Value="{StaticResource DefaultCornerRadius}" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="Padding" Value="{StaticResource ButtonPadding}" />
+    </Style>
+    
+    <Style TargetType="Button" x:Key="FilledButton">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightSystemBackgroundColor}, Dark={StaticResource DarkSystemBackgroundColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+        <Setter Property="CornerRadius" Value="{StaticResource DefaultCornerRadius}" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="Padding" Value="{StaticResource ButtonPadding}" />
+    </Style>
+    
+    <Style TargetType="Entry">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightSecondarySystemBackgroundColor}, Dark={StaticResource DarkSecondarySystemBackgroundColor}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource LightPlaceholderTextColor}, Dark={StaticResource DarkPlaceholderTextColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+    </Style>
+    
+    <Style TargetType="Editor">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightSecondarySystemBackgroundColor}, Dark={StaticResource DarkSecondarySystemBackgroundColor}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
+        <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource LightPlaceholderTextColor}, Dark={StaticResource DarkPlaceholderTextColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+    </Style>
+    
+    <Style TargetType="Picker">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightSecondarySystemBackgroundColor}, Dark={StaticResource DarkSecondarySystemBackgroundColor}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+    </Style>
+    
+    <Style TargetType="Switch">
+        <Setter Property="OnColor" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+        <Setter Property="ThumbColor" Value="{AppThemeBinding Light={StaticResource LightSystemBackgroundColor}, Dark={StaticResource DarkSystemBackgroundColor}}" />
+    </Style>
+    
+    <Style TargetType="Slider">
+        <Setter Property="MinimumTrackColor" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+        <Setter Property="MaximumTrackColor" Value="{AppThemeBinding Light={StaticResource LightSystemFillColor}, Dark={StaticResource DarkSystemFillColor}}" />
+        <Setter Property="ThumbColor" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+    </Style>
+    
+    <Style TargetType="ProgressBar">
+        <Setter Property="ProgressColor" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+    </Style>
+    
+    <Style TargetType="ActivityIndicator">
+        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource LightLinkColor}, Dark={StaticResource DarkLinkColor}}" />
+    </Style>
+    
+    <Style TargetType="CollectionView">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightSystemGroupedBackgroundColor}, Dark={StaticResource DarkSystemGroupedBackgroundColor}}" />
+        <Setter Property="HeaderTemplate" Value="{StaticResource CollectionViewHeaderTemplate}" />
+        <Setter Property="FooterTemplate" Value="{StaticResource CollectionViewFooterTemplate}" />
+    </Style>
+    
+    <Style TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="100" />
+    </Style>
+    
 </ResourceDictionary>
