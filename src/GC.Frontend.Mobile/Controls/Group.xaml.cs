@@ -1,8 +1,11 @@
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Controls.Xaml;
 
 namespace GC.Frontend.Mobile.Controls;
 
-public partial class Group {
+[XamlCompilation(XamlCompilationOptions.Compile)]
+[ContentProperty("Content")]
+public partial class Group : ContentView {
   
   public static readonly BindableProperty HeaderProperty = BindableProperty.Create(
     nameof(Header),
@@ -14,6 +17,7 @@ public partial class Group {
     get => (string)GetValue(HeaderProperty);
     set => SetValue(HeaderProperty, value);
   }
+
 
   public Group() {
     InitializeComponent();

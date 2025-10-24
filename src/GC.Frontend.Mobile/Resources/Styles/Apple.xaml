@@ -77,7 +77,8 @@
     <x:Double x:Key="DefaultFontSize">15</x:Double>
     <x:Double x:Key="SecondaryFontSize">13</x:Double>
     <x:Double x:Key="TertiaryFontSize">11</x:Double>
-    <x:Double x:Key="DefaultCornerRadius">16</x:Double>
+    <x:Double x:Key="DefaultHeight">44</x:Double>
+    <x:Double x:Key="DefaultCornerRadius">22</x:Double>
     <Thickness x:Key="ButtonPadding">0</Thickness>
     <Thickness x:Key="InputPadding">8</Thickness>
     <Thickness x:Key="GroupPadding">16</Thickness>
@@ -98,11 +99,13 @@
     <Style TargetType="Label">
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
         <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+        <Setter Property="Height" Value="{StaticResource DefaultHeight}" />
     </Style>
     
     <Style TargetType="Label" x:Key="SecondaryLabel">
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightSecondaryLabelColor}, Dark={StaticResource DarkSecondaryLabelColor}}" />
         <Setter Property="FontSize" Value="{StaticResource SecondaryFontSize}" />
+        <Setter Property="Height" Value="{StaticResource DefaultHeight}" />
     </Style>
     
     <Style TargetType="Label" x:Key="TertiaryLabel">
@@ -161,6 +164,7 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
         <Setter Property="PlaceholderColor" Value="{AppThemeBinding Light={StaticResource LightPlaceholderTextColor}, Dark={StaticResource DarkPlaceholderTextColor}}" />
         <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+        <Setter Property="Height" Value="{StaticResource DefaultHeight}" />
     </Style>
     
     <Style TargetType="Editor">
@@ -174,6 +178,7 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource LightSecondarySystemBackgroundColor}, Dark={StaticResource DarkSecondarySystemBackgroundColor}}" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightLabelColor}, Dark={StaticResource DarkLabelColor}}" />
         <Setter Property="FontSize" Value="{StaticResource DefaultFontSize}" />
+        <Setter Property="Height" Value="{StaticResource DefaultHeight}" />
     </Style>
     
     <Style TargetType="Switch">
