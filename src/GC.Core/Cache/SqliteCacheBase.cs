@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using GC.Common;
 using Microsoft.Data.Sqlite;
 
 namespace GC.Core.Cache;
@@ -30,6 +31,7 @@ public static partial class SqliteCacheBase {
       catch {
         // ignore
       }
+      Log.Info($"SQLite DB Path: {_dbPath}");
       _isInitialized = true;
     }
   }

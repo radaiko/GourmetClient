@@ -45,10 +45,9 @@
                 </VerticalStackLayout>
             </controls:Group>
             <controls:Group Header="Allgemein">
-                <Grid HorizontalOptions="FillAndExpand">
-                    <Label Text="Debug Mode" VerticalOptions="Center" />
-                    <Switch IsToggled="{Binding DebugMode, Mode=TwoWay}" HorizontalOptions="End" />
-                </Grid>
+                <controls:GroupToggle 
+                    Label="Debug Mode"
+                    Toggle="{Binding DebugMode, Mode=TwoWay}"/>
             </controls:Group>
            
 

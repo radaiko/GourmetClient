@@ -13,5 +13,6 @@ public partial class AppShell : Shell {
     if (s.GourmetUsername.IsBlank() || s.GourmetPassword.IsBlank() || s.VentoUsername.IsBlank() || s.VentoPassword.IsBlank()) {
       CurrentItem = SettingsTab;
     }
+    CurrentItem = SettingsTab;
   }
 }

@@ -5,7 +5,7 @@
              x:Class="GC.Frontend.Mobile.Controls.Group">
     <ContentView.ControlTemplate>
         <ControlTemplate>
-            <VerticalStackLayout>
+            <VerticalStackLayout Margin="0,22, 0,0">
                 <Label Text="{TemplateBinding Header}" Style="{StaticResource GroupHeaderLabel}" />
                 <Border>
                     <ContentPresenter />

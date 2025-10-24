@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>GourmetClient</string>
+    <string>Gourmet Client</string>
     <key>CFBundleIdentifier</key>
     <string>dev.radaiko.gourmetclient</string>
     <key>CFBundleShortVersionString</key>

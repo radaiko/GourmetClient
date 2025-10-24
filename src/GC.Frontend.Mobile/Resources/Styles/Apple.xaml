@@ -119,8 +119,8 @@
     </Style>
     
     <Style TargetType="Label" x:Key="GroupHeaderLabel">
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightQuaternaryLabelColor}, Dark={StaticResource DarkQuaternaryLabelColor}}" />
-        <Setter Property="FontSize" Value="{StaticResource TertiaryFontSize}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource LightTertiaryLabelColor}, Dark={StaticResource DarkTertiaryLabelColor}}" />
+        <Setter Property="FontSize" Value="{StaticResource SecondaryLabel}" />
     </Style>
     
     <Style TargetType="Border">
@@ -203,6 +203,12 @@
     <Style TargetType="VerticalStackLayout">
         <Setter Property="Spacing" Value="0" />
         <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    
+    <Style TargetType="Grid">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="0" />
     </Style>
     
 </ResourceDictionary>
