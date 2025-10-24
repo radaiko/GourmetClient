@@ -13,16 +13,34 @@
     </ContentPage.BindingContext>
     
     <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="0">
+        <VerticalStackLayout>
+            <!-- <Label Text="Gourmet" Style="{DynamicResource GroupHeaderLabel}" /> -->
+            <!-- <Border> -->
+            <!--     <VerticalStackLayout Spacing="8"> -->
+            <!--         <Entry Placeholder="Benutzername" Text="" /> -->
+            <!--         <controls:Separator /> -->
+            <!--         <Entry Placeholder="Password" IsPassword="True" Text="" /> -->
+            <!--         <controls:Separator /> -->
+            <!--         <Button Text="Anmelden" /> -->
+            <!--         <controls:Separator /> -->
+            <!--         <Grid HorizontalOptions="FillAndExpand"> -->
+            <!--              <Label Text="Debug Mode" VerticalOptions="Center" /> -->
+            <!--              <Switch IsToggled="{Binding DebugMode, Mode=TwoWay}" HorizontalOptions="End" /> -->
+            <!--          </Grid> -->
+            <!--     </VerticalStackLayout> -->
+            <!-- </Border> -->
+            
             <controls:Group Header="Gourmet">
                 <VerticalStackLayout Spacing="0">
                     <Entry Placeholder="Benutzername" Text="{Binding GourmetUsername, Mode=TwoWay}" />
+                    <controls:Separator />
                     <Entry Placeholder="Password" IsPassword="True" Text="{Binding GourmetPassword, Mode=TwoWay}" />
                 </VerticalStackLayout>
             </controls:Group>
             <controls:Group Header="Ventopay">
                 <VerticalStackLayout Spacing="0">
                     <Entry Placeholder="Benutzername" Text="{Binding VentoUsername, Mode=TwoWay}" />
+                    <controls:Separator />
                     <Entry Placeholder="Password" IsPassword="True" Text="{Binding VentoPassword, Mode=TwoWay}" />
                 </VerticalStackLayout>
             </controls:Group>

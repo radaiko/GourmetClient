@@ -5,7 +5,7 @@
     x:Class="GC.Frontend.Mobile.Controls.Separator">
 
     <ContentView.Content>
-        <BoxView Style="{DynamicResource Separator}" />
+        <BoxView Style="{DynamicResource Separator}"/>
     </ContentView.Content>
 
 </ContentView>

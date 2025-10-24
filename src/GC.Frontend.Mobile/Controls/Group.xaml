@@ -4,12 +4,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="GC.Frontend.Mobile.Controls.Group"
              x:Name="Root">
-    <Border Margin="0,0,0,10">
-        <VerticalStackLayout>
-            <Label Text="{Binding Header, Source={x:Reference Root}}" Style="{DynamicResource TertiaryLabel}" />
-           <Label Text="──────────" Style="{DynamicResource TertiaryLabel}" Margin="0,0,0,5"/>
-            <ContentView />
-        </VerticalStackLayout>
-        
-    </Border>
+    <VerticalStackLayout>
+        <Label Text="{Binding Header, Source={x:Reference Root}}" Style="{DynamicResource GroupHeaderLabel }" />
+        <Border>
+            <VerticalStackLayout Spacing="8">
+                <ContentView />
+            </VerticalStackLayout>
+        </Border>
+    </VerticalStackLayout>
 </ContentView>
