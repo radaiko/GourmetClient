@@ -8,6 +8,9 @@ using GC.Models;
 
 namespace GC.Core.Cache;
 
+// TODO: fix that on every month are all transactions added
+// TODO: fix that only 2 months are fetched even if more are missing
+
 public class BillingCache {
   // Delegate persistence/in-memory store to generic base repository
   private static readonly CacheRepositoryBase<BillingMonth> _repo = new(

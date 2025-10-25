@@ -105,7 +105,7 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
                 _viewModel.SelectedIndex++;
             }
         });
-        View.AddGestureRecognizer(leftSwipe);
+        _transactionsTable.AddGestureRecognizer(leftSwipe);
 
         // Add swipe gesture for previous month
         var rightSwipe = new UISwipeGestureRecognizer { Direction = UISwipeGestureRecognizerDirection.Right };
@@ -114,10 +114,11 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
                 _viewModel.SelectedIndex--;
             }
         });
-        View.AddGestureRecognizer(rightSwipe);
+        _transactionsTable.AddGestureRecognizer(rightSwipe);
 
         // Bind to view model changes
         _viewModel.AvailableMonths.CollectionChanged  += (_, _) => UpdateUI();
+        _viewModel.PropertyChanged += (_, _) => UpdateUI();
 
         // Initial UI update
         UpdateUI();
