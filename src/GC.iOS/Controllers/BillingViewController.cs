@@ -1,11 +1,10 @@
 using GC.Common;
 using GC.Frontend.ViewModels;
-using GC.iOS.Core;
 using System.ComponentModel;
 
 namespace GC.iOS.Controllers;
 
-public class BillingViewController : UIViewController, IUITableViewDataSource
+public class BillingViewController : BaseViewController, IUITableViewDataSource
 {
     private BillingViewModel _viewModel = new();
     private UILabel? _selectedTotalLabel;
@@ -13,14 +12,10 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
     private UITableView? _transactionsTable;
     private UIPageControl? _pageControl;
     private UIView? _topView;
-    private SafeAreaHelper<BillingViewController> _safeAreaHelper;
 
     public override void ViewDidLoad()
     {
         base.ViewDidLoad();
-
-        _safeAreaHelper = new SafeAreaHelper<BillingViewController>(this);
-        _safeAreaHelper.PropertyChanged += OnSafeAreaChanged;
 
         View.BackgroundColor = UIColor.SystemBackground;
 
@@ -84,9 +79,12 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
         _viewModel.AvailableMonths.CollectionChanged  += (_, _) => UpdateUI();
 
         UpdateUI();
+
+        // Initial call to OnSafeAreaChanged
+        OnSafeAreaChanged(this, new PropertyChangedEventArgs(string.Empty));
     }
 
-    private void OnSafeAreaChanged(object? sender, PropertyChangedEventArgs e)
+    protected override void OnSafeAreaChanged(object? sender, PropertyChangedEventArgs e)
     {
         var safeArea = _safeAreaHelper.SafeAreaInsets;
         _topView!.Frame = new CGRect(0, safeArea.Top, View.Bounds.Width, 76);
@@ -133,15 +131,5 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
             cell.TextLabel.Text = $"{transaction.Date:dd.MM.yyyy} - {transaction.Type} - {total:N2} €";
         }
         return cell;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _safeAreaHelper.PropertyChanged -= OnSafeAreaChanged;
-            _safeAreaHelper.Dispose();
-        }
-        base.Dispose(disposing);
     }
 }

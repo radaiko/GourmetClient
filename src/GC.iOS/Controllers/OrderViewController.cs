@@ -2,29 +2,24 @@ using UIKit;
 using GC.Frontend.ViewModels;
 using System.Linq;
 using GC.Common;
-using GC.iOS.Core;
 using System;
 using System.ComponentModel;
 
 namespace GC.iOS.Controllers;
 
-public class OrderViewController : UIViewController, IUITableViewDataSource
+public class OrderViewController : BaseViewController, IUITableViewDataSource
 {
     private OrderViewModel _viewModel = new();
     private UILabel? _dateLabel;
     private UITableView? _menusTable;
     private UIPageControl? _pageControl;
-    private SafeAreaHelper<OrderViewController> _safeAreaHelper;
 
     public override void ViewDidLoad()
     {
         base.ViewDidLoad();
         
-        _safeAreaHelper = new SafeAreaHelper<OrderViewController>(this);
-        _safeAreaHelper.PropertyChanged += OnSafeAreaChanged;
-        
         CreateUI();
-        OnSafeAreaChanged(null, new PropertyChangedEventArgs(nameof(SafeAreaHelper<OrderViewController>.SafeAreaInsets)));
+        OnSafeAreaChanged(null, new PropertyChangedEventArgs("SafeAreaInsets"));
         
         // Bind to ViewModel
         _viewModel.PropertyChanged += (_, _) => UpdateUI();
@@ -88,7 +83,7 @@ public class OrderViewController : UIViewController, IUITableViewDataSource
         _menusTable.AddGestureRecognizer(rightSwipe);
     }
 
-    private void OnSafeAreaChanged(object? sender, PropertyChangedEventArgs e)
+    protected override void OnSafeAreaChanged(object? sender, PropertyChangedEventArgs e)
     {
         var safeArea = _safeAreaHelper.SafeAreaInsets;
         Log.Debug($"OnSafeAreaChanged called, insets: Top={safeArea.Top}, Bottom={safeArea.Bottom}, Left={safeArea.Left}, Right={safeArea.Right}");
@@ -147,15 +142,5 @@ public class OrderViewController : UIViewController, IUITableViewDataSource
             cell.DetailTextLabel.Text = $"{menu.Price:N2} € - Allergens: {string.Join(", ", menu.Allergens)}";
         }
         return cell;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _safeAreaHelper.PropertyChanged -= OnSafeAreaChanged;
-            _safeAreaHelper.Dispose();
-        }
-        base.Dispose(disposing);
     }
 }

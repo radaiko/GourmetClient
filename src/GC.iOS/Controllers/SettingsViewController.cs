@@ -20,7 +20,7 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource {
     _table = new UITableView(View.Bounds, UITableViewStyle.InsetGrouped) {
       AutoresizingMask = UIViewAutoresizing.All,
       BackgroundColor = UIColor.SystemBackground,
-      RowHeight = Common.StandardCellHeight
+      RowHeight = Helpers.Common.StandardCellHeight
     };
     _table.DataSource = this;
     View.AddSubview(_table);
@@ -89,23 +89,23 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource {
     var cell = new UITableViewCell(UITableViewCellStyle.Default, null);
     switch (indexPath.Section) {
       case 0 when indexPath.Row == 0:
-        _gourmetUsername!.Frame = new CGRect(Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Common.StandardCellHeight);
+        _gourmetUsername!.Frame = new CGRect(Helpers.Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Helpers.Common.StandardCellHeight);
         cell.ContentView.AddSubview(_gourmetUsername);
         break;
       case 0:
-        _gourmetPassword!.Frame = new CGRect(Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Common.StandardCellHeight);
+        _gourmetPassword!.Frame = new CGRect(Helpers.Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Helpers.Common.StandardCellHeight);
         cell.ContentView.AddSubview(_gourmetPassword);
         break;
       case 1 when indexPath.Row == 0:
-        _ventoUsername!.Frame = new CGRect(Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Common.StandardCellHeight);
+        _ventoUsername!.Frame = new CGRect(Helpers.Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Helpers.Common.StandardCellHeight);
         cell.ContentView.AddSubview(_ventoUsername);
         break;
       case 1:
-        _ventoPassword!.Frame = new CGRect(Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Common.StandardCellHeight);
+        _ventoPassword!.Frame = new CGRect(Helpers.Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Helpers.Common.StandardCellHeight);
         cell.ContentView.AddSubview(_ventoPassword);
         break;
       case 2:
-        _debugToggle!.Frame = new CGRect(Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Common.StandardCellHeight);
+        _debugToggle!.Frame = new CGRect(Helpers.Common.StandardMargin, 0, cell.ContentView.Bounds.Width, Helpers.Common.StandardCellHeight);
         cell.ContentView.AddSubview(_debugToggle);
         break;
     }

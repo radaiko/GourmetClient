@@ -1,6 +1,4 @@
-using Foundation;
-
-namespace GC.iOS;
+namespace GC.iOS.Helpers;
 
 public static class Common {
   public static nfloat StandardMargin => 16f;

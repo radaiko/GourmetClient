@@ -1,9 +1,9 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace GC.iOS.Core;
+namespace GC.iOS.Helpers;
 
-public class SafeAreaHelper<T> : NSObject, INotifyPropertyChanged, IDisposable where T : UIViewController
+public sealed class SafeAreaHelper<T> : NSObject, INotifyPropertyChanged, IDisposable where T : UIViewController
 {
     // A weak reference is used to prevent a memory leak
     private readonly WeakReference<T> _viewControllerRef;
@@ -68,7 +68,7 @@ public class SafeAreaHelper<T> : NSObject, INotifyPropertyChanged, IDisposable w
     }
 
     // Helper method to raise the PropertyChanged event.
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName ?? string.Empty));
     }
