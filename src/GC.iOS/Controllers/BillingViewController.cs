@@ -1,4 +1,7 @@
+using GC.Common;
 using GC.Frontend.ViewModels;
+using GC.iOS.Core;
+using System.ComponentModel;
 
 namespace GC.iOS.Controllers;
 
@@ -9,17 +12,23 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
     private UILabel? _lastMonthLabel;
     private UITableView? _transactionsTable;
     private UIPageControl? _pageControl;
+    private UIView? _topView;
+    private SafeAreaHelper<BillingViewController> _safeAreaHelper;
 
     public override void ViewDidLoad()
     {
         base.ViewDidLoad();
 
+        _safeAreaHelper = new SafeAreaHelper<BillingViewController>(this);
+        _safeAreaHelper.PropertyChanged += OnSafeAreaChanged;
+
         View.BackgroundColor = UIColor.SystemBackground;
 
-        var safeArea = Common.SafeArea;
+        var safeArea = _safeAreaHelper.SafeAreaInsets;
+        Log.Debug($"Safe area - Top: {safeArea.Top}, Bottom: {safeArea.Bottom}, Left: {safeArea.Left}, Right: {safeArea.Right}");
         
         // Create views with safe area frames
-        var topView = new UIView(new CGRect(0, safeArea.Top, View.Bounds.Width, 76));
+        _topView = new UIView(new CGRect(0, safeArea.Top, View.Bounds.Width, 76));
         _pageControl = new UIPageControl(new CGRect(0, 0, View.Bounds.Width, 16));
         _pageControl.Pages = _viewModel.AvailableMonths.Count;
         _pageControl.CurrentPage = _viewModel.SelectedIndex;
@@ -27,7 +36,7 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
             _viewModel.SelectedIndex = (int)_pageControl.CurrentPage;
             UpdateUI();
         };
-        topView.AddSubview(_pageControl);
+        _topView.AddSubview(_pageControl);
         _selectedTotalLabel = new UILabel(new CGRect(16, 16, View.Bounds.Width / 2 - 16, 44)) {
             TextAlignment = UITextAlignment.Left,
             Font = UIFont.SystemFontOfSize(18),
@@ -38,17 +47,17 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
             Font = UIFont.SystemFontOfSize(18),
             Lines = 2
         };
-        topView.AddSubview(_selectedTotalLabel);
-        topView.AddSubview(_lastMonthLabel);
-        View.AddSubview(topView);
+        _topView.AddSubview(_selectedTotalLabel);
+        _topView.AddSubview(_lastMonthLabel);
+        View.AddSubview(_topView);
 
         // Transactions table
-        _transactionsTable = new UITableView(new CGRect(0, safeArea.Top + 76, View.Bounds.Width, View.Bounds.Height - safeArea.Top - 76), UITableViewStyle.Plain) {
+        _transactionsTable = new UITableView(new CGRect(0, safeArea.Top + 76, View.Bounds.Width, View.Bounds.Height - safeArea.Top - 76 - safeArea.Bottom), UITableViewStyle.Plain) {
             DataSource = this
         };
         var refreshControl = new UIRefreshControl();
         refreshControl.ValueChanged += async (sender, e) => {
-            await _viewModel.RefreshBillingDataCommand.ExecuteAsync(null);
+            await _viewModel.RefreshCommand.ExecuteAsync(null);
             refreshControl.EndRefreshing();
         };
         _transactionsTable.RefreshControl = refreshControl;
@@ -72,9 +81,16 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
         View.AddGestureRecognizer(rightSwipe);
 
         // Bind to ViewModel
-        _viewModel.PropertyChanged += (_, _) => UpdateUI();
+        _viewModel.AvailableMonths.CollectionChanged  += (_, _) => UpdateUI();
 
         UpdateUI();
+    }
+
+    private void OnSafeAreaChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        var safeArea = _safeAreaHelper.SafeAreaInsets;
+        _topView!.Frame = new CGRect(0, safeArea.Top, View.Bounds.Width, 76);
+        _transactionsTable!.Frame = new CGRect(0, safeArea.Top + 76, View.Bounds.Width, View.Bounds.Height - safeArea.Top - 76 - safeArea.Bottom);
     }
 
     private void UpdateUI()
@@ -117,5 +133,15 @@ public class BillingViewController : UIViewController, IUITableViewDataSource
             cell.TextLabel.Text = $"{transaction.Date:dd.MM.yyyy} - {transaction.Type} - {total:N2} €";
         }
         return cell;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _safeAreaHelper.PropertyChanged -= OnSafeAreaChanged;
+            _safeAreaHelper.Dispose();
+        }
+        base.Dispose(disposing);
     }
 }

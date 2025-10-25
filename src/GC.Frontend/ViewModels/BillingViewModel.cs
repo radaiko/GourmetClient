@@ -25,7 +25,7 @@ public partial class BillingViewModel : ObservableObject {
     };
   }
   
-  [RelayCommand] private static async Task RefreshBillingData() {
+  [RelayCommand] private static async Task Refresh() {
     Log.Info("Refreshing billing data in MemCache.");
     await MemCache.RefreshBillingMonthsAsync();
   }
