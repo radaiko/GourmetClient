@@ -22,6 +22,21 @@ public class MainTabBarController : UITabBarController
     private SettingsViewController? _settingsView;
 
     /// <summary>
+    /// The navigation controller for the Order tab.
+    /// </summary>
+    private UINavigationController? _orderNav;
+
+    /// <summary>
+    /// The navigation controller for the Billing tab.
+    /// </summary>
+    private UINavigationController? _billingNav;
+
+    /// <summary>
+    /// The navigation controller for the Settings tab.
+    /// </summary>
+    private UINavigationController? _settingsNav;
+
+    /// <summary>
     /// Called after the view has been loaded into memory.
     /// Initializes the tab view controllers and sets up the tab bar.
     /// </summary>
@@ -35,7 +50,10 @@ public class MainTabBarController : UITabBarController
         _settingsView = new SettingsViewController();
 
         // Set the view controllers for the tab bar
-        ViewControllers = [_orderView, _billingView, _settingsView];
+        _orderNav = new UINavigationController(_orderView);
+        _billingNav = new UINavigationController(_billingView);
+        _settingsNav = new UINavigationController(_settingsView);
+        ViewControllers = [_orderNav, _billingNav, _settingsNav];
 
         // Update the tab bar images based on the current theme
         UpdateTabBarImages();
@@ -67,17 +85,17 @@ public class MainTabBarController : UITabBarController
 
         // Set the order tab image
         var orderImage = UIImage.FromFile("order" + suffix)?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
-        _orderView!.TabBarItem.Image = orderImage;
-        _orderView!.TabBarItem.SelectedImage = orderImage;
+        _orderNav!.TabBarItem.Image = orderImage;
+        _orderNav!.TabBarItem.SelectedImage = orderImage;
 
         // Set the billing tab image
         var billingImage = UIImage.FromFile("billing" + suffix)?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
-        _billingView!.TabBarItem.Image = billingImage;
-        _billingView!.TabBarItem.SelectedImage = billingImage;
+        _billingNav!.TabBarItem.Image = billingImage;
+        _billingNav!.TabBarItem.SelectedImage = billingImage;
 
         // Set the settings tab image
         var settingsImage = UIImage.FromFile("settings" + suffix)?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
-        _settingsView!.TabBarItem.Image = settingsImage;
-        _settingsView!.TabBarItem.SelectedImage = settingsImage;
+        _settingsNav!.TabBarItem.Image = settingsImage;
+        _settingsNav!.TabBarItem.SelectedImage = settingsImage;
     }
 }

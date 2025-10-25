@@ -11,21 +11,29 @@ public partial class BillingMonth : ObservableObject {
   [NotifyPropertyChangedFor(nameof(TotalAmount))]
   [NotifyPropertyChangedFor(nameof(TotalCafeAndCo))]
   [NotifyPropertyChangedFor(nameof(TotalGourmet))]
+  [NotifyPropertyChangedFor(nameof(CountGourmet))]
+  [NotifyPropertyChangedFor(nameof(CountCafeAndCo))]
   [ObservableProperty] private Transaction[] _transactions = [];
   
   // Total of all transactions in this month (sum of all positions' total prices)
   public decimal TotalAmount => Transactions.Sum(t => t.Positions.Sum(p => p.TotalPrice));
 
   // Total for transactions belonging to Cafe&Co (identified by TransactionType.CafePlusCo)
-  public decimal TotalCafeAndCo => Enumerable
-    .Where<Transaction>(Transactions, t => t.Type == Transaction.TransactionType.CafePlusCo)
+  public decimal TotalCafeAndCo => Transactions
+    .Where(t => t.Type == Transaction.TransactionType.CafePlusCo)
     .Sum(t => t.Positions.Sum(p => p.TotalPrice));
 
   // Total for transactions belonging to Gourmet (identified by TransactionType.Gourmet)
-  public decimal TotalGourmet => Enumerable
-    .Where<Transaction>(Transactions, t => t.Type == Transaction.TransactionType.Gourmet)
+  public decimal TotalGourmet => Transactions
+    .Where(t => t.Type == Transaction.TransactionType.Gourmet)
     .Sum(t => t.Positions.Sum(p => p.TotalPrice));
   
+  // Count of Gourmet transactions
+  public int CountGourmet => Transactions.Count(t => t.Type == Transaction.TransactionType.Gourmet);
+
+  // Count of Cafe&Co transactions
+  public int CountCafeAndCo => Transactions.Count(t => t.Type == Transaction.TransactionType.CafePlusCo);
+
   public static ObservableCollection<BillingMonth> GetDummyData() {
     var dummyMonths = new ObservableCollection<BillingMonth>();
     // provide 3 months of sample data

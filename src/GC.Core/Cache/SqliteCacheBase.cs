@@ -92,4 +92,36 @@ public static partial class SqliteCacheBase {
     }
     return result;
   }
+
+  // Execute a scalar query with named parameters. Parameter tuples are (name, value).
+  public static object? ExecuteScalar(string sql, params (string name, object? value)[] parameters) {
+    using var conn = OpenConnection();
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = sql;
+    foreach (var (name, value) in parameters) {
+      cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
+    }
+    return cmd.ExecuteScalar();
+  }
+
+  // Read rows from a table with specified columns and WHERE clause. Returns list of dictionaries.
+  public static List<Dictionary<string, object>> ReadRows(string tableName, string[] columns, string whereClause, params (string name, object? value)[] parameters) {
+    ValidateTableName(tableName);
+    var result = new List<Dictionary<string, object>>();
+    using var conn = OpenConnection();
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = $"SELECT {string.Join(", ", columns)} FROM {tableName} {whereClause}";
+    foreach (var (name, value) in parameters) {
+      cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
+    }
+    using var rdr = cmd.ExecuteReader();
+    while (rdr.Read()) {
+      var row = new Dictionary<string, object?>();
+      for (int i = 0; i < rdr.FieldCount; i++) {
+        row[rdr.GetName(i)] = rdr.IsDBNull(i) ? null : rdr.GetValue(i);
+      }
+      result.Add(row!);
+    }
+    return result;
+  }
 }

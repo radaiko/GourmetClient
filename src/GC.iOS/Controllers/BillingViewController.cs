@@ -1,5 +1,6 @@
 using GC.Common;
 using GC.Frontend.ViewModels;
+using GC.Models;
 using System.ComponentModel;
 
 namespace GC.iOS.Controllers;
@@ -8,7 +9,7 @@ namespace GC.iOS.Controllers;
 /// View controller for displaying billing information and transactions.
 /// Shows monthly totals and transaction history with swipe navigation.
 /// </summary>
-public class BillingViewController : BaseViewController, IUITableViewDataSource
+public class BillingViewController : BaseViewController, IUITableViewDataSource, IUITableViewDelegate
 {
     /// <summary>
     /// View model that provides billing data.
@@ -39,6 +40,11 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
     /// Top view containing the page control and labels.
     /// </summary>
     private UIView? _topView;
+
+    /// <summary>
+    /// Activity indicator shown when data is loading.
+    /// </summary>
+    private UIActivityIndicatorView? _loadingIndicator;
 
     /// <summary>
     /// Called after the view has been loaded into memory.
@@ -84,9 +90,18 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
         _topView.AddSubview(_lastMonthLabel);
         View.AddSubview(_topView);
 
+        // Create loading indicator
+        _loadingIndicator = new UIActivityIndicatorView(UIActivityIndicatorViewStyle.Medium) {
+            Center = new CGPoint(View.Bounds.Width / 2, safeArea.Top + 38),
+            HidesWhenStopped = true
+        };
+        _topView.AddSubview(_loadingIndicator);
+
         // Create transactions table view
         _transactionsTable = new UITableView(new CGRect(0, safeArea.Top + 76, View.Bounds.Width, View.Bounds.Height - safeArea.Top - 76 - safeArea.Bottom), UITableViewStyle.Plain) {
-            DataSource = this
+            DataSource = this,
+            Delegate = this,
+            RowHeight = 80 // Make rows bigger for the blocks
         };
 
         // Add pull-to-refresh functionality
@@ -137,6 +152,7 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
     {
         var safeArea = _safeAreaHelper.SafeAreaInsets;
         _topView!.Frame = new CGRect(0, safeArea.Top, View.Bounds.Width, 76);
+        _loadingIndicator!.Center = new CGPoint(View.Bounds.Width / 2, safeArea.Top + 38);
         _transactionsTable!.Frame = new CGRect(0, safeArea.Top + 76, View.Bounds.Width, View.Bounds.Height - safeArea.Top - 76 - safeArea.Bottom);
     }
 
@@ -162,6 +178,18 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
         _transactionsTable!.ReloadData();
         _pageControl!.Pages = _viewModel.AvailableMonths.Count;
         _pageControl!.CurrentPage = _viewModel.SelectedIndex;
+
+        // Show or hide loading indicator
+        if (_viewModel.IsLoading)
+        {
+            _loadingIndicator!.StartAnimating();
+            _transactionsTable!.Hidden = true;
+        }
+        else
+        {
+            _loadingIndicator!.StopAnimating();
+            _transactionsTable!.Hidden = false;
+        }
     }
 
     /// <summary>
@@ -181,7 +209,7 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
     {
         if (_viewModel.AvailableMonths.Count > _viewModel.SelectedIndex)
         {
-            return _viewModel.AvailableMonths[_viewModel.SelectedIndex].Transactions.Length;
+            return 2; // One row for Gourmet, one for Cafe&Co
         }
         return 0;
     }
@@ -195,12 +223,53 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource
     public UITableViewCell GetCell(UITableView tableView, NSIndexPath indexPath)
     {
         var cell = new UITableViewCell(UITableViewCellStyle.Default, null);
+        cell.TextLabel.Font = UIFont.SystemFontOfSize(20); // Larger font for the blocks
+        cell.TextLabel.Lines = 2; // Allow multiple lines
         if (_viewModel.AvailableMonths.Count > _viewModel.SelectedIndex)
         {
-            var transaction = _viewModel.AvailableMonths[_viewModel.SelectedIndex].Transactions[indexPath.Row];
-            var total = transaction.Positions.Sum(p => p.TotalPrice);
-            cell.TextLabel.Text = $"{transaction.Date:dd.MM.yyyy} - {transaction.Type} - {total:N2} €";
+            var selectedMonth = _viewModel.AvailableMonths[_viewModel.SelectedIndex];
+            if (indexPath.Row == 0)
+            {
+                cell.TextLabel.Text = $"Gourmet\n{selectedMonth.CountGourmet} Zahlungen in Summe {selectedMonth.TotalGourmet:N2} €";
+            }
+            else if (indexPath.Row == 1)
+            {
+                cell.TextLabel.Text = $"Cafe&Co\n{selectedMonth.CountCafeAndCo} Zahlungen in Summe {selectedMonth.TotalCafeAndCo:N2} €";
+            }
         }
         return cell;
+    }
+
+    /// <summary>
+    /// Called when a row is selected.
+    /// </summary>
+    /// <param name="tableView">The table view.</param>
+    /// <param name="indexPath">The index path of the selected row.</param>
+    public void RowSelected(UITableView tableView, NSIndexPath indexPath)
+    {
+        if (_viewModel.AvailableMonths.Count > _viewModel.SelectedIndex)
+        {
+            var selectedMonth = _viewModel.AvailableMonths[_viewModel.SelectedIndex];
+            Transaction[] transactions;
+            string title;
+            if (indexPath.Row == 0)
+            {
+                transactions = selectedMonth.Transactions.Where(t => t.Type == Transaction.TransactionType.Gourmet).ToArray();
+                title = "Gourmet";
+            }
+            else if (indexPath.Row == 1)
+            {
+                transactions = selectedMonth.Transactions.Where(t => t.Type == Transaction.TransactionType.CafePlusCo).ToArray();
+                title = "Cafe&Co";
+            }
+            else
+            {
+                return;
+            }
+
+            var listController = new TransactionListViewController(transactions);
+            listController.Title = title;
+            NavigationController?.PushViewController(listController, true);
+        }
     }
 }

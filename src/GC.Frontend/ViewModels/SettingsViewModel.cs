@@ -2,6 +2,7 @@ using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GC.Models;
 using System.ComponentModel;
+using GC.Core.Cache;
 
 namespace GC.Frontend.ViewModels;
 
@@ -54,4 +55,8 @@ public partial class SettingsViewModel : ObservableObject{
     }
   }
 
+
+  public SettingsViewModel() {
+    Settings.It.PropertyChanged += async (_, _) => await MemCache.Initialize();
+  }
 }

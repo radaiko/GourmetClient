@@ -13,6 +13,7 @@ public partial class BillingViewModel : ObservableObject {
 
   [ObservableProperty] private int _selectedIndex = 0;
   [ObservableProperty] private ObservableCollection<BillingMonth> _availableMonths = [];
+  [ObservableProperty] private bool _isLoading = true;
   
   public BillingViewModel() {
     Log.Debug("Initializing BillingViewModel and setting up AvailableMonths.");
@@ -23,6 +24,8 @@ public partial class BillingViewModel : ObservableObject {
       Log.Debug("Billing months updated in MemCache, refreshing AvailableMonths in BillingViewModel.");
       AvailableMonths = MemCache.BillingMonths;
     };
+
+    MemCache.IsLoadingChanged += isLoading => { IsLoading = isLoading; };
   }
   
   [RelayCommand] private static async Task Refresh() {
