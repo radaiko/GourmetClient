@@ -132,7 +132,6 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource,
         _transactionsTable.AddGestureRecognizer(rightSwipe);
 
         // Bind to view model changes
-        _viewModel.AvailableMonths.CollectionChanged  += (_, _) => UpdateUI();
         _viewModel.PropertyChanged += (_, _) => UpdateUI();
 
         // Initial UI update

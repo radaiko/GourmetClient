@@ -25,6 +25,10 @@ public static class SQLiteBase
     
     // Ensure file exists
     if (!File.Exists(DbPath)) {
+      // Ensure directory exists
+      var dir = Path.GetDirectoryName(DbPath);
+      if (dir != null)
+        Directory.CreateDirectory(dir);
       using var fs = File.Create(DbPath);
     }
     

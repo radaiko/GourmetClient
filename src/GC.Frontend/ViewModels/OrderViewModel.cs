@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,12 +11,17 @@ namespace GC.Frontend.ViewModels;
 
 public partial class OrderViewModel : ObservableObject {
   [ObservableProperty] private int _selectedIndex = 0;
-  [ObservableProperty] private ObservableCollection<Day> _availableDays = [];
+  [ObservableProperty] private List<Day> _availableDays = [];
+  [ObservableProperty] private bool _isLoading = true;
   
   public OrderViewModel() {
     AvailableDays = MemCache.Menus;
-    MemCache.Menus.CollectionChanged += (_, _) => {
-      AvailableDays = MemCache.Menus;
+    MemCache.IsLoadingChanged += isLoading => {
+      IsLoading = isLoading; 
+      if (!isLoading) {
+        Log.Debug("Loading is done. Update Days in OrderViewModel.");
+        AvailableDays = MemCache.Menus;
+      }
     };
   }
   

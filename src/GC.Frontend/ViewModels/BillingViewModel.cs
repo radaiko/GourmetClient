@@ -12,7 +12,7 @@ namespace GC.Frontend.ViewModels;
 public partial class BillingViewModel : ObservableObject {
 
   [ObservableProperty] private int _selectedIndex = 0;
-  [ObservableProperty] private ObservableCollection<BillingMonth> _availableMonths = [];
+  [ObservableProperty] private List<BillingMonth> _availableMonths = [];
   [ObservableProperty] private bool _isLoading = true;
   
   public BillingViewModel() {
@@ -20,12 +20,14 @@ public partial class BillingViewModel : ObservableObject {
     AvailableMonths = MemCache.BillingMonths;
     Log.Debug($"AvailableMonths initialized with {AvailableMonths.Count} months.");
     Log.Debug("Subscribing to MemCache.BillingMonths.CollectionChanged event.");
-    MemCache.BillingMonths.CollectionChanged += (_, _) => {
-      Log.Debug("Billing months updated in MemCache, refreshing AvailableMonths in BillingViewModel.");
-      AvailableMonths = MemCache.BillingMonths;
+    
+    MemCache.IsLoadingChanged += isLoading => {
+      IsLoading = isLoading;
+      if (!isLoading) {
+        Log.Debug("Loading is done. Update Billing months in BillingViewModel.");
+        AvailableMonths = MemCache.BillingMonths;
+      }
     };
-
-    MemCache.IsLoadingChanged += isLoading => { IsLoading = isLoading; };
   }
   
   [RelayCommand] private static async Task Refresh() {
