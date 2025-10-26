@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GC.Common;
 using GC.Models;
 
 namespace GC.Core.DB;
@@ -47,7 +48,7 @@ public static class SQLiteMenus {
       cmd.Parameters.AddWithValue("@hash", menu.Hash);
       cmd.Parameters.AddWithValue("@type", (int)menu.Type);
       cmd.Parameters.AddWithValue("@title", menu.Title);
-      cmd.Parameters.AddWithValue("@date", menu.Date.ToUniversalTime());
+      cmd.Parameters.AddWithValue("@date", menu.Date);
       cmd.Parameters.AddWithValue("@allergens", new string(menu.Allergens));
       cmd.Parameters.AddWithValue("@price", menu.Price);
       cmd.ExecuteNonQuery();
@@ -64,7 +65,7 @@ public static class SQLiteMenus {
   /// <param name="end"></param>
   /// <returns></returns>
   /// <exception cref="InvalidOperationException"></exception>
-  public static IEnumerable<Day> Read(DateTime start, DateTime end) {
+  public static IEnumerable<Day> Read(DateOnly start, DateOnly end) {
     Init();
     
     // Read all menus for the specified month
@@ -81,7 +82,7 @@ public static class SQLiteMenus {
       var id = reader.GetInt32(0);
       var typeInt = reader.GetInt32(1);
       var title = reader.GetString(2);
-      var date = reader.GetDateTime(3).ToLocalTime();
+      var date = reader.GetDateTime(3).ToDateOnly();
       var allergensStr = reader.GetString(4);
       var price = reader.GetDecimal(5);
       var type = (MenuType)typeInt;

@@ -133,9 +133,9 @@ public static class GourmetApi {
     Log.Info($"GourmetApi.GetOrderDaysAsync finished, total menus: {result.Count}");
     // Group menus by date into Day objects
     // Group menus into days
-    var availableDays = result.ConvertAll(m => m.Date.Date).Distinct();
+    var availableDays = result.ConvertAll(m => m.Date).Distinct();
     return (from day in availableDays
-        let menusForDay = result.Where(m => m.Date.Date == day).ToList()
+        let menusForDay = result.Where(m => m.Date == day).ToList()
         let menu1 = menusForDay.FirstOrDefault(m => m.Type == MenuType.Menu1)
                     ?? new Menu(MenuType.Menu1, "N/A", [], 0.0m, day)
         let menu2 = menusForDay.FirstOrDefault(m => m.Type == MenuType.Menu2)
@@ -144,7 +144,7 @@ public static class GourmetApi {
                     ?? new Menu(MenuType.Menu3, "N/A", [], 0.0m, day)
         let soupAndSalad = menusForDay.FirstOrDefault(m => m.Type == MenuType.SoupAndSalad)
                            ?? new Menu(MenuType.SoupAndSalad, "N/A", [], 0.0m, day)
-        select new Day(day, menu1, menu2, menu3, soupAndSalad))
+        select new Day(menu1, menu2, menu3, soupAndSalad))
       .ToList();
   }
   
@@ -222,7 +222,7 @@ public static class GourmetApi {
           title,
           allergene.Where(char.IsLetter).ToArray(),
           decimal.TryParse(price, NumberStyles.Currency, CultureInfo.GetCultureInfo("de-AT"), out var parsedPrice) ? parsedPrice : 0m,
-          date.Value
+          date.Value.ToDateOnly()
         ));
         Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, $"Extracted menu {index}/{menuNodes.Count}: {title}"));
       } else {

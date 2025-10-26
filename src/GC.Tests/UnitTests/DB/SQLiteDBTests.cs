@@ -102,6 +102,36 @@ public class SqLiteBaseTests(SQLiteDBTestFixture fixture) : IClassFixture<SQLite
     SQLiteMenus.Insert(days);
     
     var readBack = SQLiteMenus.Read(days.First().Date, days.Last().Date.AddDays(1));
-    Assert.Equal(days.ToArray(), readBack);
+    
+    for (var i = 0; i < days.Count; i++) {
+      var originalDay = days[i];
+      var readDay = readBack.ElementAt(i);
+      
+      // Assert.Equal(originalDay.Date, readDay.Date);
+      
+      for (var j = 0; j < 4; j++) {
+        var originalMenu = j switch {
+          0 => originalDay.Menu1,
+          1 => originalDay.Menu2,
+          2 => originalDay.Menu3,
+          3 => originalDay.SoupAndSalad,
+          _ => throw new InvalidOperationException("Invalid menu index")
+        };
+        var readMenu = j switch {
+          0 => readDay.Menu1,
+          1 => readDay.Menu2,
+          2 => readDay.Menu3,
+          3 => readDay.SoupAndSalad,
+          _ => throw new InvalidOperationException("Invalid menu index")
+        };
+        
+
+        Assert.Equal(originalMenu.Type, readMenu.Type);
+        Assert.Equal(originalMenu.Title, readMenu.Title);
+        Assert.Equal(originalMenu.Allergens, readMenu.Allergens);
+        Assert.Equal(originalMenu.Price, readMenu.Price);
+        Assert.Equal(originalMenu.Date, readMenu.Date);
+      }
+    }
   }
 }

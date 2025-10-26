@@ -5,34 +5,21 @@ using System.Linq;
 namespace GC.Models;
 
 public static class Extensions {
-  public static Day[] ToDays(this IEnumerable<Menu> menus) {
-    var daysDict = new Dictionary<DateTime, Day>();
-
+  public static IEnumerable<Day> ToDays(this IEnumerable<Menu> menus) {
+    List<Day> days = [];
     foreach (var menu in menus) {
-      if (!daysDict.TryGetValue(menu.Date, out Day? day)) {
-        day = new Day(menu.Date, null!, null!, null!, null!);
-        daysDict[menu.Date] = day;
-      }
-
-      switch (menu.Type) {
-        case MenuType.Menu1:
-          day.Menu1 = menu;
-          break;
-        case MenuType.Menu2:
-          day.Menu2 = menu;
-          break;
-        case MenuType.Menu3:
-          day.Menu3 = menu;
-          break;
-        case MenuType.SoupAndSalad:
-          day.SoupAndSalad = menu;
-          break;
-        default:
-          throw new ArgumentOutOfRangeException();
+      var date = menu.Date;
+      var day = days.FirstOrDefault(d => d.Date == date);
+      if (day == null) {
+        day = new Day(
+          menus.FirstOrDefault( m=> m.Date == date && m.Type == MenuType.Menu1), 
+          menus.FirstOrDefault( m=> m.Date == date && m.Type == MenuType.Menu2), 
+          menus.FirstOrDefault( m=> m.Date == date && m.Type == MenuType.Menu3),
+          menus.FirstOrDefault( m=> m.Date == date && m.Type == MenuType.SoupAndSalad));
+        days.Add(day);
       }
     }
-
-    return daysDict.Values.ToArray();
+    return days;
   }
   public static Menu[] ToMenu(this IEnumerable<Day> days) => days.SelectMany(d => d.Menus).ToArray();
 }
