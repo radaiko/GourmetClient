@@ -25,6 +25,7 @@ public class SQLiteDBTestFixture : IDisposable {
   }
 }
 
+[Collection("Sequential")]
 // ReSharper disable once InconsistentNaming
 public class SqLiteBaseTests(SQLiteDBTestFixture fixture) : IClassFixture<SQLiteDBTestFixture> {
   [Fact]

@@ -23,8 +23,11 @@ internal static class Init {
     Settings.It.VentoUsername = Environment.GetEnvironmentVariable("VentoUsername");
     Settings.It.VentoPassword = Environment.GetEnvironmentVariable("VentoPassword");
     
-    // Set up HttpClient with cassette
-    BaseApi.SetHttpClient(HttpCassette.CreateHttpClient());
-    
   }
+}
+
+
+[CollectionDefinition("Sequential", DisableParallelization = true)]
+public class SequentialCollectionDefinitionClass
+{
 }
