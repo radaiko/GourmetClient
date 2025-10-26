@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
 using GC.Common;
+using GC.Core.WebApis;
 using GC.Models;
+using GC.Tests.Helpers;
 
 namespace GC.Tests;
 
@@ -20,6 +22,9 @@ internal static class Init {
     Settings.It.GourmetPassword = Environment.GetEnvironmentVariable("GourmetPassword");
     Settings.It.VentoUsername = Environment.GetEnvironmentVariable("VentoUsername");
     Settings.It.VentoPassword = Environment.GetEnvironmentVariable("VentoPassword");
+    
+    // Set up HttpClient with cassette
+    BaseApi.SetHttpClient(HttpCassette.CreateHttpClient());
     
   }
 }
