@@ -88,7 +88,12 @@ public class SqLiteBaseTests(SQLiteDBTestFixture fixture) : IClassFixture<SQLite
     var readBack = SQLiteBilling.Read(month);
 
     Assert.NotNull(readBack);
-    Assert.Equal(billingMonth, readBack);
+    Assert.Equal(billingMonth.TotalAmount, readBack.TotalAmount);
+    Assert.Equal(billingMonth.TotalCafeAndCo, readBack.TotalCafeAndCo);
+    Assert.Equal(billingMonth.TotalGourmet, readBack.TotalGourmet);
+    Assert.Equal(billingMonth.CountGourmet, readBack.CountGourmet);
+    Assert.Equal(billingMonth.CountCafeAndCo, readBack.CountCafeAndCo);
+    Assert.Equal(billingMonth.Month, readBack.Month);
   }
   
   [Fact]
