@@ -10,7 +10,7 @@ namespace GC.Tests.E2E.CacheTests;
 public class BillingCacheTests {
   [Fact]
   public async Task Test1() {
-    var tempDb = PathHelper.GetTempDbPath("test.db");
+    var tempDb = PathHelper.GetTempDbPath();
     try { File.Delete(tempDb); } catch { }
     SqliteCacheBase.SetDbPathForTests(tempDb);
 

@@ -44,7 +44,7 @@ public static class SQLiteBilling {
       cmd.CommandText = "INSERT OR REPLACE INTO BillingTransactions (type, date, hash) VALUES (@type, @date, @hash);";
       cmd.Parameters.Clear();
       cmd.Parameters.AddWithValue("@type", (int)transaction.Type);
-      cmd.Parameters.AddWithValue("@date", transaction.Date);
+      cmd.Parameters.AddWithValue("@date", transaction.Date.ToUniversalTime());
       cmd.Parameters.AddWithValue("@hash", transaction.Hash);
       cmd.ExecuteNonQuery();
       
@@ -93,10 +93,10 @@ public static class SQLiteBilling {
     
     while (reader.Read())
     {
-      long id = reader.GetInt64(0);
-      int typeInt = reader.GetInt32(1);
-      DateTime date = reader.GetDateTime(2);
-      Transaction.TransactionType type = (Transaction.TransactionType)typeInt;
+      var id = reader.GetInt64(0);
+      var typeInt = reader.GetInt32(1);
+      var date = reader.GetDateTime(2).ToLocalTime();
+      var type = (Transaction.TransactionType)typeInt;
       
       // Read associated positions
       using var cmdPos = SQLiteBase.Connection.CreateCommand();

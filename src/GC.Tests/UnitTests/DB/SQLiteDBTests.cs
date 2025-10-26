@@ -10,7 +10,7 @@ public class SQLiteDBTestFixture : IDisposable {
   public string TempDb { get; }
 
   public SQLiteDBTestFixture() {
-    TempDb = Path.Combine(Path.GetTempPath(), $"gc_unittests_sqlitedb_{Guid.NewGuid():N}.db");
+    TempDb = Helpers.PathHelper.GetTempDbPath();
     try {
       File.Delete(TempDb);
     }
@@ -22,7 +22,6 @@ public class SQLiteDBTestFixture : IDisposable {
 
   public void Dispose() {
     SQLiteBase.Close();
-    File.Delete(TempDb);
   }
 }
 
@@ -99,10 +98,10 @@ public class SqLiteBaseTests(SQLiteDBTestFixture fixture) : IClassFixture<SQLite
   
   [Fact]
   public void SQLiteDB_Can_Insert_And_Read_Menu() {
-    var days = Day.GetDummyData().ToList();
+    var days = Day.GetDummyData();
     SQLiteMenus.Insert(days);
     
     var readBack = SQLiteMenus.Read(days.First().Date, days.Last().Date.AddDays(1));
-    Assert.Equal(days, readBack);
+    Assert.Equal(days.ToArray(), readBack);
   }
 }
