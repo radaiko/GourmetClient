@@ -140,7 +140,8 @@ public static class VentoApi {
     var toDate = fromDate.AddMonths(1).AddDays(-1);
 
     // Prepare request to transactions page with query parameters (if the site accepts them we try; otherwise we fetch and filter locally)
-    var url = WebUrl + PageNameTransactions + $"?from={fromDate:dd.MM.yyyy}&until={toDate:dd.MM.yyyy}";
+    // https://my.ventopay.com/mocca.website/Transaktionen.aspx?fromDate=01.10.2025&untilDate=31.10.2025
+    var url = WebUrl + PageNameTransactions + $"?fromDate={fromDate:dd.MM.yyyy}&untilDate={toDate:dd.MM.yyyy}";
 
     var response = await BaseApi.Client.GetAsync(url);
     response.EnsureSuccessStatusCode();

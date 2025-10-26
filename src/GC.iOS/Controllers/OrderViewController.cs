@@ -157,7 +157,7 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
         }
         else
         {
-            _dateLabel!.Text = "-";
+            _dateLabel!.Text = "";
         }
 
         // Reload table data and update page control

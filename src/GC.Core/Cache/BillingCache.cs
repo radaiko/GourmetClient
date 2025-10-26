@@ -14,6 +14,7 @@ public static class BillingCache {
   /// Indicates whether billing months are currently being loaded.
   /// </summary>
   public static bool IsLoading { get; private set; }
+  public static bool IsValid { get; private set; }
 
   /// <summary>
   /// Gets billing months from cache, fetching missing months from WebApi if needed.
@@ -26,24 +27,35 @@ public static class BillingCache {
     var today = DateTime.Now.ToDateOnly();
     var endOfMonth = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
     var lastFetch = SQLiteBilling.GetLastFetchDate();
+    int monthsPassed = 0;
     
     if (lastFetch == DateOnly.MinValue) { // First time fetch, get last 6 months from WebApi and store in sqlite
-      for (var i = 0; i < 6; i++) {
-        var monthToFetch = endOfMonth.AddMonths(-i);
-        var billingMonth = await VentoApi.GetBillingMonthAsync(monthToFetch.Year, monthToFetch.Month);
-        SQLiteBilling.Insert(billingMonth);
+      monthsPassed = 6;
+      lastFetch = DateTime.Now.ToDateOnly().AddMonths(-6);
+    }
+    else // Not first time, fetch only missing months
+      monthsPassed = (today.Year - lastFetch.Year) * 12 + today.Month - lastFetch.Month;
+
+    // Get Data
+    for (var i = 1; i <= monthsPassed; i++) {
+      var monthToFetch = lastFetch.AddMonths(i);
+      try {
+        await GetAndWrite(monthToFetch);
+      }
+      catch {
+        IsValid = false;
+        return default;
       }
     }
-    else { // Not first time, fetch only missing months
-      var monthsPassed = (today.Year - lastFetch.Year) * 12 + today.Month - lastFetch.Month;
-      for (var i = 1; i <= monthsPassed; i++) {
-        var monthToFetch = lastFetch.AddMonths(i);
-        var billingMonth = await VentoApi.GetBillingMonthAsync(monthToFetch.Year, monthToFetch.Month);
-        SQLiteBilling.Insert(billingMonth);
-      }
-    }
+    
+    // Read from cache
     cache = SQLiteBilling.Read();
     IsLoading = false;
+    IsValid = true;
     return cache;
+  }
+
+  public static async Task GetAndWrite(DateOnly monthToFetch) {
+    SQLiteBilling.Insert(await VentoApi.GetBillingMonthAsync(monthToFetch.Year, monthToFetch.Month));
   }
 }

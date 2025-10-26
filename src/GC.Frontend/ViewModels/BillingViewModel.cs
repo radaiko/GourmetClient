@@ -17,15 +17,14 @@ public partial class BillingViewModel : ObservableObject {
   
   public BillingViewModel() {
     Log.Debug("Initializing BillingViewModel and setting up AvailableMonths.");
-    AvailableMonths = MemCache.BillingMonths;
-    Log.Debug($"AvailableMonths initialized with {AvailableMonths.Count} months.");
+    AvailableMonths = MemCache.BillingMonths ?? [];
     Log.Debug("Subscribing to MemCache.BillingMonths.CollectionChanged event.");
     
     MemCache.IsLoadingChanged += isLoading => {
       IsLoading = isLoading;
       if (!isLoading) {
         Log.Debug("Loading is done. Update Billing months in BillingViewModel.");
-        AvailableMonths = MemCache.BillingMonths;
+        AvailableMonths = MemCache.BillingMonths ?? [];
       }
     };
   }

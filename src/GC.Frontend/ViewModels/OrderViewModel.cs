@@ -15,12 +15,12 @@ public partial class OrderViewModel : ObservableObject {
   [ObservableProperty] private bool _isLoading = true;
   
   public OrderViewModel() {
-    AvailableDays = MemCache.Menus;
+    AvailableDays = MemCache.Menus ?? [];
     MemCache.IsLoadingChanged += isLoading => {
       IsLoading = isLoading; 
       if (!isLoading) {
         Log.Debug("Loading is done. Update Days in OrderViewModel.");
-        AvailableDays = MemCache.Menus;
+        AvailableDays = MemCache.Menus ?? [];
       }
     };
   }

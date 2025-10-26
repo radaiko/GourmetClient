@@ -8,8 +8,8 @@ using GC.Models;
 namespace GC.Core.Cache;
 
 public static class MemCache {
-  public static List<BillingMonth> BillingMonths { get; private set; } = [];
-  public static List<Day> Menus { get; private set; } = [];
+  public static List<BillingMonth>? BillingMonths { get; private set; } = [];
+  public static List<Day>? Menus { get; private set; } = [];
 
   private static bool _isBillingLoading;
   private static bool _isOrderLoading;
@@ -79,13 +79,12 @@ public static class MemCache {
     BillingLoading = true;
     Log.Debug("Billing refresh started");
     try {
-      BillingMonths.Clear();
+      BillingMonths?.Clear();
       BillingMonths = (List<BillingMonth>)await BillingCache.GetAsync();
-      Log.Debug($"Completed loading {BillingMonths.Count} billing months");
+      Log.Debug($"Completed loading {BillingMonths?.Count ?? 0} billing months");
     }
     catch (Exception ex) {
-      Log.Debug($"Exception while loading billing months: {ex}");
-      throw;
+      Log.Error($"Exception while loading billing months: {ex}");
     }
     finally {
       BillingLoading = false;
@@ -97,13 +96,12 @@ public static class MemCache {
     OrderLoading = true;
     Log.Debug("Order refresh started");
     try {
-      Menus.Clear();
+      Menus?.Clear();
       Menus = (List<Day>)await MenuCache.GetAsync();
-      Log.Debug($"Completed loading {Menus.Count} order days");
+      Log.Debug($"Completed loading {Menus?.Count ?? 0} order days");
     }
     catch (Exception ex) {
-      Log.Debug($"Exception while loading order days: {ex}");
-      throw;
+      Log.Error($"Exception while loading order days: {ex}");
     }
     finally {
       OrderLoading = false;

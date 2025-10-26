@@ -169,8 +169,8 @@ public class BillingViewController : BaseViewController, IUITableViewDataSource,
         }
         else
         {
-            _selectedTotalLabel!.Text = "-";
-            _lastMonthLabel!.Text = "-";
+            _selectedTotalLabel!.Text = "";
+            _lastMonthLabel!.Text = "";
         }
 
         // Reload table data and update page control

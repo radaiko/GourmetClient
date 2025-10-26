@@ -12,6 +12,7 @@ namespace GC.Core.Cache;
 public static class MenuCache {
   
   public static bool IsLoading { get; private set; }
+  public static bool IsValid { get; private set; }
   
   public static async Task<IEnumerable<Day>> GetAsync() {
     IsLoading = true;
@@ -24,12 +25,19 @@ public static class MenuCache {
     }
     else { // cache is out of date, load from webapi (GourmetApi)
       Log.Info("MenuCache is out of date, fetching new menus from WebApi.");
-      var days = await GourmetApi.GetOrderDaysAsync();
-      SQLiteMenus.Insert(days);
+      try {
+        var days = await GourmetApi.GetOrderDaysAsync();
+        SQLiteMenus.Insert(days);
+      }
+      catch {
+        IsValid = false;
+        return default;
+      }
     }
     
     cache = SQLiteMenus.Read();
     IsLoading = false;
+    IsValid = true;
     return cache;
   }
 }
