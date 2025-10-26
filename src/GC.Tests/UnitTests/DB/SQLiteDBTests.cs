@@ -90,7 +90,7 @@ public class SqLiteBaseTests(SQLiteDBTestFixture fixture) : IClassFixture<SQLite
 
   [Fact]
   public void SQLiteDB_Can_Insert_And_Read_BillingMonth() {
-    var billingMonth = BillingMonth.GetDummyData().First();
+    var billingMonth = InvoiceMonth.GetDummyData().First();
     SQLiteBilling.Insert(billingMonth);
 
     var month = billingMonth.Month;

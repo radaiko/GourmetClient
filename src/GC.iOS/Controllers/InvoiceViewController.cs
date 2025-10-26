@@ -9,7 +9,7 @@ namespace GC.iOS.Controllers;
 /// View controller for displaying billing information and transactions.
 /// Shows monthly totals and transaction history with swipe navigation.
 /// </summary>
-public class BillingViewController : BaseViewController, IUITableViewDataSource, IUITableViewDelegate
+public class InvoiceViewController : BaseViewController, IUITableViewDataSource, IUITableViewDelegate
 {
     /// <summary>
     /// View model that provides billing data.

@@ -124,7 +124,7 @@ public static class VentoApi {
     return false;
   }
 
-  public static async Task<BillingMonth> GetBillingMonthAsync(int year, int month) {
+  public static async Task<InvoiceMonth> GetBillingMonthAsync(int year, int month) {
     Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.VentoApi, "Starting menu fetch"));
     // Ensure logged in before fetching menus
     if (!_isLoggedIn) {
@@ -151,7 +151,7 @@ public static class VentoApi {
     var doc = new HtmlDocument();
     doc.LoadHtml(html);
     
-    var billingMonth = new BillingMonth();
+    var billingMonth = new InvoiceMonth();
     
    // Collect all <div class="transact"> nodes (including nested ones)
     var transactDivs = doc.DocumentNode.SelectNodes("//div[contains(concat(' ', normalize-space(@class), ' '), ' transact ')]");

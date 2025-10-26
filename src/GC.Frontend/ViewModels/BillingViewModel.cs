@@ -12,7 +12,7 @@ namespace GC.Frontend.ViewModels;
 public partial class BillingViewModel : ObservableObject {
 
   [ObservableProperty] private int _selectedIndex = 0;
-  [ObservableProperty] private List<BillingMonth> _availableMonths = [];
+  [ObservableProperty] private List<InvoiceMonth> _availableMonths = [];
   [ObservableProperty] private bool _isLoading = true;
   
   public BillingViewModel() {

@@ -5,7 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GC.Models;
 
-public partial class BillingMonth : ObservableObject {
+public partial class InvoiceMonth : ObservableObject {
   
   [NotifyPropertyChangedFor(nameof(Month))]
   [NotifyPropertyChangedFor(nameof(TotalAmount))]
@@ -37,8 +37,8 @@ public partial class BillingMonth : ObservableObject {
   // The month this billing period represents (derived from the earliest transaction date)
   public DateTime Month => Transactions.MinBy(t => t.Date)!.Date;
 
-  public static ObservableCollection<BillingMonth> GetDummyData() {
-    var dummyMonths = new ObservableCollection<BillingMonth>();
+  public static ObservableCollection<InvoiceMonth> GetDummyData() {
+    var dummyMonths = new ObservableCollection<InvoiceMonth>();
     // provide 3 months of sample data
     for (int i = 0; i < 3; i++) {
       var monthDate = DateTime.Now.AddMonths(-i);
@@ -61,7 +61,7 @@ public partial class BillingMonth : ObservableObject {
         };
       }
 
-      dummyMonths.Add(new BillingMonth {
+      dummyMonths.Add(new InvoiceMonth {
         Transactions = transactions
       });
     }

@@ -8,7 +8,7 @@ using GC.Models;
 namespace GC.Core.Cache;
 
 public static class MemCache {
-  public static List<BillingMonth>? BillingMonths { get; private set; } = [];
+  public static List<InvoiceMonth>? BillingMonths { get; private set; } = [];
   public static List<Day>? Menus { get; private set; } = [];
 
   private static bool _isBillingLoading;
@@ -80,7 +80,7 @@ public static class MemCache {
     Log.Debug("Billing refresh started");
     try {
       BillingMonths?.Clear();
-      BillingMonths = (List<BillingMonth>)await BillingCache.GetAsync();
+      BillingMonths = (List<InvoiceMonth>)await InvoiceCache.GetAsync();
       Log.Debug($"Completed loading {BillingMonths?.Count ?? 0} billing months");
     }
     catch (Exception ex) {

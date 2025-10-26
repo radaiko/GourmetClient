@@ -8,7 +8,7 @@ using GC.Models;
 
 namespace GC.Core.Cache;
 
-public static class BillingCache {
+public static class InvoiceCache {
   
   /// <summary>
   /// Indicates whether billing months are currently being loaded.
@@ -20,9 +20,9 @@ public static class BillingCache {
   /// Gets billing months from cache, fetching missing months from WebApi if needed.
   /// </summary>
   /// <returns></returns>
-  public static async Task<IEnumerable<BillingMonth>> GetAsync() {
+  public static async Task<IEnumerable<InvoiceMonth>> GetAsync() {
     IsLoading = true;
-    IEnumerable<BillingMonth> cache;
+    IEnumerable<InvoiceMonth> cache;
     
     var today = DateTime.Now.ToDateOnly();
     var endOfMonth = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));

@@ -43,7 +43,7 @@ public static class SQLiteBilling {
   /// </summary>
   /// <param name="month"></param>
   /// <exception cref="InvalidOperationException"></exception>
-  public static void Insert(BillingMonth month) {
+  public static void Insert(InvoiceMonth month) {
     Init();
     
     var transactions = month.Transactions;
@@ -101,7 +101,7 @@ public static class SQLiteBilling {
   /// <param name="month"></param>
   /// <returns></returns>
   /// <exception cref="InvalidOperationException"></exception>
-  public static BillingMonth? Read(DateTime month)
+  public static InvoiceMonth? Read(DateTime month)
   {
     Init();
     
@@ -151,7 +151,7 @@ public static class SQLiteBilling {
     
     if (transactions.Count == 0) return null;
     
-    return new BillingMonth { Transactions = transactions.ToArray() };
+    return new InvoiceMonth { Transactions = transactions.ToArray() };
   }
   
 
@@ -161,10 +161,10 @@ public static class SQLiteBilling {
   /// Reads all billing months from the SQLite database.
   /// </summary>
   /// <returns></returns>
-  public static IEnumerable<BillingMonth> Read() {
+  public static IEnumerable<InvoiceMonth> Read() {
     Init();
     
-    List<BillingMonth> months = new();
+    List<InvoiceMonth> months = new();
     
     using var cmdMonths = SQLiteBase.Connection!.CreateCommand();
     cmdMonths.CommandText = "SELECT DISTINCT strftime('%Y-%m', date) AS month FROM BillingTransactions ORDER BY month DESC;";

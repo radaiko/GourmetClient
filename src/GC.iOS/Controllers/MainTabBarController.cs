@@ -14,7 +14,7 @@ public class MainTabBarController : UITabBarController
     /// <summary>
     /// The view controller for the Billing tab.
     /// </summary>
-    private BillingViewController? _billingView;
+    private InvoiceViewController? _billingView;
 
     /// <summary>
     /// The view controller for the Settings tab.
@@ -46,7 +46,7 @@ public class MainTabBarController : UITabBarController
 
         // Create the three main view controllers for the tabs
         _orderView = new OrderViewController();
-        _billingView = new BillingViewController();
+        _billingView = new InvoiceViewController();
         _settingsView = new SettingsViewController();
 
         // Set the view controllers for the tab bar
