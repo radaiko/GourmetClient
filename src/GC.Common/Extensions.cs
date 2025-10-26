@@ -8,4 +8,5 @@ public static class StringExtensions {
   public static DateOnly ToDateOnly(this DateTime time) {
     return DateOnly.FromDateTime(time);
   }
+
 }

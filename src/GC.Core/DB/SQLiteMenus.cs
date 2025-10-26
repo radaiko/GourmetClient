@@ -13,7 +13,6 @@ public static class SQLiteMenus {
       throw new InvalidOperationException("SQLite connection is not initialized.");
   }
   
-  
   /// <summary>
   /// Inserts the menu data into the SQLite database.
   /// </summary>
@@ -93,5 +92,16 @@ public static class SQLiteMenus {
     }
 
     return menus.ToDays();
+  }
+  
+  /// <summary>
+  /// Reads the menu data from the SQLite database for the next two weeks starting from today.
+  /// </summary>
+  /// <returns></returns>
+  public static IEnumerable<Day> Read() {
+    var start = DateOnly.FromDateTime(DateTime.Now);
+    // Read menus until friday in 2 weeks
+    var end = start.AddDays(14 + (5 - (int)start.DayOfWeek + 7) % 7);
+    return Read(start, end);
   }
 }

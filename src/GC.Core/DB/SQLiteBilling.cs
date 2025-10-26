@@ -13,6 +13,25 @@ public static class SQLiteBilling {
   }
   
   /// <summary>
+  /// Gets the date of the last fetched billing transaction.
+  /// </summary>
+  /// <returns></returns>
+  public static DateOnly GetLastFetchDate() {
+    Init();
+    
+    using var cmd = SQLiteBase.Connection!.CreateCommand();
+    cmd.CommandText = "SELECT MAX(date) FROM BillingTransactions;";
+    
+    var result = cmd.ExecuteScalar();
+    if (result == DBNull.Value || result == null) {
+      return DateOnly.MinValue;
+    }
+    
+    var lastDate = (DateTime)result;
+    return DateOnly.FromDateTime(lastDate.ToLocalTime());
+  }
+  
+  /// <summary>
   /// Writes the billing month data into the SQLite database.
   /// </summary>
   /// <param name="month"></param>
@@ -126,5 +145,33 @@ public static class SQLiteBilling {
     if (transactions.Count == 0) return null;
     
     return new BillingMonth { Transactions = transactions.ToArray() };
+  }
+  
+
+  
+  
+  /// <summary>
+  /// Reads all billing months from the SQLite database.
+  /// </summary>
+  /// <returns></returns>
+  public static IEnumerable<BillingMonth> Read() {
+    Init();
+    
+    List<BillingMonth> months = new();
+    
+    using var cmdMonths = SQLiteBase.Connection!.CreateCommand();
+    cmdMonths.CommandText = "SELECT DISTINCT strftime('%Y-%m', date) AS month FROM BillingTransactions ORDER BY month DESC;";
+    
+    using var readerMonths = cmdMonths.ExecuteReader();
+    while (readerMonths.Read()) {
+      var monthStr = readerMonths.GetString(0);
+      var monthDate = DateTime.ParseExact(monthStr + "-01", "yyyy-MM-dd", null);
+      var billingMonth = Read(monthDate);
+      if (billingMonth != null) {
+        months.Add(billingMonth);
+      }
+    }
+    
+    return months;
   }
 }

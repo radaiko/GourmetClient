@@ -13,9 +13,9 @@ public partial class OrderViewModel : ObservableObject {
   [ObservableProperty] private ObservableCollection<Day> _availableDays = [];
   
   public OrderViewModel() {
-    AvailableDays = MemCache.OrderDays;
-    MemCache.OrderDays.CollectionChanged += (_, _) => {
-      AvailableDays = MemCache.OrderDays;
+    AvailableDays = MemCache.Menus;
+    MemCache.Menus.CollectionChanged += (_, _) => {
+      AvailableDays = MemCache.Menus;
     };
   }
   

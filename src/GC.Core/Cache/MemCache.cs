@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using GC.Common;
@@ -7,8 +8,8 @@ using GC.Models;
 namespace GC.Core.Cache;
 
 public static class MemCache {
-  public static ObservableCollection<BillingMonth> BillingMonths { get; } = new();
-  public static ObservableCollection<Day> OrderDays { get; } = new();
+  public static List<BillingMonth> BillingMonths { get; private set; } = [];
+  public static List<Day> Menus { get; private set; } = [];
 
   private static bool _isBillingLoading;
   private static bool _isOrderLoading;
@@ -79,10 +80,7 @@ public static class MemCache {
     Log.Debug("Billing refresh started");
     try {
       BillingMonths.Clear();
-      // await foreach (var month in BillingCache.GetAsync()) {
-      //   BillingMonths.Add(month);
-      //   Log.Debug($"Added billing month {month.Month:yyyy-MM}");
-      // }
+      BillingMonths = (List<BillingMonth>)await BillingCache.GetAsync();
       Log.Debug($"Completed loading {BillingMonths.Count} billing months");
     }
     catch (Exception ex) {
@@ -99,12 +97,9 @@ public static class MemCache {
     OrderLoading = true;
     Log.Debug("Order refresh started");
     try {
-      OrderDays.Clear();
-      // await foreach (var day in MenuCache.GetAsync()) {
-      //   OrderDays.Add(day);
-      //   Log.Debug($"Added order day {day.Date:o}");
-      // }
-      Log.Debug($"Completed loading {OrderDays.Count} order days");
+      Menus.Clear();
+      Menus = (List<Day>)await MenuCache.GetAsync();
+      Log.Debug($"Completed loading {Menus.Count} order days");
     }
     catch (Exception ex) {
       Log.Debug($"Exception while loading order days: {ex}");

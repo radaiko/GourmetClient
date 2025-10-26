@@ -25,7 +25,6 @@
 
     <ItemGroup>
       <Folder Include="E2E\" />
-      <Folder Include="E2E\CacheTests\" />
       <Folder Include="Temp\" />
     </ItemGroup>
 
