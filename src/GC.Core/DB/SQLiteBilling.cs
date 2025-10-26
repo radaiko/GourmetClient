@@ -26,9 +26,14 @@ public static class SQLiteBilling {
     if (result == DBNull.Value || result == null) {
       return DateOnly.MinValue;
     }
-    
-    var lastDate = (DateTime)result;
-    return DateOnly.FromDateTime(lastDate.ToLocalTime());
+
+    try {
+      var lastDate = (DateTime)result;
+      return DateOnly.FromDateTime(lastDate.ToLocalTime());
+    }
+    catch {
+      return DateOnly.MinValue;
+    }
   }
   
   /// <summary>

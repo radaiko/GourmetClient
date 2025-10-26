@@ -25,9 +25,3 @@ internal static class Init {
     
   }
 }
-
-
-[CollectionDefinition("Sequential", DisableParallelization = true)]
-public class SequentialCollectionDefinitionClass
-{
-}

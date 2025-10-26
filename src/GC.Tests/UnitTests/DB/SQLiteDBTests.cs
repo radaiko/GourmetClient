@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using GC.Core.DB;
 using GC.Models;
 using Microsoft.Data.Sqlite;
@@ -22,10 +23,17 @@ public class SQLiteDBTestFixture : IDisposable {
 
   public void Dispose() {
     SQLiteBase.Close();
+    if (!Debugger.IsAttached) {
+      try {
+        File.Delete(TempDb);
+      }
+      catch {
+        // ignored
+      }
+    }
   }
 }
 
-[Collection("Sequential")]
 // ReSharper disable once InconsistentNaming
 public class SqLiteBaseTests(SQLiteDBTestFixture fixture) : IClassFixture<SQLiteDBTestFixture> {
   [Fact]

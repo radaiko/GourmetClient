@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using GC.Core.Cache;
 using GC.Core.DB;
 using GC.Core.WebApis;
@@ -23,10 +24,17 @@ public class MemCacheTestsFixture : IDisposable {
 
     public void Dispose() {
         SQLiteBase.Close();
+        if (!Debugger.IsAttached) {
+            try {
+                File.Delete(TempDb);
+            }
+            catch {
+                // ignored
+            }
+        }
     }
 }
 
-[Collection("Sequential")]
 public class MemCacheTests(MemCacheTestsFixture fixture) : IClassFixture<MemCacheTestsFixture>
 {
     [Fact]
