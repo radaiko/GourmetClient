@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GC.Common;
 using GC.Models;
 
 namespace GC.Core.DB;
@@ -28,10 +29,11 @@ public static class SQLiteBilling {
     }
 
     try {
-      var lastDate = (DateTime)result;
+      var lastDate = DateTime.Parse(result.ToString()!);
       return DateOnly.FromDateTime(lastDate.ToLocalTime());
     }
-    catch {
+    catch (Exception ex) {
+      Log.Error($"Failed to parse last fetch date from database: {ex}");
       return DateOnly.MinValue;
     }
   }
