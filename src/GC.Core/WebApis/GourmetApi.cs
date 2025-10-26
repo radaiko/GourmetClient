@@ -101,7 +101,7 @@ public static class GourmetApi {
     }
     var i = 0;
     List<Menu> result = [];
-    var seen = new HashSet<string>(); // To track unique menus by a composite key
+    var seen = new HashSet<string>(); // ToMenu track unique menus by a composite key
     while (i < 4) {
       try {
         var pageUrl = WebUrl + $"menus/?page={i}";

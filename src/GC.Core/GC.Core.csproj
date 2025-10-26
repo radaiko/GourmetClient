@@ -15,4 +15,16 @@
       <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Properties\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="GC.Tests" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <EmbeddedResource Include="DB\sql\*.sql" />
+    </ItemGroup>
+
 </Project>

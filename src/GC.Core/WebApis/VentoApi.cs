@@ -151,7 +151,6 @@ public static class VentoApi {
     doc.LoadHtml(html);
     
     var billingMonth = new BillingMonth();
-    billingMonth.Month = fromDate; // set month to the requested month
     
    // Collect all <div class="transact"> nodes (including nested ones)
     var transactDivs = doc.DocumentNode.SelectNodes("//div[contains(concat(' ', normalize-space(@class), ' '), ' transact ')]");

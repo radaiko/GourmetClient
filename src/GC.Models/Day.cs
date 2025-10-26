@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace GC.Models;
@@ -31,26 +32,26 @@ public partial class Day : ObservableObject {
     public static ObservableCollection<Day> GetDummyData() => [
         new(
             DateTime.Now,
-            new Menu(MenuType.Menu1, "Grilled Chicken with Vegetables", new[] { 'A', 'C' }, 8.50m, DateTime.Now),
-            new Menu(MenuType.Menu2, "Spaghetti Bolognese", new[] { 'A', 'G' }, 7.00m, DateTime.Now),
-            new Menu(MenuType.Menu3, "Vegetarian Stir Fry", new[] { 'A', 'C', 'G' }, 7.50m, DateTime.Now),
-            new Menu(MenuType.SoupAndSalad, "Tomato Soup and Caesar Salad", new[] { 'A', 'D', 'G' }, 6.00m, DateTime.Now)
+            new Menu(MenuType.Menu1, "Grilled Chicken with Vegetables", ['A', 'C'], 8.50m, DateTime.Now),
+            new Menu(MenuType.Menu2, "Spaghetti Bolognese", ['A', 'G'], 7.00m, DateTime.Now),
+            new Menu(MenuType.Menu3, "Vegetarian Stir Fry", ['A', 'C', 'G'], 7.50m, DateTime.Now),
+            new Menu(MenuType.SoupAndSalad, "Tomato Soup and Caesar Salad", ['A', 'D', 'G'], 6.00m, DateTime.Now)
         ),
 
         new(
             DateTime.Now.AddDays(1),
-            new Menu(MenuType.Menu1, "Beef Tacos", new[] { 'A' }, 8.00m, DateTime.Now.AddDays(1)),
-            new Menu(MenuType.Menu2, "Penne Alfredo", new[] { 'A', 'G' }, 7.25m, DateTime.Now.AddDays(1)),
-            new Menu(MenuType.Menu3, "Quinoa Bowl", new[] { 'A', 'C' }, 7.00m, DateTime.Now.AddDays(1)),
-            new Menu(MenuType.SoupAndSalad, "Minestrone and Garden Salad", new[] { 'A', 'D' }, 5.75m, DateTime.Now.AddDays(1))
+            new Menu(MenuType.Menu1, "Beef Tacos", ['A'], 8.00m, DateTime.Now.AddDays(1)),
+            new Menu(MenuType.Menu2, "Penne Alfredo", ['A', 'G'], 7.25m, DateTime.Now.AddDays(1)),
+            new Menu(MenuType.Menu3, "Quinoa Bowl", ['A', 'C'], 7.00m, DateTime.Now.AddDays(1)),
+            new Menu(MenuType.SoupAndSalad, "Minestrone and Garden Salad", ['A', 'D'], 5.75m, DateTime.Now.AddDays(1))
         ),
 
         new(
             DateTime.Now.AddDays(2),
-            new Menu(MenuType.Menu1, "Teriyaki Salmon", new[] { 'A', 'D' }, 9.00m, DateTime.Now.AddDays(2)),
-            new Menu(MenuType.Menu2, "Chicken Caesar Wrap", new[] { 'A', 'D' }, 6.75m, DateTime.Now.AddDays(2)),
-            new Menu(MenuType.Menu3, "Lentil Curry", new[] { 'A', 'C' }, 7.50m, DateTime.Now.AddDays(2)),
-            new Menu(MenuType.SoupAndSalad, "Pumpkin Soup and Mixed Greens", new[] { 'A', 'G' }, 6.25m, DateTime.Now.AddDays(2))
+            new Menu(MenuType.Menu1, "Teriyaki Salmon", ['A', 'D'], 9.00m, DateTime.Now.AddDays(2)),
+            new Menu(MenuType.Menu2, "Chicken Caesar Wrap", ['A', 'D'], 6.75m, DateTime.Now.AddDays(2)),
+            new Menu(MenuType.Menu3, "Lentil Curry", ['A', 'C'], 7.50m, DateTime.Now.AddDays(2)),
+            new Menu(MenuType.SoupAndSalad, "Pumpkin Soup and Mixed Greens", ['A', 'G'], 6.25m, DateTime.Now.AddDays(2))
         )
     ];
 }

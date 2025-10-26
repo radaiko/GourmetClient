@@ -7,7 +7,7 @@ namespace GC.Models;
 
 public partial class BillingMonth : ObservableObject {
   
-  [ObservableProperty] private DateTime _month;
+  [NotifyPropertyChangedFor(nameof(Month))]
   [NotifyPropertyChangedFor(nameof(TotalAmount))]
   [NotifyPropertyChangedFor(nameof(TotalCafeAndCo))]
   [NotifyPropertyChangedFor(nameof(TotalGourmet))]
@@ -33,6 +33,9 @@ public partial class BillingMonth : ObservableObject {
 
   // Count of Cafe&Co transactions
   public int CountCafeAndCo => Transactions.Count(t => t.Type == Transaction.TransactionType.CafePlusCo);
+  
+  // The month this billing period represents (derived from the earliest transaction date)
+  public DateTime Month => Transactions.MinBy(t => t.Date)!.Date;
 
   public static ObservableCollection<BillingMonth> GetDummyData() {
     var dummyMonths = new ObservableCollection<BillingMonth>();
@@ -59,7 +62,6 @@ public partial class BillingMonth : ObservableObject {
       }
 
       dummyMonths.Add(new BillingMonth {
-        Month = new DateTime(monthDate.Year, monthDate.Month, 1),
         Transactions = transactions
       });
     }

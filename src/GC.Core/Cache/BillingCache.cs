@@ -56,7 +56,7 @@ public class BillingCache {
     foreach (var group in grouped) {
       if (group.Any()) {
         var month = group.Key;
-        var billingMonth = new BillingMonth { Month = month, Transactions = group.ToArray() };
+        var billingMonth = new BillingMonth { Transactions = group.ToArray() };
         _cache.AddOrUpdate(month, billingMonth, (_, __) => billingMonth);
       }
     }
@@ -123,7 +123,7 @@ public class BillingCache {
       var transaction = new Transaction { Type = type, Date = date, Positions = positions };
       transactions.Add(transaction);
     }
-    var fullMonth = new BillingMonth { Month = normMonth, Transactions = transactions.ToArray() };
+    var fullMonth = new BillingMonth { Transactions = transactions.ToArray() };
     // Update cache
     if (fullMonth.Transactions.Length == 0) {
       _cache.TryRemove(normMonth, out _);
@@ -182,12 +182,11 @@ public class BillingCache {
 
     foreach (var m in requested) {
       // Start with an empty month as a safe default the UI can show immediately
-      var result = new BillingMonth { Month = m, Transactions = Array.Empty<Transaction>() };
+      var result = new BillingMonth { Transactions = Array.Empty<Transaction>() };
 
       try {
         // VentoApi.GetBillingMonthAsync returns a non-null BillingMonth; normalize and use it
         var apiResult = await VentoApi.GetBillingMonthAsync(m.Year, m.Month);
-        apiResult.Month = NormalizeMonth(apiResult.Month);
         result = apiResult;
       }
       catch (Exception ex) {

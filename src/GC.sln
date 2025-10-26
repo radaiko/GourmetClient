@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3DA99C4E-89E3-4049-9C22-0A7EC60D83D8}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Build.props = Directory.Build.props
+		..\.gitignore = ..\.gitignore
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GC.Core", "GC.Core\GC.Core.csproj", "{5C2847F5-5F27-4CFB-BD3A-88DDDCABE6D3}"
@@ -21,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GC.Models", "GC.Models\GC.Models.csproj", "{43F91BDC-3108-48C5-8D97-4CCC9E2ED79B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GC.iOS", "GC.iOS\GC.iOS.csproj", "{90425DA4-0EB2-41F9-9468-54619FF7EAA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GC.Tests", "GC.Tests\GC.Tests.csproj", "{679B5FE7-053E-4FB2-86DD-D2C81B54D05D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,6 +63,10 @@ Global
 		{90425DA4-0EB2-41F9-9468-54619FF7EAA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90425DA4-0EB2-41F9-9468-54619FF7EAA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90425DA4-0EB2-41F9-9468-54619FF7EAA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{679B5FE7-053E-4FB2-86DD-D2C81B54D05D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{679B5FE7-053E-4FB2-86DD-D2C81B54D05D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{679B5FE7-053E-4FB2-86DD-D2C81B54D05D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{679B5FE7-053E-4FB2-86DD-D2C81B54D05D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

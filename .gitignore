@@ -455,3 +455,5 @@ $RECYCLE.BIN/
 
 # custom
 .env
+!src/GC.Tests/test-recordings/
+/src/GC.Tests/Temp/test.db
