@@ -458,3 +458,4 @@ $RECYCLE.BIN/
 !src/GC.Tests/test-recordings/
 /src/GC.Tests/Temp/test.db
 /src/GC.Tests/Temp/**/.*
+/src/GC.iOS/GoogleService-Info.plist

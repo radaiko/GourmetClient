@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>true</ImplicitUsings>
         <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+        <ApplicationId>dev.radaiko.gourmetclient</ApplicationId>
         
         <!-- Faster build time -->
         <UseInterpreter>true</UseInterpreter>
@@ -17,12 +18,37 @@
         <TrimMode Condition="'$(Configuration)' == 'Release'">full</TrimMode>
     </PropertyGroup>
 
+    <!-- Ensure Crashlytics can find the main symbol by exporting __mh_execute_header -->
+    <PropertyGroup>
+    </PropertyGroup>
+
     <!-- iOS specific properties -->
     <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios26.0'">
         <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
         <NoWarn>$(NoWarn);XCODE_26_0_PREVIEW</NoWarn>
+        <!-- Use the entitlements plist for code signing (enable keychain access groups) -->
+        <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+        <!-- Ensure mtouch extra args are applied for the iOS build -->
+        <MtouchExtraArgs>--gcc_flags=-Wl,-exported_symbols_list,$(MSBuildProjectDirectory)/ExportedSymbols.txt</MtouchExtraArgs>
+        <MTouchExtraArgs>--gcc_flags=-Wl,-exported_symbols_list,$(MSBuildProjectDirectory)/ExportedSymbols.txt</MTouchExtraArgs>
     </PropertyGroup>
+
     <ItemGroup>
+      <!-- Ensure ExportedSymbols.txt is available to the build system but not treated as an app resource -->
+      <None Include="ExportedSymbols.txt" />
       <ProjectReference Include="..\GC.Frontend\GC.Frontend.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Assets.xcassets\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <BundleResource Include="GoogleService-Info.plist" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Plugin.Firebase.Analytics" Version="3.1.2" />
+      <PackageReference Include="Plugin.Firebase.Crashlytics" Version="3.1.1" />
     </ItemGroup>
 </Project>
