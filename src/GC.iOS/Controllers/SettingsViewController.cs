@@ -97,11 +97,8 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource
         _debugSwitch.On = _viewModel.DebugMode;
 
         // Add event handlers to update view model when controls change
-        _gourmetUsername.EditingChanged += (_, _) => _viewModel.GourmetUsername = _gourmetUsername.Text;
-        _gourmetPassword.EditingChanged += (_, _) => _viewModel.GourmetPassword = _gourmetPassword.Text;
-        _ventoUsername.EditingChanged += (_, _) => _viewModel.VentoUsername = _ventoUsername.Text;
-        _ventoPassword.EditingChanged += (_, _) => _viewModel.VentoPassword = _ventoPassword.Text;
-        _debugSwitch.ValueChanged += (_, _) => _viewModel.DebugMode = _debugSwitch.On;
+        // Do not save immediately while editing. Values will be saved when leaving the Settings tab.
+        // Keep UI responsive by not attaching EditingChanged handlers that write to persistent settings.
 
         // Add a tap gesture recognizer so tapping outside a field dismisses the keyboard
         var tap = new UITapGestureRecognizer(() => View.EndEditing(true)) {
@@ -237,6 +234,29 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource
                 break;
         }
         return cell;
+    }
+
+    /// <summary>
+    /// When the Settings view is about to disappear, persist the entered credentials
+    /// only if the user is switching to another tab (not when pushing a child view controller).
+    /// </summary>
+    /// <param name="animated">Whether the disappearance is animated.</param>
+    public override void ViewWillDisappear(bool animated)
+    {
+        base.ViewWillDisappear(animated);
+
+        // If the TabBarController's selected view controller is not this view's navigation controller,
+        // the user is switching to another tab. Persist the settings now.
+        var isSwitchingTab = TabBarController != null && !ReferenceEquals(TabBarController.SelectedViewController, NavigationController);
+        if (isSwitchingTab)
+        {
+            // Read values from the UI and assign to the view model (which updates Settings.It)
+            _viewModel.GourmetUsername = _gourmetUsername?.Text;
+            _viewModel.GourmetPassword = _gourmetPassword?.Text;
+            _viewModel.VentoUsername = _ventoUsername?.Text;
+            _viewModel.VentoPassword = _ventoPassword?.Text;
+            if (_debugSwitch != null) _viewModel.DebugMode = _debugSwitch.On;
+        }
     }
 
     // Nested delegate to dismiss keyboard when rows are tapped

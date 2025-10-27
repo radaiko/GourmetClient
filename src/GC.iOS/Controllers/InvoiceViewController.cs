@@ -2,6 +2,7 @@ using GC.Common;
 using GC.Frontend.ViewModels;
 using GC.Models;
 using System.ComponentModel;
+using ErrorEventArgs = GC.Common.ErrorEventArgs;
 
 namespace GC.iOS.Controllers;
 
@@ -56,6 +57,10 @@ public class InvoiceViewController : BaseViewController, IUITableViewDataSource,
 
         // Set background color
         View.BackgroundColor = UIColor.SystemBackground;
+
+        // Subscribe to global info/error events so the user is informed about background work
+        GC.Common.Base.OnInfo += HandleGlobalInfo;
+        GC.Common.Base.OnError += HandleGlobalError;
 
         var safeArea = _safeAreaHelper.SafeAreaInsets;
         Log.Debug($"Safe area - Top: {safeArea.Top}, Bottom: {safeArea.Bottom}, Left: {safeArea.Left}, Right: {safeArea.Right}");
@@ -270,5 +275,40 @@ public class InvoiceViewController : BaseViewController, IUITableViewDataSource,
             listController.Title = title;
             NavigationController?.PushViewController(listController, true);
         }
+    }
+
+    /// <summary>
+    /// Handler for Info events from GC.Common.Base. Shows a brief alert with the context.
+    /// Runs on the main thread because it updates UI.
+    /// </summary>
+    private void HandleGlobalInfo(object? sender, InfoEventArgs? e)
+    {
+        if (e == null) return;
+        var message = e.Context ?? e.Type.ToString();
+        GC.iOS.Helpers.InAppNotifier.ShowInfo(message);
+    }
+
+    /// <summary>
+    /// Handler for Error events from GC.Common.Base. Shows an alert describing the error.
+    /// Runs on the main thread because it updates UI.
+    /// </summary>
+    private void HandleGlobalError(object? sender, ErrorEventArgs? e)
+    {
+        if (e == null) return;
+        var message = e.Exception?.Message ?? e.Context ?? e.Type.ToString();
+        GC.iOS.Helpers.InAppNotifier.ShowError(message);
+    }
+
+    /// <summary>
+    /// Dispose override to unsubscribe from static events and avoid leaks.
+    /// </summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            GC.Common.Base.OnInfo -= HandleGlobalInfo;
+            GC.Common.Base.OnError -= HandleGlobalError;
+        }
+        base.Dispose(disposing);
     }
 }
