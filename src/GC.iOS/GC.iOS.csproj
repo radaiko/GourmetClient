@@ -36,7 +36,10 @@
     <ItemGroup>
       <!-- Ensure ExportedSymbols.txt is available to the build system but not treated as an app resource -->
       <None Include="ExportedSymbols.txt" />
+      <ProjectReference Include="..\GC.Common\GC.Common.csproj" />
+      <ProjectReference Include="..\GC.Core\GC.Core.csproj" />
       <ProjectReference Include="..\GC.Frontend\GC.Frontend.csproj" />
+      <ProjectReference Include="..\GC.Models\GC.Models.csproj" />
     </ItemGroup>
     
     <ItemGroup>

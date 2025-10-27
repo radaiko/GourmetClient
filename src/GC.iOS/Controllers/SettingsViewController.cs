@@ -1,5 +1,7 @@
 using UIKit;
 using GC.Frontend.ViewModels;
+using Foundation;
+using CoreGraphics;
 
 namespace GC.iOS.Controllers;
 
@@ -9,11 +11,6 @@ namespace GC.iOS.Controllers;
 /// </summary>
 public class SettingsViewController : UIViewController, IUITableViewDataSource
 {
-    /// <summary>
-    /// Constant for rounded rect border style (kept for compatibility).
-    /// </summary>
-    private const UITextBorderStyle RoundedRect = UITextBorderStyle.RoundedRect;
-
     /// <summary>
     /// Table view displaying the settings sections.
     /// </summary>
@@ -68,14 +65,25 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource
             BackgroundColor = UIColor.SystemBackground,
             RowHeight = Helpers.Common.StandardCellHeight
         };
-        _table.DataSource = this;
-        View.AddSubview(_table);
+        _table!.DataSource = this;
+        _table!.Delegate = new SettingsTableDelegate(this);
+
+        // Allow keyboard to be dismissed when dragging the table
+        _table!.KeyboardDismissMode = UIScrollViewKeyboardDismissMode.OnDrag;
+
+        View.AddSubview(_table!);
 
         // Create text fields for credentials
         _gourmetUsername = CreateTextField("Benutzername", false);
         _gourmetPassword = CreateTextField("Password", true);
         _ventoUsername = CreateTextField("Benutzername", false);
         _ventoPassword = CreateTextField("Password", true);
+
+        // Ensure Return key dismisses keyboard and wire ShouldReturn to resign first responder
+        _gourmetUsername.ShouldReturn = tf => { tf.ResignFirstResponder(); return true; };
+        _gourmetPassword.ShouldReturn = tf => { tf.ResignFirstResponder(); return true; };
+        _ventoUsername.ShouldReturn = tf => { tf.ResignFirstResponder(); return true; };
+        _ventoPassword.ShouldReturn = tf => { tf.ResignFirstResponder(); return true; };
 
         // Create debug toggle
         _debugSwitch = new UISwitch();
@@ -95,8 +103,31 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource
         _ventoPassword.EditingChanged += (_, _) => _viewModel.VentoPassword = _ventoPassword.Text;
         _debugSwitch.ValueChanged += (_, _) => _viewModel.DebugMode = _debugSwitch.On;
 
+        // Add a tap gesture recognizer so tapping outside a field dismisses the keyboard
+        var tap = new UITapGestureRecognizer(() => View.EndEditing(true)) {
+            CancelsTouchesInView = false // allow taps to pass through to table cells
+        };
+        // Allow the tap recognizer to work alongside other gestures (so cell taps still function)
+        tap.ShouldRecognizeSimultaneously = (_, _) => true;
+        // Only receive touches that are not inside a UITextField or UIControl to avoid interfering with controls
+        tap.ShouldReceiveTouch = (_, touch) => {
+            var touchedView = touch.View;
+            return !(touchedView is UITextField) && !(touchedView is UIControl);
+        };
+        View.AddGestureRecognizer(tap);
+
+        // Also add a recognizer directly to the table so taps on empty areas and cells dismiss the keyboard
+        var tapTable = new UITapGestureRecognizer(() => View.EndEditing(true)) { CancelsTouchesInView = false };
+        tapTable.ShouldRecognizeSimultaneously = (_, _) => true;
+        // Only receive touches that are not inside a UITextField or UIControl
+        tapTable.ShouldReceiveTouch = (_, touch) => {
+            var touchedView = touch.View;
+            return !(touchedView is UITextField) && !(touchedView is UIControl);
+        };
+        _table!.AddGestureRecognizer(tapTable);
+
         // Load the table data
-        _table.ReloadData();
+        _table!.ReloadData();
     }
 
     /// <summary>
@@ -114,6 +145,7 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource
             TextColor = UIColor.Label,
             BackgroundColor = new UIColor(white: 1, alpha: 0f),
             AttributedPlaceholder = new NSAttributedString(placeholder, new UIStringAttributes { ForegroundColor = UIColor.PlaceholderText }),
+            ReturnKeyType = UIReturnKeyType.Done,
         };
         return tf;
     }
@@ -205,5 +237,19 @@ public class SettingsViewController : UIViewController, IUITableViewDataSource
                 break;
         }
         return cell;
+    }
+
+    // Nested delegate to dismiss keyboard when rows are tapped
+    private class SettingsTableDelegate : UITableViewDelegate
+    {
+        private readonly SettingsViewController _parent;
+        public SettingsTableDelegate(SettingsViewController parent) => _parent = parent;
+
+        public override void RowSelected(UITableView tableView, NSIndexPath indexPath)
+        {
+            // Dismiss keyboard when a row is selected
+            _parent.View!.EndEditing(true);
+            tableView.DeselectRow(indexPath, true);
+        }
     }
 }
