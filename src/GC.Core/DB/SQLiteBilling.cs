@@ -33,7 +33,7 @@ public static class SQLiteBilling {
       return DateOnly.FromDateTime(lastDate.ToLocalTime());
     }
     catch (Exception ex) {
-      Log.Error($"Failed to parse last fetch date from database: {ex}");
+      Logger.Error($"Failed to parse last fetch date from database: {ex}");
       return DateOnly.MinValue;
     }
   }

@@ -63,7 +63,7 @@ public class InvoiceViewController : BaseViewController, IUITableViewDataSource,
         GC.Common.Base.OnError += HandleGlobalError;
 
         var safeArea = _safeAreaHelper.SafeAreaInsets;
-        Log.Debug($"Safe area - Top: {safeArea.Top}, Bottom: {safeArea.Bottom}, Left: {safeArea.Left}, Right: {safeArea.Right}");
+        Logger.Debug($"Safe area - Top: {safeArea.Top}, Bottom: {safeArea.Bottom}, Left: {safeArea.Left}, Right: {safeArea.Right}");
 
         // Create top view for month info and page control
         _topView = new UIView(new CGRect(0, safeArea.Top, View.Bounds.Width, 76));

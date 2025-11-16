@@ -29,7 +29,7 @@ public class AppDelegate : UIApplicationDelegate {
     public override bool FinishedLaunching(UIApplication application, NSDictionary? launchOptions) {
     // Setup Firebase for analytics and crash reporting
     CrossFirebase.Initialize();
-    Log.AnalyticsHandler = (eventName, payload) => {
+    Logger.AnalyticsHandler = (eventName, payload) => {
       try {
         // Sanitize payload: Firebase Analytics accepts simple values and string length max 100.
         var dict = new Dictionary<object, object>();

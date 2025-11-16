@@ -1,14 +1,22 @@
+using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 
 namespace GC.Common;
 
-public static class Log {
+public sealed class Logger {
 
   // Public hook for platform-specific analytics/telemetry (e.g. Firebase in GC.iOS).
   // Set this during app startup on the platform project to enable sending events.
   public static Action<string, IReadOnlyDictionary<string, string>>? AnalyticsHandler;
+  
+  private static readonly Lazy<Logger> Instance = new(() => new Logger());
+  public static Logger It => Instance.Value;
 
-  static Log() {
+  private readonly ObservableCollection<LogMsg> _logs = [];
+  
+  public static ObservableCollection<LogMsg> Logs => It._logs;
+
+  static Logger() {
     Base.OnError += (sender, args) => {
       Error($"ErrorEvent: Type={args.Type} Context={args.Context} Exception={args.Exception}");
     };
@@ -36,27 +44,39 @@ public static class Log {
   }
   
   private static void Write(string level, string message, string path, string method) {
-    // Write to stderr to avoid interfering with tools that expect structured stdout (like xUnit JSON)
-    Console.Error.WriteLine($"[{level}] [{Path.GetFileNameWithoutExtension(path)}:{method}] [{Timestamp}] {message}");
-    
+    var msg = new LogMsg(message, Path.GetFileNameWithoutExtension(path), method,
+      level switch
+      {
+        "INFO" => LogLevel.Info,
+        "WARN" => LogLevel.Warning,
+        "ERROR" => LogLevel.Error,
+        "DEBUG" => LogLevel.Debug,
+        _ => LogLevel.Info
+      });
+    It._logs.Add(msg);
+    SendAnalytics(msg);
+    WriteToConsole(msg);
+  }
+
+  private static void SendAnalytics(LogMsg msg) {
     try {
       var payload = new Dictionary<string, string> {
-        ["message"] = message,
-        ["file"] = Path.GetFileNameWithoutExtension(path),
-        ["method"] = method,
+        ["message"] = msg.Message,
+        ["file"] = msg.Class,
+        ["method"] = msg.Method,
       };
       
-      switch (level) {
-        case "INFO":
+      switch (msg.Level) {
+        case LogLevel.Info:
           AnalyticsHandler?.Invoke("info", payload);
           break;
-        case "WARN":
+        case LogLevel.Warning:
           AnalyticsHandler?.Invoke("warning", payload);
           break;
-        case "ERROR":
+        case LogLevel.Error:
           AnalyticsHandler?.Invoke("error", payload);
           break;
-        case "DEBUG":
+        case LogLevel.Debug:
           AnalyticsHandler?.Invoke("debug", payload);
           break;
         default:
@@ -67,10 +87,46 @@ public static class Log {
     } catch (Exception ex) {
       // Avoid throwing from logging; fall back to writing to stderr.
       try {
-        Write("ERROR", $"Failed to send analytics: {ex}", nameof(Log), nameof(Error));
+        Write("ERROR", $"Failed to send analytics: {ex}", nameof(Logger), nameof(Error));
       } catch { /* swallow */ }
     }
   }
   
+  private static void WriteToConsole(LogMsg msg)
+  {
+    Console.WriteLine(msg.ToString());
+  }
   private static string Timestamp => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+}
+
+public sealed class LogMsg
+{
+  public string Timestamp { get; }
+  public string Message { get; }
+  public string Class { get; }
+  public string Method { get; }
+  public LogLevel Level { get; }
+  public LogMsg(string message, string path, string method, LogLevel level)
+  {
+    Timestamp = GetNow;
+    Message = message;
+    Class = path;
+    Method = method;
+    Level = level;
+  }
+
+  private static string GetNow => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+  public override string ToString()
+  {
+    return $"[{Level}] [{Class}:{Method}] [{Timestamp}] {Message}";
+  }
+}
+
+public enum LogLevel
+{
+  Info,
+  Warning,
+  Error,
+  Debug
 }

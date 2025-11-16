@@ -143,7 +143,7 @@ public class HttpCassette {
           if (File.Exists(tempPath)) File.Delete(tempPath);
         }
         catch (Exception ex) {
-          // Log the cleanup failure to aid debugging — do not throw from cleanup.
+          // Logger the cleanup failure to aid debugging — do not throw from cleanup.
           System.Diagnostics.Debug.WriteLine($"HttpCassette: failed to delete temp file '{tempPath}': {ex.Message}");
         }
         throw;

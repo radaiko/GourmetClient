@@ -93,7 +93,7 @@ public static class InAppNotifier
             catch (Exception ex)
             {
                 // Best effort; don't crash the app if the notifier fails
-                GC.Common.Log.Error($"InAppNotifier failed: {ex}");
+                GC.Common.Logger.Error($"InAppNotifier failed: {ex}");
             }
         });
     }

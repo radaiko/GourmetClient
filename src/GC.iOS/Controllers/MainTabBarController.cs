@@ -1,8 +1,10 @@
+using GC.Models;
+
 namespace GC.iOS.Controllers;
 
 /// <summary>
 /// The main tab bar controller that manages the primary navigation of the app.
-/// Contains tabs for Order, Billing, and Settings views.
+/// Contains tabs for Order, Billing, Settings, and optionally Logs (when debug mode is enabled).
 /// </summary>
 public class MainTabBarController : UITabBarController
 {
@@ -22,6 +24,11 @@ public class MainTabBarController : UITabBarController
     private SettingsViewController? _settingsView;
 
     /// <summary>
+    /// The view controller for the Log tab (only shown in debug mode).
+    /// </summary>
+    private LogViewController? _logView;
+
+    /// <summary>
     /// The navigation controller for the Order tab.
     /// </summary>
     private UINavigationController? _orderNav;
@@ -35,6 +42,11 @@ public class MainTabBarController : UITabBarController
     /// The navigation controller for the Settings tab.
     /// </summary>
     private UINavigationController? _settingsNav;
+
+    /// <summary>
+    /// The navigation controller for the Log tab.
+    /// </summary>
+    private UINavigationController? _logNav;
 
     /// <summary>
     /// Called after the view has been loaded into memory.
@@ -53,9 +65,50 @@ public class MainTabBarController : UITabBarController
         _orderNav = new UINavigationController(_orderView);
         _billingNav = new UINavigationController(_billingView);
         _settingsNav = new UINavigationController(_settingsView);
-        ViewControllers = [_orderNav, _billingNav, _settingsNav];
+
+        // Subscribe to settings changes to update tabs when debug mode changes
+        Settings.It.PropertyChanged += OnSettingsChanged;
+
+        // Update tab bar with or without log tab based on debug mode
+        UpdateTabBarControllers();
 
         // Update the tab bar images based on the current theme
+        UpdateTabBarImages();
+    }
+
+    /// <summary>
+    /// Called when settings change to update the tab bar controllers.
+    /// </summary>
+    private void OnSettingsChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(Settings.DebugMode))
+        {
+            InvokeOnMainThread(UpdateTabBarControllers);
+        }
+    }
+
+    /// <summary>
+    /// Updates the tab bar controllers based on the current debug mode setting.
+    /// </summary>
+    private void UpdateTabBarControllers()
+    {
+        if (Settings.It.DebugMode)
+        {
+            // Create log view if it doesn't exist
+            if (_logView == null)
+            {
+                _logView = new LogViewController();
+                _logNav = new UINavigationController(_logView);
+            }
+
+            ViewControllers = [_orderNav!, _billingNav!, _settingsNav!, _logNav!];
+        }
+        else
+        {
+            ViewControllers = [_orderNav!, _billingNav!, _settingsNav!];
+        }
+
+        // Update images after changing view controllers
         UpdateTabBarImages();
     }
 
@@ -97,5 +150,24 @@ public class MainTabBarController : UITabBarController
         var settingsImage = UIImage.FromFile("settings" + suffix)?.ImageWithRenderingMode(UIImageRenderingMode.AlwaysOriginal);
         _settingsNav!.TabBarItem.Image = settingsImage;
         _settingsNav!.TabBarItem.SelectedImage = settingsImage;
+
+        // Set the log tab image if debug mode is enabled
+        if (_logNav != null && Settings.It.DebugMode)
+        {
+            // Use a system icon for logs since we may not have a custom image
+            _logNav.TabBarItem.Image = UIImage.GetSystemImage("list.bullet.rectangle");
+        }
+    }
+
+    /// <summary>
+    /// Disposes of resources used by the tab bar controller.
+    /// </summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            Settings.It.PropertyChanged -= OnSettingsChanged;
+        }
+        base.Dispose(disposing);
     }
 }

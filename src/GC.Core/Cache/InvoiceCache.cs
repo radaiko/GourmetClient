@@ -20,7 +20,7 @@ public static class InvoiceCache {
   /// Gets billing months from cache, fetching missing months from WebApi if needed.
   /// </summary>
   /// <returns></returns>
-  public static async Task<IEnumerable<InvoiceMonth>> GetAsync() {
+  public static async Task<IEnumerable<InvoiceMonth>?> GetAsync() {
     IsLoading = true;
     IEnumerable<InvoiceMonth> cache;
     
@@ -44,7 +44,7 @@ public static class InvoiceCache {
       }
       catch {
         IsValid = false;
-        return default;
+        return null;
       }
     }
     

@@ -16,21 +16,21 @@ public partial class BillingViewModel : ObservableObject {
   [ObservableProperty] private bool _isLoading = true;
   
   public BillingViewModel() {
-    Log.Debug("Initializing BillingViewModel and setting up AvailableMonths.");
+    Logger.Debug("Initializing BillingViewModel and setting up AvailableMonths.");
     AvailableMonths = MemCache.BillingMonths ?? [];
-    Log.Debug("Subscribing to MemCache.BillingMonths.CollectionChanged event.");
+    Logger.Debug("Subscribing to MemCache.BillingMonths.CollectionChanged event.");
     
     MemCache.IsLoadingChanged += isLoading => {
       IsLoading = isLoading;
       if (!isLoading) {
-        Log.Debug("Loading is done. Update Billing months in BillingViewModel.");
+        Logger.Debug("Loading is done. Update Billing months in BillingViewModel.");
         AvailableMonths = MemCache.BillingMonths ?? [];
       }
     };
   }
   
   [RelayCommand] private static async Task Refresh() {
-    Log.Info("Refreshing billing data in MemCache.");
+    Logger.Info("Refreshing billing data in MemCache.");
     await MemCache.RefreshBillingMonthsAsync();
   }
 }

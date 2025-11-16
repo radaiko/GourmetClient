@@ -29,13 +29,13 @@ public static class MemCache {
               ((Action<bool>)d)(current);
             }
             catch (Exception ex) {
-              Log.Debug($"IsLoadingChanged handler threw: {ex}");
+              Logger.Debug($"IsLoadingChanged handler threw: {ex}");
             }
           }
         }
       }
-      // Log loading state changes for billing
-      Log.Debug($"Billing loading changed from {previous} to {current}");
+      // Logger loading state changes for billing
+      Logger.Debug($"Billing loading changed from {previous} to {current}");
     }
   }
 
@@ -54,13 +54,13 @@ public static class MemCache {
               ((Action<bool>)d)(current);
             }
             catch (Exception ex) {
-              Log.Debug($"IsLoadingChanged handler threw: {ex}");
+              Logger.Debug($"IsLoadingChanged handler threw: {ex}");
             }
           }
         }
       }
-      // Log loading state changes for orders
-      Log.Debug($"Order loading changed from {previous} to {current}");
+      // Logger loading state changes for orders
+      Logger.Debug($"Order loading changed from {previous} to {current}");
     }
   }
 
@@ -69,43 +69,43 @@ public static class MemCache {
   public static bool IsLoading => _isBillingLoading || _isOrderLoading;
 
   public static async Task Initialize() {
-    Log.Debug("Starting initialization of caches");
+    Logger.Debug("Starting initialization of caches");
     await RefreshBillingMonthsAsync();
     await RefreshOrderDaysAsync();
-    Log.Debug("Finished initialization of caches");
+    Logger.Debug("Finished initialization of caches");
   }
 
   public static async Task RefreshBillingMonthsAsync() {
     BillingLoading = true;
-    Log.Debug("Billing refresh started");
+    Logger.Debug("Billing refresh started");
     try {
       BillingMonths?.Clear();
       BillingMonths = (List<InvoiceMonth>)await InvoiceCache.GetAsync();
-      Log.Debug($"Completed loading {BillingMonths?.Count ?? 0} billing months");
+      Logger.Debug($"Completed loading {BillingMonths?.Count ?? 0} billing months");
     }
     catch (Exception ex) {
-      Log.Error($"Exception while loading billing months: {ex}");
+      Logger.Error($"Exception while loading billing months: {ex}");
     }
     finally {
       BillingLoading = false;
-      Log.Debug("Billing refresh finished");
+      Logger.Debug("Billing refresh finished");
     }
   }
 
   public static async Task RefreshOrderDaysAsync() {
     OrderLoading = true;
-    Log.Debug("Order refresh started");
+    Logger.Debug("Order refresh started");
     try {
       Menus?.Clear();
       Menus = (List<Day>)await MenuCache.GetAsync();
-      Log.Debug($"Completed loading {Menus?.Count ?? 0} order days");
+      Logger.Debug($"Completed loading {Menus?.Count ?? 0} order days");
     }
     catch (Exception ex) {
-      Log.Error($"Exception while loading order days: {ex}");
+      Logger.Error($"Exception while loading order days: {ex}");
     }
     finally {
       OrderLoading = false;
-      Log.Debug("Order refresh finished");
+      Logger.Debug("Order refresh finished");
     }
   }
 }

@@ -62,14 +62,14 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
     private void CreateUI()
     {
         var safeArea = _safeAreaHelper.SafeAreaInsets;
-        Log.Debug($"Safe area - Top: {safeArea.Top}, Bottom: {safeArea.Bottom}, Left: {safeArea.Left}, Right: {safeArea.Right}");
+        Logger.Debug($"Safe area - Top: {safeArea.Top}, Bottom: {safeArea.Bottom}, Left: {safeArea.Left}, Right: {safeArea.Right}");
 
         // Find the key window for debugging purposes
         var keyWindow = UIApplication.SharedApplication.ConnectedScenes
             .OfType<UIWindowScene>()
             .SelectMany(s => s.Windows)
             .LastOrDefault(w => w.IsKeyWindow);
-        Log.Debug($"UIApplication keyWindow = {keyWindow}");
+        Logger.Debug($"UIApplication keyWindow = {keyWindow}");
 
         // Create page control at the top for day navigation
         _pageControl = new UIPageControl(new CGRect(0, safeArea.Top, View.Bounds.Width, 40));
@@ -100,10 +100,10 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
         // Add swipe gesture for navigating to next day
         var leftSwipe = new UISwipeGestureRecognizer { Direction = UISwipeGestureRecognizerDirection.Left };
         leftSwipe.AddTarget(() => {
-            Log.Debug($"Left swipe detected, current index: {_viewModel.SelectedIndex}");
+            Logger.Debug($"Left swipe detected, current index: {_viewModel.SelectedIndex}");
             if (_viewModel.SelectedIndex < _viewModel.AvailableDays.Count - 1) {
                 _viewModel.SelectedIndex++;
-                Log.Debug($"Changed index to {_viewModel.SelectedIndex}");
+                Logger.Debug($"Changed index to {_viewModel.SelectedIndex}");
             }
         });
         _menusTable.AddGestureRecognizer(leftSwipe);
@@ -111,10 +111,10 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
         // Add swipe gesture for navigating to previous day
         var rightSwipe = new UISwipeGestureRecognizer { Direction = UISwipeGestureRecognizerDirection.Right };
         rightSwipe.AddTarget(() => {
-            Log.Debug($"Right swipe detected, current index: {_viewModel.SelectedIndex}");
+            Logger.Debug($"Right swipe detected, current index: {_viewModel.SelectedIndex}");
             if (_viewModel.SelectedIndex > 0) {
                 _viewModel.SelectedIndex--;
-                Log.Debug($"Changed index to {_viewModel.SelectedIndex}");
+                Logger.Debug($"Changed index to {_viewModel.SelectedIndex}");
             }
         });
         _menusTable.AddGestureRecognizer(rightSwipe);
@@ -129,7 +129,7 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
     protected override void OnSafeAreaChanged(object? sender, PropertyChangedEventArgs e)
     {
         var safeArea = _safeAreaHelper.SafeAreaInsets;
-        Log.Debug($"OnSafeAreaChanged called, insets: Top={safeArea.Top}, Bottom={safeArea.Bottom}, Left={safeArea.Left}, Right={safeArea.Right}");
+        Logger.Debug($"OnSafeAreaChanged called, insets: Top={safeArea.Top}, Bottom={safeArea.Bottom}, Left={safeArea.Left}, Right={safeArea.Right}");
 
         // Adjust page control position
         _pageControl!.Frame = new CGRect(0, safeArea.Top, View.Bounds.Width, 40);
@@ -149,7 +149,7 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
     /// </summary>
     private void UpdateUI()
     {
-        Log.Debug($"UpdateUI called, selected index: {_viewModel.SelectedIndex}, available days: {_viewModel.AvailableDays.Count}");
+        Logger.Debug($"UpdateUI called, selected index: {_viewModel.SelectedIndex}, available days: {_viewModel.AvailableDays.Count}");
 
         // Update date label
         if (_viewModel.AvailableDays.Count > _viewModel.SelectedIndex)
@@ -172,7 +172,7 @@ public class OrderViewController : BaseViewController, IUITableViewDataSource
                     .OfType<UIWindowScene>()
                     .SelectMany(s => s.Windows)
                     .LastOrDefault(w => w.IsKeyWindow);
-        Log.Debug($"UIApplication keyWindow = {keyWindow}");
+        Logger.Debug($"UIApplication keyWindow = {keyWindow}");
     }
 
     /// <summary>

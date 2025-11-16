@@ -48,7 +48,7 @@ public partial class Settings : ObservableObject {
     try {
       if (!File.Exists(StoragePath)) {
         var defaults = new Settings { _loading = false };
-        Log.Info("Settings loaded (defaults)");
+        Logger.Info("Settings loaded (defaults)");
         return defaults;
       }
       var encryptedBase64 = File.ReadAllText(StoragePath);
@@ -64,11 +64,11 @@ public partial class Settings : ObservableObject {
         DebugMode = data.DebugMode
       };
       settings._loading = false;
-      Log.Info("Settings loaded");
+      Logger.Info("Settings loaded");
       return settings;
     }
     catch (Exception ex) {
-      Log.Error($"Failed to load settings: {ex.Message}");
+      Logger.Error($"Failed to load settings: {ex.Message}");
       return new Settings();
     }
   }
@@ -88,10 +88,10 @@ public partial class Settings : ObservableObject {
       var json = JsonSerializer.Serialize(data, Base.JsonOptions);
       var encryptedBase64 = Crypto.Encrypt(json);
       File.WriteAllText(StoragePath, encryptedBase64);
-      Log.Debug("Settings saved");
+      Logger.Debug("Settings saved");
     }
     catch (Exception ex) {
-      Log.Error($"Failed to save settings: {ex.Message}");
+      Logger.Error($"Failed to save settings: {ex.Message}");
     }
   }
 }

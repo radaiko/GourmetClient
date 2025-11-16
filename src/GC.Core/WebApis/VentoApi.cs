@@ -29,7 +29,7 @@ public static class VentoApi {
     var username = Settings.It.VentoUsername;
     var password = Settings.It.VentoPassword;
     if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) {
-      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.VentoApi, null, "Vento username or password not set in settings."));
+      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.VentoApi, "Vento username or password not set in settings."));
       return false;
     }
 
@@ -51,7 +51,7 @@ public static class VentoApi {
       }
       catch (Exception ex) {
         Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.VentoApi, ex, "Error parsing the login HTML"));
-        Log.Debug(ex.ToString());
+        Logger.Debug(ex.ToString());
         return false;
       }
 
@@ -74,12 +74,12 @@ public static class VentoApi {
         return true;
       }
 
-      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.VentoApi, null, "Vento login failed: invalid credentials or unexpected response."));
+      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.VentoApi, loginResponse, "Vento login failed: invalid credentials or unexpected response."));
       return false;
     }
     catch (Exception ex) {
       Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.VentoApi, ex, "Exception during Vento API login."));
-      Log.Debug(ex.ToString());
+      Logger.Debug(ex.ToString());
       return false;
     }
   }
@@ -128,7 +128,7 @@ public static class VentoApi {
     Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.VentoApi, "Starting menu fetch"));
     // Ensure logged in before fetching menus
     if (!_isLoggedIn) {
-      Log.Debug("Not logged in, calling LoginAsync from GetOrderDaysAsync");
+      Logger.Debug("Not logged in, calling LoginAsync from GetOrderDaysAsync");
       await LoginAsync();
     }
     if (!_isLoggedIn) {
@@ -273,7 +273,7 @@ public static class VentoApi {
       return transaction;
     }
     catch (Exception ex) {
-      Log.Debug(ex.ToString());
+      Logger.Debug(ex.ToString());
       return null;
     }
   }

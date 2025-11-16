@@ -20,33 +20,33 @@ public static class GourmetApi {
 
   
   public static void Logout() {
-    Log.Info("GourmetApi.Logout called");
+    Logger.Info("GourmetApi.Logout called");
     foreach (Cookie cookie in BaseApi.CookieContainer.GetAllCookies())
     {
       cookie.Expired = true;
     }
     _isLoggedIn = false;
-    Log.Info("GourmetApi: Logged out and cookies expired");
+    Logger.Info("GourmetApi: Logged out and cookies expired");
   }
   
   public static async Task<bool> LoginAsync() {
     Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, "Starting login"));
     if (_isLoggedIn) {
       Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, "Already logged in"));
-      Log.Debug("Already logged in, skipping login");
+      Logger.Debug("Already logged in, skipping login");
       return true;
     }
     var username = Settings.It.GourmetUsername;
     var password = Settings.It.GourmetPassword;
     if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) {
-      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, null, "Gourmet username or password not set in settings."));
+      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, "Gourmet username or password not set in settings."));
       return false;
     }
     try {
       // 1. Check if already logged in
       // Construct the start page URI in a robust way instead of concatenating path separators
       var startUri = new Uri(new Uri(WebUrl), StartPage + "/");
-      Log.Debug($"Requesting start page to check login status: {startUri}");
+      Logger.Debug($"Requesting start page to check login status: {startUri}");
       var startPageResponse = await BaseApi.Client.GetAsync(startUri);
       var startPageHtml = await startPageResponse.Content.ReadAsStringAsync();
       if (startPageHtml.Contains("navbar-link") && startPageHtml.Contains("einstellungen")) {
@@ -55,7 +55,7 @@ public static class GourmetApi {
         return true;
       }
       // 2. Get login page and extract ufprt
-      Log.Debug("Fetching login page to extract ufprt");
+      Logger.Debug("Fetching login page to extract ufprt");
       // Reuse the previously constructed startUri for the login page request
       var loginPageResponse = await BaseApi.Client.GetAsync(startUri);
       var loginPageHtml = await loginPageResponse.Content.ReadAsStringAsync();
@@ -71,7 +71,7 @@ public static class GourmetApi {
         { "ufprt", ufprt }
       };
       // 4. Post login form
-      Log.Debug("Posting login form");
+      Logger.Debug("Posting login form");
       var response = await BaseApi.Client.PostAsync(WebUrl, new FormUrlEncodedContent(formData));
       var responseHtml = await response.Content.ReadAsStringAsync();
       // 5. Check for login success
@@ -80,11 +80,11 @@ public static class GourmetApi {
         Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, "Login successful"));
         return true;
       }
-      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, null, "Gourmet login failed: invalid credentials or unexpected response."));
+      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, response, "Gourmet login failed: invalid credentials or unexpected response."));
       return false;
     } catch (Exception ex) {
       Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, ex, "Exception during Gourmet API login."));
-      Log.Debug(ex.ToString());
+      Logger.Debug(ex.ToString());
       return false;
     }
   }
@@ -93,7 +93,7 @@ public static class GourmetApi {
     Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, "Starting menu fetch"));
     // Ensure logged in before fetching menus
     if (!_isLoggedIn) {
-      Log.Debug("Not logged in, calling LoginAsync from GetOrderDaysAsync");
+      Logger.Debug("Not logged in, calling LoginAsync from GetOrderDaysAsync");
       await LoginAsync();
     }
     if (!_isLoggedIn) {
@@ -105,32 +105,32 @@ public static class GourmetApi {
     while (i < 4) {
       try {
         var pageUrl = WebUrl + $"menus/?page={i}";
-        Log.Debug($"Fetching menus page: {pageUrl}");
+        Logger.Debug($"Fetching menus page: {pageUrl}");
         var doc = await GetPageAsync(pageUrl);
         Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, $"Processing page {i}"));
         var menus = await ExtractMenusFromPage(doc);
-        Log.Debug($"Extracted {menus.Count} menus from page {i}");
+        Logger.Debug($"Extracted {menus.Count} menus from page {i}");
         foreach (var menu in menus) {
           // Use a composite key of date, title, and type to prevent duplicates
           var key = $"{menu.Date:yyyy-MM-dd}|{menu.Title}|{menu.Type}";
           if (seen.Add(key)) {
             result.Add(menu);
           } else {
-            Log.Debug($"Skipping duplicate menu: {key}");
+            Logger.Debug($"Skipping duplicate menu: {key}");
           }
         }
         if (menus.Count == 0) {
-          Log.Debug("No menus found on page, breaking pagination loop");
+          Logger.Debug("No menus found on page, breaking pagination loop");
           break;
         }
       } catch (Exception ex) {
-        Log.Error($"GourmetApi.GetOrderDaysAsync exception while processing page {i}: {ex.Message}");
-        Log.Debug(ex.ToString());
+        Logger.Error($"GourmetApi.GetOrderDaysAsync exception while processing page {i}: {ex.Message}");
+        Logger.Debug(ex.ToString());
         break;
       }
       i++;
     }
-    Log.Info($"GourmetApi.GetOrderDaysAsync finished, total menus: {result.Count}");
+    Logger.Info($"GourmetApi.GetOrderDaysAsync finished, total menus: {result.Count}");
     // Group menus by date into Day objects
     // Group menus into days
     var availableDays = result.ConvertAll(m => m.Date).Distinct();
@@ -149,9 +149,9 @@ public static class GourmetApi {
   }
   
   private static async Task<HtmlDocument> GetPageAsync(string url) {
-    Log.Debug($"GourmetApi.GetPageAsync fetching URL: {url}");
+    Logger.Debug($"GourmetApi.GetPageAsync fetching URL: {url}");
     var response = await BaseApi.Client.GetAsync(url);
-    Log.Debug($"GourmetApi.GetPageAsync response status: {response.StatusCode}");
+    Logger.Debug($"GourmetApi.GetPageAsync response status: {response.StatusCode}");
     response.EnsureSuccessStatusCode();
     var html = await response.Content.ReadAsStringAsync();
     var doc = new HtmlDocument();
@@ -189,7 +189,7 @@ public static class GourmetApi {
           return fallbackDate;
         }
       }
-      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, null, $"Unable to parse date attribute '{dateAttr}'"));
+      Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, $"Unable to parse date attribute '{dateAttr}'"));
       return null;
   }
 
@@ -226,7 +226,7 @@ public static class GourmetApi {
         ));
         Base.OnInfo?.Invoke(null, new InfoEventArgs(InfoType.GourmetApi, $"Extracted menu {index}/{menuNodes.Count}: {title}"));
       } else {
-        Log.Debug("ExtractMenusFromPage: skipping menu with no date");
+        Logger.Debug("ExtractMenusFromPage: skipping menu with no date");
       }
     }
     return Task.FromResult(result);
@@ -244,7 +244,7 @@ public class ErrorHandlingHandler : DelegatingHandler
       if (!response.IsSuccessStatusCode)
       {
         var msg = $"HTTP {(int)response.StatusCode} {response.ReasonPhrase} for {request.Method} {request.RequestUri}";
-        Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, null, msg));
+        Base.OnError?.Invoke(null, new ErrorEventArgs(ErrorType.GourmetApi, response, msg));
         // Option: throw new HttpRequestException(msg); // uncomment to force exceptions
       }
 

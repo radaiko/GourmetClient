@@ -19,14 +19,14 @@ public partial class OrderViewModel : ObservableObject {
     MemCache.IsLoadingChanged += isLoading => {
       IsLoading = isLoading; 
       if (!isLoading) {
-        Log.Debug("Loading is done. Update Days in OrderViewModel.");
+        Logger.Debug("Loading is done. Update Days in OrderViewModel.");
         AvailableDays = MemCache.Menus ?? [];
       }
     };
   }
   
   [RelayCommand] private static async Task Refresh() {
-    Log.Info("Refreshing data in MemCache.");
+    Logger.Info("Refreshing data in MemCache.");
     await MemCache.RefreshOrderDaysAsync();
   }
 }
