@@ -4,8 +4,6 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GourmetClient.Maui", "GourmetClient.Maui\GourmetClient.Maui.csproj", "{8F8BE820-739B-3CAA-565E-8D85E6B5E0EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GourmetClient", "GourmetClient\GourmetClient.csproj", "{40657508-ADD9-C714-09B7-F7B637F01AE6}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
