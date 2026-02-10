@@ -1,6 +1,6 @@
 # GourmetClient
 
-Cross-platform .NET MAUI application (.NET 10.0) that scrapes two external websites for company cafeteria menu and billing data.
+Expo React Native app that scrapes two external websites for company cafeteria menu and billing data.
 
 ## README Requirements
 
@@ -13,57 +13,58 @@ The README must always include a credit line linking to https://github.com/patri
 ## Project Structure
 
 ```
-src/
-├── GourmetClient.sln
-└── GourmetClient.Maui/
-    ├── GourmetClient.Maui.csproj
-    ├── MauiProgram.cs              # DI registration, app startup
-    ├── App.xaml / AppShell.xaml     # Shell with tab navigation
-    ├── Core/
-    │   ├── Network/                # ALL WEB SCRAPING LOGIC HERE
-    │   │   ├── WebClientBase.cs    # Base HTTP client, session management
-    │   │   ├── GourmetWebClient.cs # Gourmet system scraping
-    │   │   ├── VentopayWebClient.cs# Ventopay system scraping
-    │   │   ├── LoginHandle.cs      # Session lifecycle (ref-counted)
-    │   │   ├── GourmetCacheService.cs  # Menu/order cache
-    │   │   ├── BillingCacheService.cs  # Billing data aggregation
-    │   │   └── GourmetApi/         # JSON request/response models
-    │   ├── Model/                  # Domain models
-    │   ├── Settings/               # UserSettings, GourmetSettingsService
-    │   ├── Serialization/          # JSON serialization DTOs
-    │   └── Notifications/          # In-app notification system
-    ├── Services/                   # Platform abstractions
-    │   ├── IAppDataPaths.cs
-    │   ├── ICredentialService.cs
-    │   ├── IUpdateService.cs
-    │   └── Implementations/
-    │       ├── MauiAppDataPaths.cs
-    │       ├── AesCredentialService.cs
-    │       ├── VelopackUpdateService.cs  # Desktop only
-    │       └── NoOpUpdateService.cs      # Mobile fallback
-    ├── ViewModels/                 # CommunityToolkit.Mvvm ViewModels
-    ├── Pages/                      # XAML pages (Menus, Orders, Billing, Settings)
-    ├── Converters/                 # XAML value converters
-    ├── Utils/
-    │   ├── HttpClientHelper.cs     # HTTP client creation, proxy handling
-    │   ├── HttpClientResult.cs
-    │   ├── EncryptionHelper.cs
-    │   └── ExtensionMethods.cs     # HtmlAgilityPack extensions
-    └── Platforms/                  # Platform-specific entry points
+src/app/                          # Expo React Native app (mobile)
+├── app/                          # Expo Router screens
+│   ├── (tabs)/                   # Tab navigation (Menus, Orders, Billing, Settings)
+│   └── _layout.tsx               # Root layout
+├── src-rn/
+│   ├── api/                      # Web scraping layer
+│   │   ├── gourmetClient.ts      # Gourmet HTTP client (cookie-managed Axios)
+│   │   ├── gourmetParser.ts      # Cheerio-based HTML parsing
+│   │   ├── gourmetApi.ts         # High-level Gourmet operations
+│   │   ├── ventopayClient.ts     # Ventopay HTTP client
+│   │   ├── ventopayParser.ts     # Ventopay HTML parsing
+│   │   └── ventopayApi.ts        # High-level Ventopay operations
+│   ├── store/                    # Zustand stores
+│   │   ├── authStore.ts          # Gourmet auth state
+│   │   ├── ventopayAuthStore.ts  # Ventopay auth state
+│   │   ├── menuStore.ts          # Menu data + caching
+│   │   ├── orderStore.ts         # Order management
+│   │   └── billingStore.ts       # Billing from both sources
+│   ├── components/               # UI components
+│   ├── hooks/                    # Custom React hooks
+│   ├── theme/                    # Theming
+│   ├── types/                    # TypeScript types
+│   └── utils/
+│       ├── constants.ts          # All URLs and config
+│       └── dateUtils.ts          # Date formatting helpers
+├── package.json
+└── tsconfig.json
+analysis/                         # Playwright findings document
 ```
+
+## Tech Stack
+
+- Expo SDK 54, React Native 0.81.5, React 19.1.0
+- Expo Router (file-based navigation with tabs)
+- Zustand (state management)
+- Cheerio (HTML parsing)
+- Axios + tough-cookie (HTTP client with cookie jar)
+- expo-secure-store (credential storage)
+- TypeScript 5.9
 
 ## Two External Data Sources
 
 ### 1. Gourmet System (Menu & Orders)
 
 - **Base URL**: `https://alaclickneu.gourmet.at/`
-- **Client**: `Core/Network/GourmetWebClient.cs`
+- **Client**: `src-rn/api/gourmetClient.ts`
 - **Purpose**: Menu data, order management, billing
 
 ### 2. Ventopay System (Billing)
 
 - **Base URL**: `https://my.ventopay.com/mocca.website/`
-- **Client**: `Core/Network/VentopayWebClient.cs`
+- **Client**: `src-rn/api/ventopayClient.ts`
 - **Hardcoded Company ID**: `0da8d3ec-0178-47d5-9ccd-a996f04acb61`
 - **Purpose**: Transaction/billing data from cafeteria POS
 
@@ -76,46 +77,51 @@ src/
 **DO NOT MODIFY THIS SEQUENCE:**
 
 1. **GET** `https://alaclickneu.gourmet.at/start/`
-2. **Extract CSRF token** from hidden input named `ufprt`
-3. **POST** `https://alaclickneu.gourmet.at/` with form data:
+2. **Extract** hidden fields `ufprt` AND `__ncforminfo` from the form
+3. **POST** `https://alaclickneu.gourmet.at/start/` with form data:
    ```
    Username: {username}
    Password: {password}
    RememberMe: false       # MUST be "false" (string)
    ufprt: {csrf_token}
+   __ncforminfo: {extracted}
    ```
 4. **Verify login** by checking for regex pattern:
    ```regex
    <a href="https://alaclickneu.gourmet.at/einstellungen/" class="navbar-link">
    ```
 
+### Critical: `__ncforminfo` Field
+
+Every form on the Gourmet site includes both `ufprt` AND `__ncforminfo` hidden fields. **Both must be extracted and sent with every form POST.** Missing `__ncforminfo` is detected as bot behavior and triggers account bans.
+
 ### User Information Extraction
 
-After login, extract from `start` page:
+After login, extract from the page:
 
-| Field | XPath |
-|-------|-------|
-| Username | `//div[@class='userfield']//span[@class='loginname']` |
-| ShopModelId | `//input[@id='shopModel']/@value` |
-| EaterId | `//input[@id='eater']/@value` |
-| StaffGroupId | `//input[@id='staffGroup']/@value` |
+| Field | Selector |
+|-------|----------|
+| Username | `.loginname` text |
+| ShopModelId | `#shopModel` value |
+| EaterId | `#eater` value |
+| StaffGroupId | `#staffGroup` value |
 
 ### Menu Data Extraction
 
 **Endpoint**: `https://alaclickneu.gourmet.at/menus?page={0-9}`
 
-**Pagination**: Loop pages 0-9, stop when no `//a[contains(@class, 'menues-next')]` exists.
+**Pagination**: Loop pages 0-9, stop when no `a.menues-next` link exists.
 
-**Menu Item XPath**: `//div[@class='meal']`
+**Menu Item Selector**: `div.meal`
 
 | Field | Extraction Method |
 |-------|-------------------|
-| Menu ID | `.//div[@class='open_info menu-article-detail']` `data-id` attribute |
-| Day | `.//div[@class='open_info menu-article-detail']` `data-date` attribute (format: `MM-dd-yyyy`) |
-| Title | `.//div[@class='title']` first child text |
-| Subtitle | `.//div[@class='subtitle']` text |
-| Allergens | `.//li[@class='allergen']` text (comma-separated letters) |
-| Available | Presence of `.//input[@type='checkbox' and @class='menu-clicked']` |
+| Menu ID | `.open_info.menu-article-detail` `data-id` attribute |
+| Day | `.open_info.menu-article-detail` `data-date` attribute (format: `MM-dd-yyyy`) |
+| Title | `.title` first child text |
+| Subtitle | `.subtitle` text |
+| Allergens | `li.allergen` text (single element, comma-separated letters) |
+| Available | Presence of `input[type=checkbox].menu-clicked` |
 
 **Category Detection** (regex on title):
 ```regex
@@ -123,19 +129,26 @@ MENÜ\s+([I]{1,3})    # Matches MENÜ I, MENÜ II, MENÜ III
 SUPPE & SALAT        # Literal match
 ```
 
+**Key**: Menu IDs are per-category, not per-item. All MENÜ I items share one ID.
+
 ### Order Operations
 
 **Ordered Menus Endpoint**: `https://alaclickneu.gourmet.at/bestellungen`
 
-**Order Item XPath**: `//div[contains(@class, 'order-item')]`
+**Order Item Selector**: `div.order-item`
 
 | Field | Extraction Method |
 |-------|-------------------|
-| Position ID | `.//input[@name='cp_PositionId']/@value` |
-| Eating Cycle ID | `.//input[@name='cp_EatingCycleId_{positionId}']/@value` |
-| Date | `.//input[@name='cp_Date_{positionId}']/@value` (format: `dd.MM.yyyy HH:mm:ss`) |
-| Title | `.//div[@class='title']` text |
-| Approved | Presence of class `confirmed` on radio input, or `fa fa-check` icon |
+| Position ID | `input[name=cp_PositionId]` value |
+| Eating Cycle ID | `input[name=cp_EatingCycleId_{positionId}]` value |
+| Date | `input[name=cp_Date_{positionId}]` value (format: `dd.MM.yyyy HH:mm:ss`) |
+| Title | `.title` text |
+| Approved | Presence of `.confirmed` class or `fa fa-check` icon |
+
+**Forms on orders page** (all POST to `/bestellungen/`):
+1. Main order form: `ufprt` + `__ncforminfo`
+2. Cancel form: `ufprt` + `__ncforminfo`
+3. Edit mode toggle (class `form-toggleEditMode`): `editMode=True` + `ufprt` + `__ncforminfo`
 
 ### JSON APIs
 
@@ -165,7 +178,7 @@ SUPPE & SALAT        # Literal match
 {
   "eaterId": "string",
   "shopModelId": "string",
-  "checkLastMonthNumber": "0"  // 0 = current month
+  "checkLastMonthNumber": "0"
 }
 ```
 
@@ -202,17 +215,17 @@ SUPPE & SALAT        # Literal match
 
 **Transaction List**: `https://my.ventopay.com/mocca.website/Transaktionen.aspx`
 - Parameters: `fromDate` and `untilDate` (format: `dd.MM.yyyy`)
-- XPath: `//div[@class='content']//div[@class='transact']`
+- Selector: `div.content div.transact`
 - Extract transaction IDs from `id` attribute
 
 **Transaction Details**: `https://my.ventopay.com/mocca.website/Rechnung.aspx?id={transactionId}`
 
 | Field | Extraction Method |
 |-------|-------------------|
-| DateTime | `//span[@id='ContentPlaceHolder1_LblTimestamp']` |
+| DateTime | `#ContentPlaceHolder1_LblTimestamp` text |
 | DateTime Format | Regex: `(\d+)\.\s+([a-zA-z]+)\s+(\d+)\s+-\s+(\d+):(\d+)` |
-| Restaurant | `//span[@id='ContentPlaceHolder1_LblRestaurantInfo']` split by `<br>` |
-| Items | `//div[@class='rechnungpart']//table//tbody` rows (excluding `rechnungsdetail` rows) |
+| Restaurant | `#ContentPlaceHolder1_LblRestaurantInfo` split by `<br>` |
+| Items | `div.rechnungpart table tbody` rows (excluding `rechnungsdetail` rows) |
 
 **Item Row Columns**:
 - Column 0: Count (format: `2x`)
@@ -225,63 +238,38 @@ SUPPE & SALAT        # Literal match
 
 ## Session & Cookie Management
 
-**Location**: `Core/Network/WebClientBase.cs`
-
-1. **Single CookieContainer per client instance** - cookies persist across all requests
-2. **LoginHandle pattern** with reference counting - logout triggers when all handles disposed
-3. **Thread-safe** via `SemaphoreSlim` and lock objects
-4. **HttpClient is reused** - only recreated on network errors
-
-### Proxy Handling
-
-**Location**: `Utils/HttpClientHelper.cs`
-
-1. On iOS/Mac Catalyst: uses default system handler (no custom proxy support)
-2. On other platforms: detect system proxy via `WebRequest.DefaultWebProxy`
-3. On 407 error: retry with proxy + default credentials
-4. On DNS error: retry without proxy
+- **tough-cookie** with **axios-cookiejar-support** for automatic cookie persistence
+- Each client (`gourmetClient.ts`, `ventopayClient.ts`) maintains its own cookie jar
+- Cookies persist across all requests within a session
 
 ---
 
 ## Things That Will Break Accounts
 
-1. **Missing CSRF tokens** - every form needs fresh `ufprt` (Gourmet) or `__VIEWSTATE` (Ventopay)
-2. **Wrong date formats** - Gourmet uses `MM-dd-yyyy`, Ventopay uses `dd.MM.yyyy`
-3. **Missing form parameters** - all hidden inputs must be included
-4. **Wrong parameter values** - `RememberMe` must be literal `"false"`, not boolean
-5. **Changing request order** - login must complete before data requests
-6. **Modifying hardcoded company ID** - Ventopay requires exact UUID
-7. **Adding custom User-Agent** - application uses default .NET UA for scraping
+1. **Missing `__ncforminfo`** - every Gourmet form needs both `ufprt` AND `__ncforminfo`
+2. **Missing CSRF tokens** - fresh `ufprt` (Gourmet) or `__VIEWSTATE` (Ventopay) per request
+3. **Wrong date formats** - Gourmet uses `MM-dd-yyyy`, Ventopay uses `dd.MM.yyyy`
+4. **Missing form parameters** - all hidden inputs must be included
+5. **Wrong parameter values** - `RememberMe` must be literal `"false"`, not boolean
+6. **Changing request order** - login must complete before data requests
+7. **Modifying hardcoded company ID** - Ventopay requires exact UUID
 8. **Rate limiting/delays** - there is intentionally NO throttling; adding delays may cause session timeout
 9. **Changing edit mode logic** - order cancellation requires exact form state management
 
 ---
 
-## Architecture
-
-- **DI**: All services registered in `MauiProgram.cs` via `IServiceCollection`
-- **MVVM**: Uses CommunityToolkit.Mvvm for ViewModels
-- **Navigation**: Shell-based tab navigation (Menus, Orders, Billing, Settings)
-- **Updates**: Velopack on desktop (Windows/Mac), no-op on mobile
-- **Settings**: JSON file in app data directory via `GourmetSettingsService`
-- **Caching**: Menu data cached to JSON file with configurable validity (default 4 hours)
-
 ## Build & Run
 
 ```bash
-dotnet build src/GourmetClient.sln
+cd src/app
+npm install
 
-# Mac Catalyst
-dotnet build src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-maccatalyst
+# iOS
+npx expo run:ios
 
 # Android
-dotnet build src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-android
+npx expo run:android
+
+# Dev server
+npx expo start
 ```
-
-## Dependencies
-
-- HtmlAgilityPack 1.12.x - HTML parsing
-- CommunityToolkit.Mvvm 8.x - MVVM toolkit
-- Semver 3.x - Version comparison
-- Velopack 0.x - Desktop auto-updates (Windows/Mac only)
-- Microsoft.Extensions.Logging.Debug 10.x

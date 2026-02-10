@@ -1,0 +1,16 @@
+export const GOURMET_BASE_URL = 'https://alaclickneu.gourmet.at';
+export const GOURMET_LOGIN_URL = `${GOURMET_BASE_URL}/start/`;
+export const GOURMET_MENUS_URL = `${GOURMET_BASE_URL}/menus`;
+export const GOURMET_ORDERS_URL = `${GOURMET_BASE_URL}/bestellungen`;
+export const GOURMET_ADD_TO_CART_URL = `${GOURMET_BASE_URL}/umbraco/api/AlaCartApi/AddToMenuesCart`;
+export const GOURMET_BILLING_URL = `${GOURMET_BASE_URL}/umbraco/api/AlaMyBillingApi/GetMyBillings`;
+export const GOURMET_SETTINGS_URL = `${GOURMET_BASE_URL}/einstellungen/`;
+
+export const MENU_CACHE_VALIDITY_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+// Ventopay (vending machines / POS billing)
+export const VENTOPAY_BASE_URL = 'https://my.ventopay.com/mocca.website';
+export const VENTOPAY_LOGIN_URL = `${VENTOPAY_BASE_URL}/Login.aspx`;
+export const VENTOPAY_TRANSACTIONS_URL = `${VENTOPAY_BASE_URL}/Transaktionen.aspx`;
+export const VENTOPAY_LOGOUT_URL = `${VENTOPAY_BASE_URL}/Ausloggen.aspx`;
+export const VENTOPAY_COMPANY_ID = '0da8d3ec-0178-47d5-9ccd-a996f04acb61';
