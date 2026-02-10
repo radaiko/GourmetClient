@@ -9,6 +9,18 @@ Cross-platform .NET MAUI app for company cafeteria menu ordering and billing. Sc
 - macOS (Mac Catalyst)
 - Windows
 
+## Quick Start (Simulators)
+
+```bash
+# iOS Simulator (macOS only, requires Xcode)
+./scripts/run-ios-simulator.sh
+
+# Android Emulator (requires Android SDK + an AVD)
+./scripts/run-android-emulator.sh
+```
+
+The scripts auto-detect a running simulator/emulator. If none is running, they boot the first available one.
+
 ## Build & Run
 
 ```bash
