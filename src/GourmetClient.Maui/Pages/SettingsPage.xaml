@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:GourmetClient.Maui.ViewModels"
+             x:Class="GourmetClient.Maui.Pages.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings"
+             BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray900}}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="24">
+
+            <!-- Gourmet Account Section -->
+            <Border StrokeShape="RoundRectangle 12"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Gourmet Account"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                        <Border Grid.Column="1"
+                                BackgroundColor="{Binding GourmetStatusColor}"
+                                StrokeShape="RoundRectangle 10"
+                                Padding="8,4"
+                                StrokeThickness="0">
+                            <Label Text="{Binding GourmetStatusText}"
+                                   FontSize="12"
+                                   TextColor="White" />
+                        </Border>
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Username"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+                        <Entry Text="{Binding GourmetUsername}"
+                               Placeholder="Enter username"
+                               Keyboard="Email"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Password"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+                        <Entry Text="{Binding GourmetPassword}"
+                               Placeholder="Enter password"
+                               IsPassword="True"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}" />
+                    </VerticalStackLayout>
+
+                    <Button Text="Test Connection"
+                            Command="{Binding TestGourmetConnectionCommand}"
+                            IsEnabled="{Binding CanTestGourmet}"
+                            BackgroundColor="{StaticResource Primary}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Ventopay Account Section -->
+            <Border StrokeShape="RoundRectangle 12"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Ventopay Account"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                        <Border Grid.Column="1"
+                                BackgroundColor="{Binding VentopayStatusColor}"
+                                StrokeShape="RoundRectangle 10"
+                                Padding="8,4"
+                                StrokeThickness="0">
+                            <Label Text="{Binding VentopayStatusText}"
+                                   FontSize="12"
+                                   TextColor="White" />
+                        </Border>
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Username"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+                        <Entry Text="{Binding VentopayUsername}"
+                               Placeholder="Enter username"
+                               Keyboard="Email"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}" />
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Password"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+                        <Entry Text="{Binding VentopayPassword}"
+                               Placeholder="Enter password"
+                               IsPassword="True"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray700}}" />
+                    </VerticalStackLayout>
+
+                    <Button Text="Test Connection"
+                            Command="{Binding TestVentopayConnectionCommand}"
+                            IsEnabled="{Binding CanTestVentopay}"
+                            BackgroundColor="{StaticResource Primary}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- App Section -->
+            <Border StrokeShape="RoundRectangle 12"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="App"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+
+                    <Button Text="Check for Updates"
+                            Command="{Binding CheckForUpdatesCommand}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                            TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Include pre-release versions"
+                               FontSize="14"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IncludePreRelease}"
+                                OnColor="{StaticResource Primary}" />
+                    </Grid>
+
+                    <Label Text="{Binding VersionText}"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- About Section -->
+            <Border StrokeShape="RoundRectangle 12"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray800}}"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                    Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="About"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource White}}" />
+
+                    <Label Text="Gourmet Client is an unofficial app for managing cafeteria orders."
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+
+                    <Label Text="Icons by Flaticon"
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray500}}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Save Button -->
+            <Button Text="Save Settings"
+                    Command="{Binding SaveSettingsCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    HeightRequest="50"
+                    CornerRadius="12" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
