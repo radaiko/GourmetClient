@@ -1,10 +1,35 @@
 # GourmetClient
-Vereinfachte Essenbestellung für Gourmet
 
-## Download
-1. Die Datei "GourmetClient.zip" herunterladen: https://github.com/patrickl92/GourmetClient/releases/latest
-2. Die heruntergeladene Datei in ein lokales Verzeichnis entpacken
+Cross-platform .NET MAUI app for company cafeteria menu ordering and billing. Scrapes two external websites (Gourmet and Ventopay) to view menus, place orders, and track expenses.
 
-   Achtung: **Nicht** nach "*C:\Programme*" oder "*C:\Programme (x86)*", da es sonst zu Problemen mit dem automatischen Updates kommen kann
-   
-4. Die Datei "*GourmetClient.exe*" im entpackten Verzeichnis starten
+## Platforms
+
+- Android
+- iOS
+- macOS (Mac Catalyst)
+- Windows
+
+## Build & Run
+
+```bash
+# Solution
+dotnet build src/GourmetClient.sln
+
+# Mac Catalyst
+dotnet build src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-maccatalyst
+dotnet run --project src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-maccatalyst
+
+# Android
+dotnet build src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-android
+```
+
+## Dependencies
+
+- HtmlAgilityPack - HTML parsing for web scraping
+- CommunityToolkit.Mvvm - MVVM support
+- Semver - Version comparison
+- Velopack - Desktop auto-updates (Windows and Mac only)
+
+## Credits
+
+Based on [GourmetClient](https://github.com/patrickl92/GourmetClient) by patrickl92.

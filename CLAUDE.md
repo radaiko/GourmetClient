@@ -1,6 +1,10 @@
 # GourmetClient
 
-Windows WPF application (.NET 9.0) that scrapes two external websites for company cafeteria menu and billing data.
+Cross-platform .NET MAUI application (.NET 10.0) that scrapes two external websites for company cafeteria menu and billing data.
+
+## README Requirements
+
+The README must always include a credit line linking to https://github.com/patrickl92/GourmetClient as the base/original project this was forked from.
 
 ## Critical Warning
 
@@ -9,21 +13,43 @@ Windows WPF application (.NET 9.0) that scrapes two external websites for compan
 ## Project Structure
 
 ```
-src/GourmetClient/
-├── Network/                    # ALL WEB SCRAPING LOGIC HERE
-│   ├── WebClientBase.cs        # Base HTTP client, session management
-│   ├── GourmetWebClient.cs     # Gourmet system scraping
-│   ├── VentopayWebClient.cs    # Ventopay system scraping
-│   ├── LoginHandle.cs          # Session lifecycle management
-│   ├── GourmetCacheService.cs  # Menu/order cache
-│   ├── BillingCacheService.cs  # Billing data aggregation
-│   └── GourmetApi/             # JSON request/response models
-├── Utils/
-│   └── HttpClientHelper.cs     # HTTP client creation, proxy handling
-├── Settings/
-│   └── UserSettings.cs         # Credentials storage
-└── Update/
-    └── UpdateService.cs        # GitHub release checking
+src/
+├── GourmetClient.sln
+└── GourmetClient.Maui/
+    ├── GourmetClient.Maui.csproj
+    ├── MauiProgram.cs              # DI registration, app startup
+    ├── App.xaml / AppShell.xaml     # Shell with tab navigation
+    ├── Core/
+    │   ├── Network/                # ALL WEB SCRAPING LOGIC HERE
+    │   │   ├── WebClientBase.cs    # Base HTTP client, session management
+    │   │   ├── GourmetWebClient.cs # Gourmet system scraping
+    │   │   ├── VentopayWebClient.cs# Ventopay system scraping
+    │   │   ├── LoginHandle.cs      # Session lifecycle (ref-counted)
+    │   │   ├── GourmetCacheService.cs  # Menu/order cache
+    │   │   ├── BillingCacheService.cs  # Billing data aggregation
+    │   │   └── GourmetApi/         # JSON request/response models
+    │   ├── Model/                  # Domain models
+    │   ├── Settings/               # UserSettings, GourmetSettingsService
+    │   ├── Serialization/          # JSON serialization DTOs
+    │   └── Notifications/          # In-app notification system
+    ├── Services/                   # Platform abstractions
+    │   ├── IAppDataPaths.cs
+    │   ├── ICredentialService.cs
+    │   ├── IUpdateService.cs
+    │   └── Implementations/
+    │       ├── MauiAppDataPaths.cs
+    │       ├── AesCredentialService.cs
+    │       ├── VelopackUpdateService.cs  # Desktop only
+    │       └── NoOpUpdateService.cs      # Mobile fallback
+    ├── ViewModels/                 # CommunityToolkit.Mvvm ViewModels
+    ├── Pages/                      # XAML pages (Menus, Orders, Billing, Settings)
+    ├── Converters/                 # XAML value converters
+    ├── Utils/
+    │   ├── HttpClientHelper.cs     # HTTP client creation, proxy handling
+    │   ├── HttpClientResult.cs
+    │   ├── EncryptionHelper.cs
+    │   └── ExtensionMethods.cs     # HtmlAgilityPack extensions
+    └── Platforms/                  # Platform-specific entry points
 ```
 
 ## Two External Data Sources
@@ -31,13 +57,13 @@ src/GourmetClient/
 ### 1. Gourmet System (Menu & Orders)
 
 - **Base URL**: `https://alaclickneu.gourmet.at/`
-- **Client**: `Network/GourmetWebClient.cs`
+- **Client**: `Core/Network/GourmetWebClient.cs`
 - **Purpose**: Menu data, order management, billing
 
 ### 2. Ventopay System (Billing)
 
 - **Base URL**: `https://my.ventopay.com/mocca.website/`
-- **Client**: `Network/VentopayWebClient.cs`
+- **Client**: `Core/Network/VentopayWebClient.cs`
 - **Hardcoded Company ID**: `0da8d3ec-0178-47d5-9ccd-a996f04acb61`
 - **Purpose**: Transaction/billing data from cafeteria POS
 
@@ -84,8 +110,8 @@ After login, extract from `start` page:
 
 | Field | Extraction Method |
 |-------|-------------------|
-| Menu ID | `data-id` attribute |
-| Day | `data-date` attribute (format: `MM-dd-yyyy`, e.g., `06-30-2025`) |
+| Menu ID | `.//div[@class='open_info menu-article-detail']` `data-id` attribute |
+| Day | `.//div[@class='open_info menu-article-detail']` `data-date` attribute (format: `MM-dd-yyyy`) |
 | Title | `.//div[@class='title']` first child text |
 | Subtitle | `.//div[@class='subtitle']` text |
 | Allergens | `.//li[@class='allergen']` text (comma-separated letters) |
@@ -106,10 +132,10 @@ SUPPE & SALAT        # Literal match
 | Field | Extraction Method |
 |-------|-------------------|
 | Position ID | `.//input[@name='cp_PositionId']/@value` |
-| Eating Cycle ID | `.//input[@name='cp_EatingCycleId_*']/@value` |
-| Date | `.//input[@name='cp_Date_*']/@value` (format: `30.06.2025 00:00:00`) |
+| Eating Cycle ID | `.//input[@name='cp_EatingCycleId_{positionId}']/@value` |
+| Date | `.//input[@name='cp_Date_{positionId}']/@value` (format: `dd.MM.yyyy HH:mm:ss`) |
 | Title | `.//div[@class='title']` text |
-| Approved | Presence of class `confirmed` or `fa-check` |
+| Approved | Presence of class `confirmed` on radio input, or `fa fa-check` icon |
 
 ### JSON APIs
 
@@ -125,17 +151,9 @@ SUPPE & SALAT        # Literal match
   "dates": [
     {
       "date": "MM-dd-yyyy",
-      "menuIds": ["id1", "id2"]
+      "menuIds": ["id1"]
     }
   ]
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "message": "string"
 }
 ```
 
@@ -183,6 +201,7 @@ SUPPE & SALAT        # Literal match
 ### Transaction Data Extraction
 
 **Transaction List**: `https://my.ventopay.com/mocca.website/Transaktionen.aspx`
+- Parameters: `fromDate` and `untilDate` (format: `dd.MM.yyyy`)
 - XPath: `//div[@class='content']//div[@class='transact']`
 - Extract transaction IDs from `id` attribute
 
@@ -193,22 +212,20 @@ SUPPE & SALAT        # Literal match
 | DateTime | `//span[@id='ContentPlaceHolder1_LblTimestamp']` |
 | DateTime Format | Regex: `(\d+)\.\s+([a-zA-z]+)\s+(\d+)\s+-\s+(\d+):(\d+)` |
 | Restaurant | `//span[@id='ContentPlaceHolder1_LblRestaurantInfo']` split by `<br>` |
-| Items | `//div[@class='rechnungpart']//table//tbody` rows |
+| Items | `//div[@class='rechnungpart']//table//tbody` rows (excluding `rechnungsdetail` rows) |
 
 **Item Row Columns**:
 - Column 0: Count (format: `2x`)
 - Column 1: Item name
 - Column 4: Cost (German format: `12,34`)
 
-**Filter Rule**: Skip transactions where restaurant contains "Gourmet" AND location does NOT contain "Kaffeeautomat".
+**Filter Rule**: Skip transactions where restaurant name contains "Gourmet" AND location does NOT contain "Kaffeeautomat".
 
 ---
 
 ## Session & Cookie Management
 
-### Critical Implementation Details
-
-**Location**: `Network/WebClientBase.cs`
+**Location**: `Core/Network/WebClientBase.cs`
 
 1. **Single CookieContainer per client instance** - cookies persist across all requests
 2. **LoginHandle pattern** with reference counting - logout triggers when all handles disposed
@@ -219,8 +236,8 @@ SUPPE & SALAT        # Literal match
 
 **Location**: `Utils/HttpClientHelper.cs`
 
-1. Detect system proxy via `WebRequest.DefaultWebProxy`
-2. Attempt without proxy first
+1. On iOS/Mac Catalyst: uses default system handler (no custom proxy support)
+2. On other platforms: detect system proxy via `WebRequest.DefaultWebProxy`
 3. On 407 error: retry with proxy + default credentials
 4. On DNS error: retry without proxy
 
@@ -229,7 +246,7 @@ SUPPE & SALAT        # Literal match
 ## Things That Will Break Accounts
 
 1. **Missing CSRF tokens** - every form needs fresh `ufprt` (Gourmet) or `__VIEWSTATE` (Ventopay)
-2. **Wrong date formats** - Gourmet uses `MM-dd-yyyy`, Ventopay uses `dd.MM.yyyy HH:mm:ss`
+2. **Wrong date formats** - Gourmet uses `MM-dd-yyyy`, Ventopay uses `dd.MM.yyyy`
 3. **Missing form parameters** - all hidden inputs must be included
 4. **Wrong parameter values** - `RememberMe` must be literal `"false"`, not boolean
 5. **Changing request order** - login must complete before data requests
@@ -240,44 +257,31 @@ SUPPE & SALAT        # Literal match
 
 ---
 
-## Cross-Platform Migration Notes
+## Architecture
 
-### Network Layer (Safe to Port)
-
-The `Network/` folder contains platform-agnostic HTTP logic using `HttpClient`. This can be ported to:
-- .NET MAUI (shared code)
-- Xamarin (shared code)
-- Native (requires reimplementation)
-
-### HTML Parsing
-
-Uses HtmlAgilityPack. Cross-platform alternatives:
-- .NET MAUI/Xamarin: HtmlAgilityPack works
-- Native iOS: use NSXMLParser or SwiftSoup
-- Native Android: use Jsoup
-
-### Must Preserve Exactly
-
-1. All XPath selectors
-2. All regex patterns (compiled as `[GeneratedRegex]`)
-3. Form parameter names and values
-4. URL paths and query parameters
-5. Date format strings
-6. Cookie handling behavior
-7. Login/logout sequence
-
----
+- **DI**: All services registered in `MauiProgram.cs` via `IServiceCollection`
+- **MVVM**: Uses CommunityToolkit.Mvvm for ViewModels
+- **Navigation**: Shell-based tab navigation (Menus, Orders, Billing, Settings)
+- **Updates**: Velopack on desktop (Windows/Mac), no-op on mobile
+- **Settings**: JSON file in app data directory via `GourmetSettingsService`
+- **Caching**: Menu data cached to JSON file with configurable validity (default 4 hours)
 
 ## Build & Run
 
 ```bash
-dotnet build src/GourmetClient/GourmetClient.csproj
-dotnet run --project src/GourmetClient/GourmetClient.csproj
+dotnet build src/GourmetClient.sln
+
+# Mac Catalyst
+dotnet build src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-maccatalyst
+
+# Android
+dotnet build src/GourmetClient.Maui/GourmetClient.Maui.csproj -f net10.0-android
 ```
 
 ## Dependencies
 
-- HtmlAgilityPack 1.12.2 - HTML parsing
-- Microsoft.Extensions.Primitives 9.0.7
-- Microsoft.Xaml.Behaviors.Wpf 1.1.135 - WPF behaviors
-- Semver 3.0.0 - Version comparison
+- HtmlAgilityPack 1.12.x - HTML parsing
+- CommunityToolkit.Mvvm 8.x - MVVM toolkit
+- Semver 3.x - Version comparison
+- Velopack 0.x - Desktop auto-updates (Windows/Mac only)
+- Microsoft.Extensions.Logging.Debug 10.x
