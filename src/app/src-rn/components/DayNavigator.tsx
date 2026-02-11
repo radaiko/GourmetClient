@@ -1,5 +1,5 @@
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { AdaptiveBlurView } from './AdaptiveBlurView';
 import { formatDisplayDate } from '../utils/dateUtils';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
@@ -65,13 +65,13 @@ export function DayNavigator({ dates, selectedDate, onSelectDate }: DayNavigator
   }
 
   return (
-    <BlurView
+    <AdaptiveBlurView
       intensity={colors.blurIntensity}
       tint={colors.blurTint as any}
       style={styles.blurWrapper}
     >
       {content}
-    </BlurView>
+    </AdaptiveBlurView>
   );
 }
 

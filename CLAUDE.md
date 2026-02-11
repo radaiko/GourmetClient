@@ -1,6 +1,6 @@
 # GourmetClient
 
-Expo React Native app that scrapes two external websites for company cafeteria menu and billing data.
+Expo React Native app (mobile + desktop via Tauri) that scrapes two external websites for company cafeteria menu and billing data.
 
 ## README Requirements
 
@@ -13,7 +13,7 @@ The README must always include a credit line linking to https://github.com/patri
 ## Project Structure
 
 ```
-src/app/                          # Expo React Native app (mobile)
+src/app/                          # Expo React Native app (mobile + web)
 ├── app/                          # Expo Router screens
 │   ├── (tabs)/                   # Tab navigation (Menus, Orders, Billing, Settings)
 │   └── _layout.tsx               # Root layout
@@ -32,14 +32,31 @@ src/app/                          # Expo React Native app (mobile)
 │   │   ├── orderStore.ts         # Order management
 │   │   └── billingStore.ts       # Billing from both sources
 │   ├── components/               # UI components
+│   │   ├── AdaptiveBlurView.tsx   # Native: expo-blur wrapper
+│   │   └── AdaptiveBlurView.web.tsx # Web: CSS backdrop-filter fallback
 │   ├── hooks/                    # Custom React hooks
 │   ├── theme/                    # Theming
 │   ├── types/                    # TypeScript types
 │   └── utils/
 │       ├── constants.ts          # All URLs and config
-│       └── dateUtils.ts          # Date formatting helpers
+│       ├── dateUtils.ts          # Date formatting helpers
+│       ├── platform.ts           # Platform detection (ios/android/desktop/web)
+│       ├── secureStorage.ts      # Native: expo-secure-store wrapper
+│       ├── secureStorage.web.ts  # Web: localStorage fallback
+│       ├── desktopUpdater.ts     # Native: no-op
+│       └── desktopUpdater.web.ts # Web/Desktop: Tauri updater integration
 ├── package.json
 └── tsconfig.json
+src/desktop/                      # Tauri v2 desktop wrapper
+├── src-tauri/
+│   ├── src/
+│   │   ├── main.rs               # Tauri entry point
+│   │   └── lib.rs                # Tauri commands (Velopack updates)
+│   ├── capabilities/main.json    # Permission config
+│   ├── Cargo.toml                # Rust dependencies
+│   ├── tauri.conf.json           # Tauri configuration
+│   └── icons/                    # Desktop app icons
+└── package.json                  # Desktop build scripts
 analysis/                         # Playwright findings document
 ```
 
@@ -50,8 +67,10 @@ analysis/                         # Playwright findings document
 - Zustand (state management)
 - Cheerio (HTML parsing)
 - Axios + tough-cookie (HTTP client with cookie jar)
-- expo-secure-store (credential storage)
-- TypeScript 5.9
+- expo-secure-store (credential storage on native), localStorage (web/desktop)
+- Tauri v2 (desktop wrapper with webview)
+- Velopack (auto-updates via GitHub Releases)
+- TypeScript 5.9, Rust (Tauri backend)
 
 ## Two External Data Sources
 
@@ -278,3 +297,46 @@ npx expo run:android
 # Dev server
 npx expo start
 ```
+
+### Desktop (Tauri)
+
+```bash
+cd src/desktop
+npm install
+
+# Dev mode (opens desktop window with Expo web dev server)
+npm run dev
+
+# Production build (creates .app/.dmg on macOS, .msi on Windows, .deb on Linux)
+npm run build
+
+# Generate icons from app icon
+npm run icons
+```
+
+### Auto-Updates Setup (Velopack)
+
+The desktop app uses Velopack for auto-updates with GitHub Releases:
+
+1. Install Velopack CLI: `dotnet tool install -g vpk`
+2. Build Tauri release: `cd src/desktop && npm run build`
+3. Package with Velopack:
+   ```bash
+   vpk pack \
+     --packId "dev.radaiko.gourmetclient" \
+     --packVersion "1.1.0" \
+     --packDir "./src-tauri/target/release/bundle" \
+     --mainExe "gourmet-client"
+   ```
+4. Upload to GitHub Releases: `vpk upload github --repoUrl "https://github.com/radaiko/GourmetClient"`
+5. Velopack generates delta updates automatically from previous releases
+
+**Prerequisites**: .NET SDK 8+ (for `vpk` CLI), Rust toolchain (for Tauri build)
+
+### Web Compatibility Notes
+
+- Uses `.web.ts`/`.web.tsx` platform extensions for web-specific implementations
+- `AdaptiveBlurView` replaces `expo-blur` BlurView on web with CSS `backdrop-filter`
+- `secureStorage` uses `localStorage` on web, `expo-secure-store` on native
+- `desktopUpdater` is a no-op on native, integrates with Velopack via Tauri IPC on desktop
+- Platform detection: `isDesktop()` checks for `window.__TAURI_INTERNALS__`

@@ -1,0 +1,13 @@
+{
+  "name": "gourmet-client-desktop",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx tauri dev",
+    "build": "npx tauri build",
+    "icons": "npx tauri icon ../app/assets/icon.png"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
+import { AdaptiveBlurView } from '../../src-rn/components/AdaptiveBlurView';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,7 +20,7 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View style={[styles.tabBarWrapper, { bottom: Math.max(insets.bottom, 8) }]}>
       <View style={styles.pill}>
-        <BlurView
+        <AdaptiveBlurView
           intensity={colors.blurIntensity}
           tint={colors.blurTint as any}
           style={StyleSheet.absoluteFill}

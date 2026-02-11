@@ -13,6 +13,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
+import { isDesktop } from '../../src-rn/utils/platform';
+import { checkForDesktopUpdates } from '../../src-rn/utils/desktopUpdater';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { useThemeStore, ThemePreference } from '../../src-rn/store/themeStore';
 import { Colors } from '../../src-rn/theme/colors';
@@ -71,6 +73,9 @@ export default function SettingsScreen() {
   const [vPassword, setVPassword] = useState('');
   const [vTestStatus, setVTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [vSaving, setVSaving] = useState(false);
+
+  // Desktop update state
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
 
   // Load saved credentials on mount
   useEffect(() => {
@@ -142,6 +147,15 @@ export default function SettingsScreen() {
   const handleVentopayLogout = async () => {
     await ventopayLogout();
     setVTestStatus('idle');
+  };
+
+  const handleCheckForUpdates = async () => {
+    setCheckingUpdates(true);
+    try {
+      await checkForDesktopUpdates(true);
+    } finally {
+      setCheckingUpdates(false);
+    }
   };
 
   return (
@@ -328,6 +342,22 @@ export default function SettingsScreen() {
           ))}
         </View>
       </View>
+
+      {isDesktop() && (
+        <>
+          <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>Updates</Text>
+          <Pressable
+            style={[styles.button, styles.buttonSecondary]}
+            onPress={handleCheckForUpdates}
+            disabled={checkingUpdates}
+          >
+            <Text style={styles.buttonSecondaryText}>
+              {checkingUpdates ? 'Checking...' : 'Check for Updates'}
+            </Text>
+          </Pressable>
+        </>
+      )}
     </ScrollView>
     </KeyboardAvoidingView>
   );

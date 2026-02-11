@@ -1,5 +1,5 @@
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { AdaptiveBlurView } from './AdaptiveBlurView';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { bannerSurface } from '../theme/platformStyles';
@@ -19,13 +19,13 @@ export function LoadingOverlay() {
   }
 
   return (
-    <BlurView
+    <AdaptiveBlurView
       intensity={colors.blurIntensityStrong}
       tint={colors.blurTint as any}
       style={styles.container}
     >
       {spinner}
-    </BlurView>
+    </AdaptiveBlurView>
   );
 }
 

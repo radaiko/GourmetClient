@@ -341,3 +341,4 @@ healthchecksdb
 
 .env
 .DS_Store
+.claude/

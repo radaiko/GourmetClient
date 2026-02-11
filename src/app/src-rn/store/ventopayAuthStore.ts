@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import * as secureStorage from '../utils/secureStorage';
 import { VentopayApi } from '../api/ventopayApi';
 
 const CREDENTIALS_KEY_USER = 'ventopay_username';
@@ -56,19 +56,19 @@ export const useVentopayAuthStore = create<VentopayAuthState>((set, get) => ({
   },
 
   saveCredentials: async (username: string, password: string) => {
-    await SecureStore.setItemAsync(CREDENTIALS_KEY_USER, username);
-    await SecureStore.setItemAsync(CREDENTIALS_KEY_PASS, password);
+    await secureStorage.setItem(CREDENTIALS_KEY_USER, username);
+    await secureStorage.setItem(CREDENTIALS_KEY_PASS, password);
   },
 
   getSavedCredentials: async () => {
-    const username = await SecureStore.getItemAsync(CREDENTIALS_KEY_USER);
-    const password = await SecureStore.getItemAsync(CREDENTIALS_KEY_PASS);
+    const username = await secureStorage.getItem(CREDENTIALS_KEY_USER);
+    const password = await secureStorage.getItem(CREDENTIALS_KEY_PASS);
     if (!username || !password) return null;
     return { username, password };
   },
 
   clearCredentials: async () => {
-    await SecureStore.deleteItemAsync(CREDENTIALS_KEY_USER);
-    await SecureStore.deleteItemAsync(CREDENTIALS_KEY_PASS);
+    await secureStorage.deleteItem(CREDENTIALS_KEY_USER);
+    await secureStorage.deleteItem(CREDENTIALS_KEY_PASS);
   },
 }));
