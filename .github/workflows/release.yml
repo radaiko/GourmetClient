@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "desktop/v*"
+      - "ios/v*"
+      - "android/v*"
+
+jobs:
+  desktop:
+    if: startsWith(github.ref, 'refs/tags/desktop/')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            main-exe: gourmet-client
+          - os: windows-latest
+            main-exe: gourmet-client.exe
+          - os: ubuntu-latest
+            main-exe: gourmet-client
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install app deps
+        run: cd src/app && npm ci
+
+      - name: Install desktop deps
+        run: cd src/desktop && npm ci
+
+      - name: Build Tauri
+        run: cd src/desktop && npm run build
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk
+
+      - name: Package and upload
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="$(echo "$GITHUB_REF_NAME" | sed 's|^desktop/v||')"
+          PACK_DIR="$(mktemp -d)"
+          cp "src/desktop/src-tauri/target/release/${{ matrix.main-exe }}" "$PACK_DIR/"
+          vpk pack \
+            --packId "dev.radaiko.gourmetclient" \
+            --packVersion "$VERSION" \
+            --packDir "$PACK_DIR" \
+            --mainExe "${{ matrix.main-exe }}"
+          vpk upload github \
+            --repoUrl "${{ github.server_url }}/${{ github.repository }}" \
+            --tag "$GITHUB_REF_NAME" \
+            --token "$GITHUB_TOKEN"
+
+  ios:
+    if: startsWith(github.ref, 'refs/tags/ios/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install deps
+        run: cd src/app && npm ci
+
+      - name: Build and submit
+        run: |
+          cd src/app
+          eas build --platform ios --profile production --non-interactive
+          eas submit --platform ios --profile production --non-interactive
+
+  android:
+    if: startsWith(github.ref, 'refs/tags/android/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install deps
+        run: cd src/app && npm ci
+
+      - name: Build and submit
+        run: |
+          cd src/app
+          eas build --platform android --profile production --non-interactive
+          eas submit --platform android --profile production --non-interactive
