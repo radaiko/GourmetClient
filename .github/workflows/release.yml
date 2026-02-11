@@ -8,7 +8,7 @@ on:
       - "android/v*"
 
 jobs:
-  desktop:
+  desktop-build:
     if: startsWith(github.ref, 'refs/tags/desktop/')
     strategy:
       fail-fast: false
@@ -16,13 +16,14 @@ jobs:
         include:
           - os: macos-latest
             main-exe: gourmet-client
+            artifact: macos
           - os: windows-latest
             main-exe: gourmet-client.exe
+            artifact: windows
           - os: ubuntu-latest
             main-exe: gourmet-client
+            artifact: linux
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -47,6 +48,23 @@ jobs:
       - name: Build Tauri
         run: cd src/desktop && npm run build
 
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.artifact }}
+          path: src/desktop/src-tauri/target/release/${{ matrix.main-exe }}
+
+  desktop-release:
+    needs: desktop-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -56,22 +74,36 @@ jobs:
         run: dotnet tool install -g vpk
 
       - name: Package and upload
-        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(echo "$GITHUB_REF_NAME" | sed 's|^desktop/v||')"
-          PACK_DIR="$(mktemp -d)"
-          cp "src/desktop/src-tauri/target/release/${{ matrix.main-exe }}" "$PACK_DIR/"
-          vpk pack \
-            --packId "dev.radaiko.gourmetclient" \
-            --packVersion "$VERSION" \
-            --packDir "$PACK_DIR" \
-            --mainExe "${{ matrix.main-exe }}"
+
+          for platform in macos linux windows; do
+            DIR="artifacts/desktop-${platform}"
+            if [ "$platform" = "windows" ]; then
+              MAIN_EXE="gourmet-client.exe"
+            else
+              MAIN_EXE="gourmet-client"
+            fi
+            chmod +x "$DIR/$MAIN_EXE" 2>/dev/null || true
+            vpk pack \
+              --packId "dev.radaiko.gourmetclient" \
+              --packVersion "$VERSION" \
+              --packDir "$DIR" \
+              --mainExe "$MAIN_EXE" \
+              --outputDir "releases-${platform}"
+          done
+
+          # Merge all release files into one directory
+          mkdir -p releases
+          cp releases-*/* releases/ 2>/dev/null || true
+
           vpk upload github \
             --repoUrl "${{ github.server_url }}/${{ github.repository }}" \
             --tag "$GITHUB_REF_NAME" \
-            --token "$GITHUB_TOKEN"
+            --token "$GITHUB_TOKEN" \
+            --releasesDir releases
 
   ios:
     if: startsWith(github.ref, 'refs/tags/ios/')
