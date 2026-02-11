@@ -1,3 +1,7 @@
+import { Platform } from 'react-native';
+
+const isAndroid = Platform.OS === 'android';
+
 export interface Colors {
   // Surfaces
   background: string;
@@ -89,17 +93,17 @@ export const LightColors: Colors = {
 
   overlay: 'rgba(255,255,255,0.7)',
 
-  // Glass
-  glassSurface: 'rgba(255,255,255,0.68)',
-  glassSurfaceVariant: 'rgba(245,245,245,0.60)',
+  // Glass (opaque on Android since BlurView is not used)
+  glassSurface: isAndroid ? '#ffffff' : 'rgba(255,255,255,0.68)',
+  glassSurfaceVariant: isAndroid ? '#f5f5f5' : 'rgba(245,245,245,0.60)',
 
-  glassHighlight: 'rgba(255,255,255,0.80)',
-  glassShadowEdge: 'rgba(0,0,0,0.08)',
+  glassHighlight: isAndroid ? '#e0e0e0' : 'rgba(255,255,255,0.80)',
+  glassShadowEdge: isAndroid ? '#e0e0e0' : 'rgba(0,0,0,0.08)',
 
-  glassSuccess: 'rgba(76,175,80,0.15)',
-  glassWarning: 'rgba(255,152,0,0.15)',
-  glassError: 'rgba(244,67,54,0.15)',
-  glassPrimary: 'rgba(74,144,217,0.12)',
+  glassSuccess: isAndroid ? '#e8f5e9' : 'rgba(76,175,80,0.15)',
+  glassWarning: isAndroid ? '#fff3e0' : 'rgba(255,152,0,0.15)',
+  glassError: isAndroid ? '#ffebee' : 'rgba(244,67,54,0.15)',
+  glassPrimary: isAndroid ? '#e3f0ff' : 'rgba(74,144,217,0.12)',
 
   blurTint: 'systemThinMaterial',
   blurIntensity: 40,
@@ -139,17 +143,17 @@ export const DarkColors: Colors = {
 
   overlay: 'rgba(0,0,0,0.7)',
 
-  // Glass
-  glassSurface: 'rgba(30,30,30,0.70)',
-  glassSurfaceVariant: 'rgba(44,44,44,0.60)',
+  // Glass (opaque on Android since BlurView is not used)
+  glassSurface: isAndroid ? '#1e1e1e' : 'rgba(30,30,30,0.70)',
+  glassSurfaceVariant: isAndroid ? '#2c2c2c' : 'rgba(44,44,44,0.60)',
 
-  glassHighlight: 'rgba(255,255,255,0.15)',
-  glassShadowEdge: 'rgba(0,0,0,0.40)',
+  glassHighlight: isAndroid ? '#333' : 'rgba(255,255,255,0.15)',
+  glassShadowEdge: isAndroid ? '#111' : 'rgba(0,0,0,0.40)',
 
-  glassSuccess: 'rgba(76,175,80,0.20)',
-  glassWarning: 'rgba(255,152,0,0.20)',
-  glassError: 'rgba(244,67,54,0.20)',
-  glassPrimary: 'rgba(106,173,240,0.18)',
+  glassSuccess: isAndroid ? '#1b3a1b' : 'rgba(76,175,80,0.20)',
+  glassWarning: isAndroid ? '#3d2e10' : 'rgba(255,152,0,0.20)',
+  glassError: isAndroid ? '#3d1a1a' : 'rgba(244,67,54,0.20)',
+  glassPrimary: isAndroid ? '#1a2d3d' : 'rgba(106,173,240,0.18)',
 
   blurTint: 'systemThickMaterialDark',
   blurIntensity: 50,

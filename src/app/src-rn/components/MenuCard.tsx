@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetMenuItem } from '../types/menu';
 import { isOrderingCutoff } from '../utils/dateUtils';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
+import { cardSurface } from '../theme/platformStyles';
 
 interface MenuCardProps {
   item: GourmetMenuItem;
@@ -62,36 +63,26 @@ export function MenuCard({ item, isSelected, onToggle }: MenuCardProps) {
   );
 }
 
+const isAndroid = Platform.OS === 'android';
+
 const createStyles = (c: Colors) =>
   StyleSheet.create({
     card: {
-      backgroundColor: c.glassSurface,
-      borderRadius: 18,
       padding: 16,
       marginBottom: 10,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
       position: 'relative',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 3,
+      ...cardSurface(c),
     },
     cardOrdered: {
-      backgroundColor: c.glassSuccess,
-      borderTopColor: c.glassHighlight,
+      backgroundColor: isAndroid ? c.successSurface : c.glassSuccess,
+      borderColor: isAndroid ? c.successBorder : undefined,
     },
     cardSelected: {
       backgroundColor: c.primary,
-      borderTopColor: 'rgba(255,255,255,0.30)',
-      borderLeftColor: 'rgba(255,255,255,0.15)',
-      borderBottomColor: c.primaryDark,
+      borderColor: isAndroid ? c.primaryDark : undefined,
+      borderTopColor: isAndroid ? c.primaryDark : 'rgba(255,255,255,0.30)',
+      borderLeftColor: isAndroid ? c.primaryDark : 'rgba(255,255,255,0.15)',
+      borderBottomColor: isAndroid ? c.primaryDark : c.primaryDark,
     },
     cardDisabled: {
       opacity: 0.5,
@@ -102,11 +93,11 @@ const createStyles = (c: Colors) =>
       marginBottom: 2,
     },
     orderedBadge: {
-      backgroundColor: c.glassSuccess,
+      backgroundColor: isAndroid ? c.successSurface : c.glassSuccess,
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 12,
-      borderWidth: 0.5,
+      borderWidth: isAndroid ? 1 : 0.5,
       borderColor: c.success,
     },
     orderedBadgeText: {
@@ -115,23 +106,17 @@ const createStyles = (c: Colors) =>
       color: c.successText,
     },
     cutoffBadge: {
-      backgroundColor: c.glassWarning,
+      backgroundColor: isAndroid ? c.warningSurface : c.glassWarning,
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 12,
-      borderWidth: 0.5,
+      borderWidth: isAndroid ? 1 : 0.5,
       borderColor: c.warning,
     },
     cutoffBadgeText: {
       fontSize: 10,
       fontWeight: '700',
       color: c.warningText,
-    },
-    category: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: c.primary,
-      letterSpacing: 0.5,
     },
     bottomRow: {
       flexDirection: 'row',

@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { formatDisplayDate } from '../utils/dateUtils';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
+import { circleButton } from '../theme/platformStyles';
 
 interface DayNavigatorProps {
   dates: Date[];
@@ -30,38 +31,46 @@ export function DayNavigator({ dates, selectedDate, onSelectDate }: DayNavigator
     }
   };
 
+  const content = (
+    <View style={styles.container}>
+      <Pressable
+        onPress={goBack}
+        style={[styles.arrow, currentIndex <= 0 && styles.arrowDisabled]}
+        disabled={currentIndex <= 0}
+      >
+        <Text style={styles.arrowText}>&#x276E;</Text>
+      </Pressable>
+
+      <View style={styles.dateContainer}>
+        <Text style={styles.dateText}>
+          {formatDisplayDate(selectedDate)}
+        </Text>
+        <Text style={styles.pageText}>
+          {currentIndex + 1} / {dates.length}
+        </Text>
+      </View>
+
+      <Pressable
+        onPress={goForward}
+        style={[styles.arrow, currentIndex >= dates.length - 1 && styles.arrowDisabled]}
+        disabled={currentIndex >= dates.length - 1}
+      >
+        <Text style={styles.arrowText}>&#x276F;</Text>
+      </Pressable>
+    </View>
+  );
+
+  if (Platform.OS === 'android') {
+    return <View style={styles.androidWrapper}>{content}</View>;
+  }
+
   return (
     <BlurView
       intensity={colors.blurIntensity}
       tint={colors.blurTint as any}
       style={styles.blurWrapper}
     >
-      <View style={styles.container}>
-        <Pressable
-          onPress={goBack}
-          style={[styles.arrow, currentIndex <= 0 && styles.arrowDisabled]}
-          disabled={currentIndex <= 0}
-        >
-          <Text style={styles.arrowText}>&#x276E;</Text>
-        </Pressable>
-
-        <View style={styles.dateContainer}>
-          <Text style={styles.dateText}>
-            {formatDisplayDate(selectedDate)}
-          </Text>
-          <Text style={styles.pageText}>
-            {currentIndex + 1} / {dates.length}
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={goForward}
-          style={[styles.arrow, currentIndex >= dates.length - 1 && styles.arrowDisabled]}
-          disabled={currentIndex >= dates.length - 1}
-        >
-          <Text style={styles.arrowText}>&#x276F;</Text>
-        </Pressable>
-      </View>
+      {content}
     </BlurView>
   );
 }
@@ -71,6 +80,12 @@ const createStyles = (c: Colors) =>
     blurWrapper: {
       borderBottomWidth: 0.5,
       borderBottomColor: c.glassShadowEdge,
+    },
+    androidWrapper: {
+      backgroundColor: c.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      elevation: 2,
     },
     container: {
       flexDirection: 'row',
@@ -84,20 +99,7 @@ const createStyles = (c: Colors) =>
       height: 48,
       justifyContent: 'center',
       alignItems: 'center',
-      borderRadius: 24,
-      backgroundColor: c.glassSurfaceVariant,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      borderRightWidth: 0,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 6,
-      elevation: 2,
+      ...circleButton(c),
     },
     arrowDisabled: {
       opacity: 0.3,

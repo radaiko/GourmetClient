@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { useBillingStore, BillingSource } from '../../src-rn/store/billingStore'
 import { BillCard, BillingEntry } from '../../src-rn/components/BillCard';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { Colors } from '../../src-rn/theme/colors';
+import { bannerSurface, tintedBanner } from '../../src-rn/theme/platformStyles';
 
 const SOURCE_FILTERS: { value: BillingSource; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -235,9 +237,9 @@ const createStyles = (c: Colors) =>
     },
     monthSelector: {
       flexDirection: 'row',
-      backgroundColor: c.glassSurface,
-      borderBottomWidth: 0.5,
-      borderBottomColor: c.glassHighlight,
+      backgroundColor: Platform.OS === 'android' ? c.surface : c.glassSurface,
+      borderBottomWidth: Platform.OS === 'android' ? 1 : 0.5,
+      borderBottomColor: Platform.OS === 'android' ? c.border : c.glassHighlight,
     },
     monthTab: {
       flex: 1,
@@ -267,12 +269,12 @@ const createStyles = (c: Colors) =>
       paddingHorizontal: 14,
       paddingVertical: 6,
       borderRadius: 20,
-      backgroundColor: c.glassSurface,
+      backgroundColor: Platform.OS === 'android' ? c.surface : c.glassSurface,
       borderWidth: 1,
-      borderColor: c.glassHighlight,
+      borderColor: Platform.OS === 'android' ? c.border : c.glassHighlight,
     },
     sourceTabActive: {
-      backgroundColor: c.glassPrimary,
+      backgroundColor: Platform.OS === 'android' ? c.primarySurface : c.glassPrimary,
       borderColor: c.primary,
     },
     sourceTabText: {
@@ -286,24 +288,11 @@ const createStyles = (c: Colors) =>
     summaryBar: {
       flexDirection: 'row',
       justifyContent: 'space-around',
-      backgroundColor: c.glassSurface,
       paddingVertical: 12,
       paddingHorizontal: 16,
       marginHorizontal: 16,
       marginTop: 4,
-      borderRadius: 14,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
+      ...bannerSurface(c),
     },
     summaryItem: {
       alignItems: 'center',
@@ -328,23 +317,10 @@ const createStyles = (c: Colors) =>
       color: c.textTertiary,
     },
     errorBanner: {
-      backgroundColor: c.glassError,
       padding: 12,
       marginHorizontal: 16,
       marginTop: 8,
-      borderRadius: 14,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
+      ...tintedBanner(c, c.glassError),
     },
     errorText: {
       color: c.errorText,

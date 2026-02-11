@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { OrderItem } from '../../src-rn/components/OrderItem';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { Colors } from '../../src-rn/theme/colors';
+import { tintedBanner, buttonPrimary } from '../../src-rn/theme/platformStyles';
 
 type Tab = 'upcoming' | 'past';
 
@@ -159,9 +161,9 @@ const createStyles = (c: Colors) =>
     },
     tabs: {
       flexDirection: 'row',
-      backgroundColor: c.glassSurface,
-      borderBottomWidth: 0.5,
-      borderBottomColor: c.glassHighlight,
+      backgroundColor: Platform.OS === 'android' ? c.surface : c.glassSurface,
+      borderBottomWidth: Platform.OS === 'android' ? 1 : 0.5,
+      borderBottomColor: Platform.OS === 'android' ? c.border : c.glassHighlight,
     },
     tab: {
       flex: 1,
@@ -185,23 +187,10 @@ const createStyles = (c: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: c.glassWarning,
       padding: 12,
       marginHorizontal: 16,
       marginTop: 8,
-      borderRadius: 14,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
+      ...tintedBanner(c, c.glassWarning),
     },
     confirmBannerText: {
       color: c.warningText,
@@ -210,16 +199,9 @@ const createStyles = (c: Colors) =>
       flex: 1,
     },
     confirmButton: {
-      backgroundColor: c.primary,
       paddingHorizontal: 20,
       paddingVertical: 8,
-      borderRadius: 12,
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.30)',
-      borderLeftWidth: 0.5,
-      borderLeftColor: 'rgba(255,255,255,0.15)',
-      borderBottomWidth: 0,
-      borderRightWidth: 0,
+      ...buttonPrimary(c),
     },
     confirmButtonText: {
       color: '#fff',
@@ -239,23 +221,10 @@ const createStyles = (c: Colors) =>
       color: c.textTertiary,
     },
     errorBanner: {
-      backgroundColor: c.glassError,
       padding: 12,
       marginHorizontal: 16,
       marginTop: 8,
-      borderRadius: 14,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 2,
+      ...tintedBanner(c, c.glassError),
     },
     errorText: {
       color: c.errorText,

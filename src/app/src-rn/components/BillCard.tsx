@@ -3,6 +3,7 @@ import { GourmetBill } from '../types/billing';
 import { VentopayTransaction } from '../types/ventopay';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
+import { cardSurface } from '../theme/platformStyles';
 
 /** Unified type for rendering both Gourmet and Ventopay entries */
 export type BillingEntry =
@@ -105,22 +106,9 @@ export function BillCard({ entry }: BillCardProps) {
 const createStyles = (c: Colors) =>
   StyleSheet.create({
     container: {
-      backgroundColor: c.glassSurface,
-      borderRadius: 16,
       padding: 16,
       marginBottom: 8,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 2,
+      ...cardSurface(c),
     },
     header: {
       flexDirection: 'row',

@@ -1,8 +1,9 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetOrderedMenu } from '../types/order';
 import { formatDisplayDate } from '../utils/dateUtils';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
+import { cardSurface } from '../theme/platformStyles';
 
 interface OrderItemProps {
   order: GourmetOrderedMenu;
@@ -52,28 +53,17 @@ export function OrderItem({ order, isCancelling, onCancel, canCancel }: OrderIte
   );
 }
 
+const isAndroid = Platform.OS === 'android';
+
 const createStyles = (c: Colors) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: c.glassSurface,
-      borderRadius: 16,
       padding: 16,
       marginBottom: 8,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderRightWidth: 0,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 2,
+      ...cardSurface(c),
     },
     containerCancelling: {
       opacity: 0.6,
@@ -104,11 +94,11 @@ const createStyles = (c: Colors) =>
       color: c.textPrimary,
     },
     badge: {
-      backgroundColor: c.glassSuccess,
+      backgroundColor: isAndroid ? c.successSurface : c.glassSuccess,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,
-      borderWidth: 0.5,
+      borderWidth: isAndroid ? 1 : 0.5,
       borderColor: c.success,
     },
     badgeText: {
@@ -117,7 +107,7 @@ const createStyles = (c: Colors) =>
       color: c.successText,
     },
     badgePending: {
-      backgroundColor: c.glassWarning,
+      backgroundColor: isAndroid ? c.warningSurface : c.glassWarning,
       borderColor: c.warning,
     },
     badgePendingText: {
@@ -127,10 +117,10 @@ const createStyles = (c: Colors) =>
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: c.glassError,
+      backgroundColor: isAndroid ? c.errorSurface : c.glassError,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: 0.5,
+      borderWidth: isAndroid ? 1 : 0.5,
       borderColor: c.error,
     },
     cancelX: {

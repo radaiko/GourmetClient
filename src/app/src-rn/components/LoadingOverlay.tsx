@@ -1,11 +1,22 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
+import { bannerSurface } from '../theme/platformStyles';
 
 export function LoadingOverlay() {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+
+  const spinner = (
+    <View style={styles.spinnerContainer}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
+
+  if (Platform.OS === 'android') {
+    return <View style={styles.androidContainer}>{spinner}</View>;
+  }
 
   return (
     <BlurView
@@ -13,9 +24,7 @@ export function LoadingOverlay() {
       tint={colors.blurTint as any}
       style={styles.container}
     >
-      <View style={styles.spinnerContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      {spinner}
     </BlurView>
   );
 }
@@ -28,21 +37,17 @@ const createStyles = (c: Colors) =>
       alignItems: 'center',
       zIndex: 10,
     },
+    androidContainer: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+      backgroundColor: c.overlay,
+    },
     spinnerContainer: {
-      backgroundColor: c.glassSurface,
       borderRadius: 24,
       padding: 28,
-      borderTopWidth: 1,
-      borderLeftWidth: 0.5,
-      borderBottomWidth: 0.5,
-      borderTopColor: c.glassHighlight,
-      borderLeftColor: c.glassHighlight,
-      borderBottomColor: c.glassShadowEdge,
-      borderRightWidth: 0,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.20,
-      shadowRadius: 24,
+      ...bannerSurface(c),
       elevation: 6,
     },
   });

@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src-rn/theme/useTheme';
@@ -115,7 +115,47 @@ const styles = StyleSheet.create({
   },
 });
 
+const TAB_TITLES: Record<string, string> = {
+  index: 'Menus',
+  orders: 'Orders',
+  billing: 'Billing',
+  settings: 'Settings',
+};
+
 export default function TabLayout() {
+  const { colors } = useTheme();
+
+  if (Platform.OS === 'android') {
+    return (
+      <Tabs
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarIcon: ({ focused, color, size }) => {
+            const icon = ICONS[route.name];
+            if (!icon) return null;
+            return <Ionicons name={focused ? icon.filled : icon.outline} size={size} color={color} />;
+          },
+          tabBarActiveTintColor: colors.primary,
+          tabBarInactiveTintColor: colors.textTertiary,
+          tabBarStyle: {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+            elevation: 8,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '600',
+          },
+        })}
+      >
+        <Tabs.Screen name="index" options={{ title: 'Menus' }} />
+        <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
+        <Tabs.Screen name="billing" options={{ title: 'Billing' }} />
+        <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      </Tabs>
+    );
+  }
+
   return (
     <Tabs
       tabBar={(props) => <GlassTabBar {...props} />}
