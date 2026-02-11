@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "GourmetApp",
+    "name": "Gourmet Client",
     "slug": "GourmetApp",
-    "scheme": "gourmetapp",
-    "version": "1.0.0",
+    "scheme": "gourmetclient",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -14,13 +14,17 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.GourmetApp"
+      "supportsTablet": false,
+      "bundleIdentifier": "dev.radaiko.gourmetclient",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#4a90d9"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -32,6 +36,12 @@
       "expo-router",
       "expo-secure-store",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "efb12eb3-0729-4ea2-a3db-8026d95db7d3"
+      }
+    }
   }
 }

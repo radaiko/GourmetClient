@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Plate -->
+  <circle cx="512" cy="520" r="280" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="8"/>
+  <circle cx="512" cy="520" r="220" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="4"/>
+
+  <!-- Fork -->
+  <g transform="translate(370, 300)" fill="white">
+    <rect x="0" y="0" width="12" height="120" rx="6"/>
+    <rect x="24" y="0" width="12" height="120" rx="6"/>
+    <rect x="48" y="0" width="12" height="120" rx="6"/>
+    <rect x="72" y="0" width="12" height="120" rx="6"/>
+    <rect x="0" y="110" width="84" height="30" rx="4"/>
+    <rect x="30" y="130" width="24" height="300" rx="12"/>
+  </g>
+
+  <!-- Knife -->
+  <g transform="translate(570, 300)" fill="white">
+    <path d="M 12 0 C 12 0, 60 10, 60 60 L 60 140 L 12 140 Z"/>
+    <rect x="12" y="130" width="48" height="30" rx="4"/>
+    <rect x="24" y="150" width="24" height="280" rx="12"/>
+  </g>
+</svg>
