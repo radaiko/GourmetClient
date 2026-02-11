@@ -3,7 +3,7 @@
     "name": "Gourmet Client",
     "slug": "GourmetApp",
     "scheme": "gourmetclient",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
