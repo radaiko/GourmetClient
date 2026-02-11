@@ -120,7 +120,8 @@ for tag in "${TAGS[@]}"; do
   git -C "$SCRIPT_DIR" tag "$tag"
 done
 
-git -C "$SCRIPT_DIR" push --follow-tags
+git -C "$SCRIPT_DIR" push
+git -C "$SCRIPT_DIR" push origin "${TAGS[@]}"
 
 ok "Pushed v${VERSION} — CI will build: ${PLATFORM_LABEL}"
 
