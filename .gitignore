@@ -342,3 +342,4 @@ healthchecksdb
 .env
 .DS_Store
 .claude/
+.ship-history
