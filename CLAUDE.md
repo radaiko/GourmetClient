@@ -95,6 +95,10 @@ analysis/                         # Playwright findings document
 
 Every form on the Gourmet site includes both `ufprt` AND `__ncforminfo` hidden fields. **Both must be extracted and sent with every form POST.** Missing `__ncforminfo` is detected as bot behavior and triggers account bans.
 
+### Critical: `multipart/form-data` Encoding
+
+Every form on the Gourmet site uses `enctype="multipart/form-data"`. **All form POSTs must use `multipart/form-data`**, not `application/x-www-form-urlencoded`. Sending URL-encoded data causes the server to silently reject the login (returns HTTP 200 with login page instead of 302 redirect).
+
 ### User Information Extraction
 
 After login, extract from the page:
@@ -247,7 +251,8 @@ SUPPE & SALAT        # Literal match
 ## Things That Will Break Accounts
 
 1. **Missing `__ncforminfo`** - every Gourmet form needs both `ufprt` AND `__ncforminfo`
-2. **Missing CSRF tokens** - fresh `ufprt` (Gourmet) or `__VIEWSTATE` (Ventopay) per request
+2. **Wrong Content-Type** - Gourmet forms require `multipart/form-data`, NOT `application/x-www-form-urlencoded`
+3. **Missing CSRF tokens** - fresh `ufprt` (Gourmet) or `__VIEWSTATE` (Ventopay) per request
 3. **Wrong date formats** - Gourmet uses `MM-dd-yyyy`, Ventopay uses `dd.MM.yyyy`
 4. **Missing form parameters** - all hidden inputs must be included
 5. **Wrong parameter values** - `RememberMe` must be literal `"false"`, not boolean

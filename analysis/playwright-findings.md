@@ -9,6 +9,10 @@ The existing .NET MAUI app **does NOT send the `__ncforminfo` hidden field** tha
 
 Every form on the site includes both `ufprt` AND `__ncforminfo` hidden fields. Both must be extracted and sent.
 
+## Critical Finding: Forms Use `multipart/form-data`
+
+**Every form on the Gourmet site** uses `enctype="multipart/form-data"`. The browser sends `Content-Type: multipart/form-data; boundary=...` — NOT `application/x-www-form-urlencoded`. Sending URL-encoded form data causes the server to return the login page with HTTP 200 (login silently fails) instead of the expected 302 redirect to `/menus/`.
+
 ---
 
 ## Login Page (`/start/`)
