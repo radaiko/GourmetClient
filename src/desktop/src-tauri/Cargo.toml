@@ -1,6 +1,6 @@
 [package]
 name = "gourmet-client"
-version = "0.0.6"
+version = "0.0.7"
 description = "Desktop client for Gourmet cafeteria system"
 edition = "2021"
 
