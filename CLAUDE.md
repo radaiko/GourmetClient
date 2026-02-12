@@ -286,7 +286,7 @@ SUPPE & SALAT        # Literal match
 
 ### Credentials
 
-Login credentials for both Gourmet and Ventopay are stored in `src/app/.env` (gitignored). These are used by the recorder script and can also be used for manual testing on simulators/emulators. See `src/app/.env.example` for the required format.
+Login credentials for both Gourmet and Ventopay are stored in `.env` at the project root (gitignored). These are used by the recorder script and can also be used for manual testing on simulators/emulators. See `.env.example` for the required format.
 
 ### Running Tests
 

@@ -5,19 +5,23 @@
  * files, then sanitizes personal data so fixtures are safe to commit.
  *
  * Usage:
- *   cp .env.example .env   # fill in real credentials
+ *   cp .env.example .env   # fill in real credentials (in project root)
  *   npm run record-fixtures
  *
  * Requires: GOURMET_USERNAME, GOURMET_PASSWORD, VENTOPAY_USERNAME, VENTOPAY_PASSWORD in .env
  */
 
-import 'dotenv/config';
+import * as path from 'path';
+import dotenv from 'dotenv';
+
+// Load .env from project root (two levels up from src/app/scripts/)
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+
 import axios from 'axios';
 import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import * as cheerio from 'cheerio';
 import * as fs from 'fs';
-import * as path from 'path';
 
 // ---------------------------------------------------------------------------
 // Config
