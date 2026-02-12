@@ -497,6 +497,7 @@ const createStyles = (c: Colors) =>
     },
     buttonDanger: {
       flex: 0,
+      alignSelf: isCompactDesktop ? 'flex-start' as const : undefined,
       paddingHorizontal: isCompactDesktop ? 16 : 24,
       ...buttonDanger(c),
     },
