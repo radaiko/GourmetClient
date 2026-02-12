@@ -96,6 +96,7 @@ jobs:
           cp "src/desktop/src-tauri/target/release/${{ matrix.main-exe }}" "$PACK_DIR/"
           vpk pack \
             --packId "dev.radaiko.gourmetclient" \
+            --packTitle "Gourmet Client" \
             --packVersion "$VERSION" \
             --packDir "$PACK_DIR" \
             --mainExe "${{ matrix.main-exe }}" \
