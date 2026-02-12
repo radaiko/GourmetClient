@@ -2,10 +2,15 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { vexo } from 'vexo-analytics';
 // IMPORTANT: tauriHttp must be imported BEFORE any store modules.
 // The module patches axios.create at load time so Zustand stores get
 // Tauri-aware Axios instances when they call axios.create() during init.
 import '../src-rn/utils/tauriHttp';
+
+if (!__DEV__) {
+  vexo('8c19fcb1-e57e-4387-ab30-a749383528fd');
+}
 import { useAuthStore } from '../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../src-rn/store/ventopayAuthStore';
 import { useTheme } from '../src-rn/theme/useTheme';
