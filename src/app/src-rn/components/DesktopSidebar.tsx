@@ -6,7 +6,7 @@ import { useTheme } from '../theme/useTheme';
 import { useDesktopLayout } from '../hooks/useDesktopLayout';
 import { Colors } from '../theme/colors';
 import { sidebarSurface } from '../theme/platformStyles';
-import { useUpdateStore, applyUpdate } from '../utils/desktopUpdater';
+import { useUpdateStore, applyUpdate, checkForDesktopUpdates } from '../utils/desktopUpdater';
 
 const ICONS: Record<string, { outline: keyof typeof Ionicons.glyphMap; filled: keyof typeof Ionicons.glyphMap; label: string }> = {
   index: { outline: 'restaurant-outline', filled: 'restaurant', label: 'Menus' },
@@ -21,6 +21,7 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
   const styles = createStyles(colors, sidebarWidth, sidebarCollapsed);
   const [version, setVersion] = useState(require('../../package.json').version);
   const pendingVersion = useUpdateStore((s) => s.pendingVersion);
+  const checkingUpdates = useUpdateStore((s) => s.checking);
 
   useEffect(() => {
     const internals = (window as any).__TAURI_INTERNALS__;
@@ -94,7 +95,13 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
           )}
         </Pressable>
       )}
-      {!sidebarCollapsed && <Text style={styles.version}>v{version}</Text>}
+      {!sidebarCollapsed && (
+        <Pressable onPress={() => checkForDesktopUpdates(true)} disabled={checkingUpdates}>
+          <Text style={styles.version}>
+            {checkingUpdates ? 'Checking...' : `v${version}`}
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }

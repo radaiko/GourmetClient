@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
 import { isDesktop } from '../../src-rn/utils/platform';
-import { checkForDesktopUpdates, useUpdateStore, applyUpdate } from '../../src-rn/utils/desktopUpdater';
+import { useUpdateStore, applyUpdate } from '../../src-rn/utils/desktopUpdater';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { useDialog } from '../../src-rn/components/DialogProvider';
@@ -23,9 +23,7 @@ import { Colors } from '../../src-rn/theme/colors';
 import {
   inputField,
   buttonPrimary,
-  buttonSecondary,
   buttonDanger,
-  tintedBanner,
   bannerSurface,
   cardSurface,
 } from '../../src-rn/theme/platformStyles';
@@ -49,7 +47,6 @@ export default function SettingsScreen() {
   // Gourmet auth
   const {
     status: gourmetStatus,
-    error: gourmetError,
     userInfo,
     login: gourmetLogin,
     logout: gourmetLogout,
@@ -60,7 +57,6 @@ export default function SettingsScreen() {
   // Ventopay auth
   const {
     status: ventopayStatus,
-    error: ventopayError,
     login: ventopayLogin,
     logout: ventopayLogout,
     saveCredentials: ventopaySaveCredentials,
@@ -70,18 +66,15 @@ export default function SettingsScreen() {
   // Gourmet form state
   const [gUsername, setGUsername] = useState('');
   const [gPassword, setGPassword] = useState('');
-  const [gTestStatus, setGTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [gSaving, setGSaving] = useState(false);
 
   // Ventopay form state
   const [vUsername, setVUsername] = useState('');
   const [vPassword, setVPassword] = useState('');
-  const [vTestStatus, setVTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [vSaving, setVSaving] = useState(false);
 
   // Desktop update state
   const pendingVersion = useUpdateStore((s) => s.pendingVersion);
-  const checkingUpdates = useUpdateStore((s) => s.checking);
 
   // Load saved credentials on mount
   useEffect(() => {
@@ -100,16 +93,6 @@ export default function SettingsScreen() {
   }, [gourmetGetSavedCredentials, ventopayGetSavedCredentials]);
 
   // Gourmet handlers
-  const handleGourmetTest = async () => {
-    if (!gUsername || !gPassword) {
-      alert('Error', 'Please enter username and password');
-      return;
-    }
-    setGTestStatus('testing');
-    const success = await gourmetLogin(gUsername, gPassword);
-    setGTestStatus(success ? 'success' : 'error');
-  };
-
   const handleGourmetSave = async () => {
     if (!gUsername || !gPassword) {
       alert('Error', 'Please enter username and password');
@@ -124,20 +107,9 @@ export default function SettingsScreen() {
 
   const handleGourmetLogout = async () => {
     await gourmetLogout();
-    setGTestStatus('idle');
   };
 
   // Ventopay handlers
-  const handleVentopayTest = async () => {
-    if (!vUsername || !vPassword) {
-      alert('Error', 'Please enter username and password');
-      return;
-    }
-    setVTestStatus('testing');
-    const success = await ventopayLogin(vUsername, vPassword);
-    setVTestStatus(success ? 'success' : 'error');
-  };
-
   const handleVentopaySave = async () => {
     if (!vUsername || !vPassword) {
       alert('Error', 'Please enter username and password');
@@ -152,11 +124,6 @@ export default function SettingsScreen() {
 
   const handleVentopayLogout = async () => {
     await ventopayLogout();
-    setVTestStatus('idle');
-  };
-
-  const handleCheckForUpdates = async () => {
-    await checkForDesktopUpdates(true);
   };
 
   const gourmetCard = (
@@ -190,43 +157,15 @@ export default function SettingsScreen() {
         />
       </View>
 
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={[styles.button, styles.buttonSecondary]}
-          onPress={handleGourmetTest}
-          disabled={gTestStatus === 'testing'}
-        >
-          <Text style={styles.buttonSecondaryText}>
-            {gTestStatus === 'testing' ? 'Testing...' : 'Test Connection'}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.button, styles.buttonPrimary]}
-          onPress={handleGourmetSave}
-          disabled={gSaving}
-        >
-          <Text style={styles.buttonPrimaryText}>
-            {gSaving ? 'Saving...' : 'Save'}
-          </Text>
-        </Pressable>
-      </View>
-
-      {gTestStatus === 'success' && (
-        <View style={styles.statusSuccess}>
-          <Text style={styles.statusSuccessText}>
-            Connected as {userInfo?.username}
-          </Text>
-        </View>
-      )}
-
-      {gTestStatus === 'error' && (
-        <View style={styles.statusError}>
-          <Text style={styles.statusErrorText}>
-            {gourmetError || 'Connection failed'}
-          </Text>
-        </View>
-      )}
+      <Pressable
+        style={[styles.button, styles.buttonPrimary]}
+        onPress={handleGourmetSave}
+        disabled={gSaving}
+      >
+        <Text style={styles.buttonPrimaryText}>
+          {gSaving ? 'Saving...' : 'Save'}
+        </Text>
+      </Pressable>
 
       {gourmetStatus === 'authenticated' && (
         <View style={styles.sessionSection}>
@@ -274,41 +213,15 @@ export default function SettingsScreen() {
         />
       </View>
 
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={[styles.button, styles.buttonSecondary]}
-          onPress={handleVentopayTest}
-          disabled={vTestStatus === 'testing'}
-        >
-          <Text style={styles.buttonSecondaryText}>
-            {vTestStatus === 'testing' ? 'Testing...' : 'Test Connection'}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[styles.button, styles.buttonPrimary]}
-          onPress={handleVentopaySave}
-          disabled={vSaving}
-        >
-          <Text style={styles.buttonPrimaryText}>
-            {vSaving ? 'Saving...' : 'Save'}
-          </Text>
-        </Pressable>
-      </View>
-
-      {vTestStatus === 'success' && (
-        <View style={styles.statusSuccess}>
-          <Text style={styles.statusSuccessText}>Connected to Ventopay</Text>
-        </View>
-      )}
-
-      {vTestStatus === 'error' && (
-        <View style={styles.statusError}>
-          <Text style={styles.statusErrorText}>
-            {ventopayError || 'Connection failed'}
-          </Text>
-        </View>
-      )}
+      <Pressable
+        style={[styles.button, styles.buttonPrimary]}
+        onPress={handleVentopaySave}
+        disabled={vSaving}
+      >
+        <Text style={styles.buttonPrimaryText}>
+          {vSaving ? 'Saving...' : 'Save'}
+        </Text>
+      </Pressable>
 
       {ventopayStatus === 'authenticated' && (
         <View style={styles.sessionSection}>
@@ -360,38 +273,24 @@ export default function SettingsScreen() {
     </Pressable>
   );
 
-  const updatesCard = isDesktop() ? (
+  const updatesCard = isDesktop() && pendingVersion ? (
     <View style={isWideLayout ? styles.desktopCard : undefined}>
       {!isWideLayout && <View style={styles.divider} />}
       <Text style={styles.sectionTitle}>Updates</Text>
-      {pendingVersion ? (
-        <>
-          <Text style={styles.updateAvailableText}>
-            Version {pendingVersion} is ready to install.
-          </Text>
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={[styles.button, styles.buttonPrimary]}
-              onPress={applyUpdate}
-            >
-              <Text style={styles.buttonPrimaryText}>Update Now</Text>
-            </Pressable>
-          </View>
-          <Text style={styles.updateHintText}>
-            The update will also apply automatically on next restart.
-          </Text>
-        </>
-      ) : (
+      <Text style={styles.updateAvailableText}>
+        Version {pendingVersion} is ready to install.
+      </Text>
+      <View style={styles.buttonRow}>
         <Pressable
-          style={[styles.button, styles.buttonSecondary]}
-          onPress={handleCheckForUpdates}
-          disabled={checkingUpdates}
+          style={[styles.button, styles.buttonPrimary]}
+          onPress={applyUpdate}
         >
-          <Text style={styles.buttonSecondaryText}>
-            {checkingUpdates ? 'Checking...' : 'Check for Updates'}
-          </Text>
+          <Text style={styles.buttonPrimaryText}>Update Now</Text>
         </Pressable>
-      )}
+      </View>
+      <Text style={styles.updateHintText}>
+        The update will also apply automatically on next restart.
+      </Text>
     </View>
   ) : null;
 
@@ -501,14 +400,6 @@ const createStyles = (c: Colors) =>
       fontWeight: '700',
       fontSize: isCompactDesktop ? 13 : 15,
     },
-    buttonSecondary: {
-      ...buttonSecondary(c),
-    },
-    buttonSecondaryText: {
-      color: c.primary,
-      fontWeight: '700',
-      fontSize: isCompactDesktop ? 13 : 15,
-    },
     buttonDanger: {
       alignSelf: isCompactDesktop ? 'flex-start' as const : undefined,
       alignItems: 'center' as const,
@@ -520,24 +411,6 @@ const createStyles = (c: Colors) =>
       color: '#fff',
       fontWeight: '700',
       fontSize: isCompactDesktop ? 13 : 15,
-    },
-    statusSuccess: {
-      padding: isCompactDesktop ? 10 : 14,
-      marginTop: isCompactDesktop ? 10 : 16,
-      ...tintedBanner(c, c.glassSuccess),
-    },
-    statusSuccessText: {
-      color: c.successText,
-      fontWeight: '600',
-    },
-    statusError: {
-      padding: isCompactDesktop ? 10 : 14,
-      marginTop: isCompactDesktop ? 10 : 16,
-      ...tintedBanner(c, c.glassError),
-    },
-    statusErrorText: {
-      color: c.errorText,
-      fontWeight: '600',
     },
     sessionSection: {
       marginTop: isCompactDesktop ? 10 : 16,
