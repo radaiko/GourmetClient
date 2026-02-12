@@ -1,6 +1,6 @@
 {
   "name": "gourmet-client-desktop",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "private": true,
   "scripts": {
     "dev": "npx tauri dev",
