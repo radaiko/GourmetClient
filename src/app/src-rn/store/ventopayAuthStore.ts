@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import * as secureStorage from '../utils/secureStorage';
 import { VentopayApi } from '../api/ventopayApi';
+import { DemoVentopayApi } from '../api/demoVentopayApi';
+import { isDemoCredentials } from '../utils/constants';
 
 const CREDENTIALS_KEY_USER = 'ventopay_username';
 const CREDENTIALS_KEY_PASS = 'ventopay_password';
@@ -28,6 +30,12 @@ export const useVentopayAuthStore = create<VentopayAuthState>((set, get) => ({
   login: async (username: string, password: string) => {
     set({ status: 'loading', error: null });
     try {
+      if (isDemoCredentials(username, password)) {
+        const demoApi = new DemoVentopayApi();
+        await demoApi.login(username, password);
+        set({ status: 'authenticated', error: null, api: demoApi as unknown as VentopayApi });
+        return true;
+      }
       await get().api.login(username, password);
       set({ status: 'authenticated', error: null });
       return true;

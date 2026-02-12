@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import * as secureStorage from '../utils/secureStorage';
 import { GourmetApi } from '../api/gourmetApi';
+import { DemoGourmetApi } from '../api/demoGourmetApi';
 import { GourmetUserInfo } from '../types/menu';
+import { isDemoCredentials } from '../utils/constants';
+import { useMenuStore } from './menuStore';
 
 const CREDENTIALS_KEY_USER = 'gourmet_username';
 const CREDENTIALS_KEY_PASS = 'gourmet_password';
@@ -31,6 +34,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (username: string, password: string) => {
     set({ status: 'loading', error: null });
     try {
+      if (isDemoCredentials(username, password)) {
+        const demoApi = new DemoGourmetApi();
+        const userInfo = await demoApi.login(username, password);
+        useMenuStore.setState({ items: [], lastFetched: null });
+        set({ status: 'authenticated', userInfo, error: null, api: demoApi as unknown as GourmetApi });
+        return true;
+      }
       const userInfo = await get().api.login(username, password);
       set({ status: 'authenticated', userInfo, error: null });
       return true;

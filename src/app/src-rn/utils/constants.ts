@@ -14,3 +14,11 @@ export const VENTOPAY_LOGIN_URL = `${VENTOPAY_BASE_URL}/Login.aspx`;
 export const VENTOPAY_TRANSACTIONS_URL = `${VENTOPAY_BASE_URL}/Transaktionen.aspx`;
 export const VENTOPAY_LOGOUT_URL = `${VENTOPAY_BASE_URL}/Ausloggen.aspx`;
 export const VENTOPAY_COMPANY_ID = '0da8d3ec-0178-47d5-9ccd-a996f04acb61';
+
+// Demo mode credentials (for App Store review)
+export const DEMO_USERNAME = 'demo';
+export const DEMO_PASSWORD = 'demo1234!';
+
+export function isDemoCredentials(username: string, password: string): boolean {
+  return username.toLowerCase() === DEMO_USERNAME && password === DEMO_PASSWORD;
+}
