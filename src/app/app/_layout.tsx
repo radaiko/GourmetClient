@@ -9,6 +9,7 @@ import '../src-rn/utils/tauriHttp';
 import { useAuthStore } from '../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../src-rn/store/ventopayAuthStore';
 import { useTheme } from '../src-rn/theme/useTheme';
+import { DialogProvider } from '../src-rn/components/DialogProvider';
 
 export default function RootLayout() {
   const gourmetLoginWithSaved = useAuthStore((s) => s.loginWithSaved);
@@ -27,11 +28,11 @@ export default function RootLayout() {
   }, [colorScheme]);
 
   return (
-    <>
+    <DialogProvider>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
-    </>
+    </DialogProvider>
   );
 }

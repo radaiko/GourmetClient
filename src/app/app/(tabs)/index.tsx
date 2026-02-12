@@ -12,6 +12,8 @@ import { useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useMenuStore, OrderProgress } from '../../src-rn/store/menuStore';
+import { useDialog } from '../../src-rn/components/DialogProvider';
+import { useOrderStore } from '../../src-rn/store/orderStore';
 import { MenuCard } from '../../src-rn/components/MenuCard';
 import { DayNavigator } from '../../src-rn/components/DayNavigator';
 import { DateListPanel } from '../../src-rn/components/DateListPanel';
@@ -27,6 +29,7 @@ import { tintedBanner, buttonPrimary, fab as fabStyle } from '../../src-rn/theme
 const ORDER_PROGRESS_LABELS: Record<NonNullable<OrderProgress>, string> = {
   adding: 'Adding to cart...',
   confirming: 'Confirming order...',
+  cancelling: 'Cancelling order...',
   refreshing: 'Updating menus...',
 };
 
@@ -40,6 +43,7 @@ const CATEGORY_ORDER = [
 
 export default function MenusScreen() {
   const { colors } = useTheme();
+  const { confirm } = useDialog();
   const insets = useSafeAreaInsets();
   const { isWideLayout, panelWidth } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -64,6 +68,8 @@ export default function MenusScreen() {
     getPendingCount,
   } = useMenuStore();
 
+  const { orders, cancellingId, fetchOrders, cancelOrder } = useOrderStore();
+
   const triggerRefresh = useCallback(() => {
     const auth = useAuthStore.getState().status;
     if (auth !== 'authenticated') return;
@@ -73,7 +79,8 @@ export default function MenusScreen() {
     } else {
       fetchMenus();
     }
-  }, [fetchMenus, refreshAvailability]);
+    fetchOrders();
+  }, [fetchMenus, refreshAvailability, fetchOrders]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', triggerRefresh);
@@ -89,6 +96,77 @@ export default function MenusScreen() {
   const dates = getAvailableDates();
   const menuItems = getMenusForDate(selectedDate);
   const pendingCount = getPendingCount();
+
+  // For the selected date, check if a main menu (I/II/III) is already ordered.
+  // If so, block all other main menus for that day (only 1 allowed).
+  // Uses both menu item flags AND order store as sources.
+  const { blockedMenuIds, orderedCategories } = useMemo(() => {
+    const blocked = new Set<string>();
+    const orderedCats = new Set<GourmetMenuCategory>();
+    const MAIN = new Set([GourmetMenuCategory.Menu1, GourmetMenuCategory.Menu2, GourmetMenuCategory.Menu3]);
+    const dayItems = menuItems.filter((i) => MAIN.has(i.category));
+
+    // Collect ordered categories from menu item flags
+    for (const item of dayItems) {
+      if (item.ordered) orderedCats.add(item.category);
+    }
+
+    // Collect ordered categories from order store (title matches category enum values)
+    const selectedKey = selectedDate.toDateString();
+    for (const o of orders) {
+      if (o.date.toDateString() === selectedKey && MAIN.has(o.title as GourmetMenuCategory)) {
+        orderedCats.add(o.title as GourmetMenuCategory);
+      }
+    }
+
+    if (orderedCats.size > 0) {
+      for (const item of dayItems) {
+        if (!item.ordered && !orderedCats.has(item.category)) {
+          blocked.add(item.id);
+        }
+      }
+    }
+    return { blockedMenuIds: blocked, orderedCategories: orderedCats };
+  }, [menuItems, orders, selectedDate]);
+
+  // Map category -> positionId for orders on the selected date (for cancel action)
+  const orderPositionByCategory = useMemo(() => {
+    const map = new Map<string, string>();
+    const selectedKey = selectedDate.toDateString();
+    for (const o of orders) {
+      if (o.date.toDateString() === selectedKey) {
+        map.set(o.title, o.positionId);
+      }
+    }
+    return map;
+  }, [orders, selectedDate]);
+
+  const handleCancelFromMenu = useCallback(
+    async (category: string) => {
+      const positionId = orderPositionByCategory.get(category);
+      if (!positionId) return;
+      const confirmed = await confirm(
+        'Cancel Order',
+        `Cancel your ${category} order?`,
+        'Cancel Order',
+        'Keep'
+      );
+      if (!confirmed) return;
+      try {
+        useMenuStore.setState({ orderProgress: 'cancelling' });
+        await cancelOrder(positionId);
+
+        useMenuStore.setState({ orderProgress: 'refreshing' });
+        await fetchOrders();
+        await fetchMenus(true);
+
+        useMenuStore.setState({ orderProgress: null });
+      } catch {
+        useMenuStore.setState({ orderProgress: null });
+      }
+    },
+    [orderPositionByCategory, cancelOrder, fetchOrders, fetchMenus, confirm]
+  );
 
   const grouped = CATEGORY_ORDER.map((cat) => ({
     category: cat,
@@ -155,14 +233,22 @@ export default function MenusScreen() {
             {group.category !== GourmetMenuCategory.SoupAndSalad && (
               <Text style={styles.categoryTitle}>{group.category}</Text>
             )}
-            {group.items.map((item) => (
-              <MenuCard
-                key={`${item.id}-${formatGourmetDate(item.day)}`}
-                item={item}
-                isSelected={isPending(item)}
-                onToggle={() => togglePendingOrder(item.id, item.day)}
-              />
-            ))}
+            {group.items.map((item) => {
+              const isOrdered = item.ordered || orderedCategories.has(item.category);
+              const canCancel = isOrdered && orderPositionByCategory.has(item.category) && cancellingId === null;
+              return (
+                <MenuCard
+                  key={`${item.id}-${formatGourmetDate(item.day)}`}
+                  item={item}
+                  isSelected={isPending(item)}
+                  blocked={blockedMenuIds.has(item.id)}
+                  ordered={isOrdered}
+                  onToggle={() => togglePendingOrder(item.id, item.day)}
+                  onCancel={canCancel ? () => handleCancelFromMenu(item.category) : undefined}
+                  isCancelling={cancellingId === orderPositionByCategory.get(item.category)}
+                />
+              );
+            })}
           </View>
         )}
         ListEmptyComponent={

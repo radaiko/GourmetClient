@@ -4,7 +4,6 @@ import { formatDisplayDate } from '../utils/dateUtils';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { circleButton } from '../theme/platformStyles';
-
 interface DayNavigatorProps {
   dates: Date[];
   selectedDate: Date;

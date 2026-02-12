@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +17,7 @@ import { isDesktop } from '../../src-rn/utils/platform';
 import { checkForDesktopUpdates, useUpdateStore, applyUpdate } from '../../src-rn/utils/desktopUpdater';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
+import { useDialog } from '../../src-rn/components/DialogProvider';
 import { useThemeStore, ThemePreference } from '../../src-rn/store/themeStore';
 import { Colors } from '../../src-rn/theme/colors';
 import {
@@ -38,6 +38,7 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
+  const { alert } = useDialog();
   const insets = useSafeAreaInsets();
   const { isWideLayout } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -101,7 +102,7 @@ export default function SettingsScreen() {
   // Gourmet handlers
   const handleGourmetTest = async () => {
     if (!gUsername || !gPassword) {
-      Alert.alert('Error', 'Please enter username and password');
+      alert('Error', 'Please enter username and password');
       return;
     }
     setGTestStatus('testing');
@@ -111,14 +112,14 @@ export default function SettingsScreen() {
 
   const handleGourmetSave = async () => {
     if (!gUsername || !gPassword) {
-      Alert.alert('Error', 'Please enter username and password');
+      alert('Error', 'Please enter username and password');
       return;
     }
     setGSaving(true);
     await gourmetSaveCredentials(gUsername, gPassword);
     await gourmetLogin(gUsername, gPassword);
     setGSaving(false);
-    Alert.alert('Saved', 'Gourmet credentials saved securely');
+    alert('Saved', 'Gourmet credentials saved securely');
   };
 
   const handleGourmetLogout = async () => {
@@ -129,7 +130,7 @@ export default function SettingsScreen() {
   // Ventopay handlers
   const handleVentopayTest = async () => {
     if (!vUsername || !vPassword) {
-      Alert.alert('Error', 'Please enter username and password');
+      alert('Error', 'Please enter username and password');
       return;
     }
     setVTestStatus('testing');
@@ -139,14 +140,14 @@ export default function SettingsScreen() {
 
   const handleVentopaySave = async () => {
     if (!vUsername || !vPassword) {
-      Alert.alert('Error', 'Please enter username and password');
+      alert('Error', 'Please enter username and password');
       return;
     }
     setVSaving(true);
     await ventopaySaveCredentials(vUsername, vPassword);
     await ventopayLogin(vUsername, vPassword);
     setVSaving(false);
-    Alert.alert('Saved', 'Ventopay credentials saved securely');
+    alert('Saved', 'Ventopay credentials saved securely');
   };
 
   const handleVentopayLogout = async () => {

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { GourmetMenuItem, GourmetDayMenu, GourmetMenuCategory } from '../types/menu';
 import { useAuthStore } from './authStore';
+import { useOrderStore } from './orderStore';
 import { MENU_CACHE_VALIDITY_MS } from '../utils/constants';
 import { isSameDay, isOrderingCutoff, localDateKey } from '../utils/dateUtils';
 
@@ -10,7 +11,7 @@ const MAIN_MENU_CATEGORIES = new Set([
   GourmetMenuCategory.Menu3,
 ]);
 
-export type OrderProgress = 'adding' | 'confirming' | 'refreshing' | null;
+export type OrderProgress = 'adding' | 'confirming' | 'cancelling' | 'refreshing' | null;
 
 interface MenuState {
   items: GourmetMenuItem[];
@@ -63,9 +64,11 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const items = await api.getMenus();
       set({ items, lastFetched: Date.now(), loading: false });
 
-      // Auto-select the first available date
+      // Auto-select the first available date only if current selection is gone
       const dates = get().getAvailableDates();
-      if (dates.length > 0) {
+      const current = get().selectedDate;
+      const stillExists = dates.some((d) => d.toDateString() === current.toDateString());
+      if (dates.length > 0 && !stillExists) {
         set({ selectedDate: dates[0] });
       }
     } catch (err) {
@@ -156,35 +159,54 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     if (pendingOrders.size === 0) return;
 
     const api = useAuthStore.getState().api;
-    const items = Array.from(pendingOrders).map((key) => {
+    const orderItems = Array.from(pendingOrders).map((key) => {
       const [menuId, dateStr] = key.split('|');
       const [y, m, d] = dateStr.split('-').map(Number);
       return { menuId, date: new Date(y, m - 1, d) };
     });
 
     // Block today's orders after 12:30 Vienna time
-    const blocked = items.filter((i) => isOrderingCutoff(i.date));
+    const blocked = orderItems.filter((i) => isOrderingCutoff(i.date));
     if (blocked.length > 0) {
       set({ error: 'Ordering for today is closed (cutoff 12:30)' });
       return;
     }
 
-    // Clear selection immediately so UI feels responsive
-    set({ pendingOrders: new Set(), error: null, orderProgress: 'adding' });
+    // Optimistically mark items as ordered and clear pending selection
+    const orderedKeys = new Set(pendingOrders);
+    const optimisticItems = get().items.map((item) => {
+      const key = makePendingKey(item.id, item.day);
+      if (orderedKeys.has(key)) {
+        return { ...item, ordered: true };
+      }
+      return item;
+    });
+    set({ items: optimisticItems, pendingOrders: new Set(), error: null, orderProgress: 'adding' });
 
     try {
-      await api.addToCart(items);
+      await api.addToCart(orderItems);
 
       set({ orderProgress: 'confirming' });
       await api.confirmOrders();
 
+      // Fetch orders first so the UI has authoritative order data
+      // even if the menu page hasn't updated the checkboxes yet
       set({ orderProgress: 'refreshing' });
+      await useOrderStore.getState().fetchOrders();
       await get().fetchMenus(true);
 
       set({ orderProgress: null });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit order';
       set({ error: message, orderProgress: null });
+      // Revert optimistic update on failure (silent, keep error visible)
+      try {
+        const freshApi = useAuthStore.getState().api;
+        const freshItems = await freshApi.getMenus();
+        set({ items: freshItems, lastFetched: Date.now() });
+      } catch {
+        // Silent — keep optimistic state if revert also fails
+      }
     }
   },
 

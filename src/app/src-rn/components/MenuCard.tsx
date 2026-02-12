@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetMenuItem } from '../types/menu';
 import { isOrderingCutoff } from '../utils/dateUtils';
 import { useFlatStyle, isCompactDesktop } from '../utils/platform';
@@ -9,33 +9,47 @@ import { cardSurface } from '../theme/platformStyles';
 interface MenuCardProps {
   item: GourmetMenuItem;
   isSelected: boolean;
+  blocked: boolean;
+  ordered: boolean;
   onToggle: () => void;
+  onCancel?: () => void;
+  isCancelling?: boolean;
 }
 
-export function MenuCard({ item, isSelected, onToggle }: MenuCardProps) {
+export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCancel, isCancelling }: MenuCardProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const cutoff = isOrderingCutoff(item.day);
-  const canOrder = item.available && !item.ordered && !cutoff;
+  const canOrder = item.available && !ordered && !blocked && !cutoff;
 
   return (
     <Pressable
       style={[
         styles.card,
-        item.ordered && styles.cardOrdered,
+        ordered && styles.cardOrdered,
         isSelected && styles.cardSelected,
-        (!item.available || cutoff) && styles.cardDisabled,
+        (!item.available || cutoff || blocked) && !ordered && styles.cardDisabled,
       ]}
       onPress={canOrder ? onToggle : undefined}
       disabled={!canOrder}
     >
       <View style={styles.badgeRow}>
-        {item.ordered && (
+        {ordered && (
           <View style={styles.orderedBadge}>
             <Text style={styles.orderedBadgeText}>Ordered</Text>
           </View>
         )}
-        {cutoff && !item.ordered && (
+        {!ordered && !item.available && (
+          <View style={styles.stockBadge}>
+            <Text style={styles.stockBadgeText}>Out of stock</Text>
+          </View>
+        )}
+        {blocked && !ordered && item.available && (
+          <View style={styles.cutoffBadge}>
+            <Text style={styles.cutoffBadgeText}>Blocked</Text>
+          </View>
+        )}
+        {cutoff && !ordered && !blocked && item.available && (
           <View style={styles.cutoffBadge}>
             <Text style={styles.cutoffBadgeText}>Closed</Text>
           </View>
@@ -51,9 +65,23 @@ export function MenuCard({ item, isSelected, onToggle }: MenuCardProps) {
         <Text style={[styles.allergens, isSelected && styles.textSelected]} numberOfLines={1}>
           {item.allergens.length > 0 ? `Allergens: ${item.allergens.join(', ')}` : ''}
         </Text>
-        <Text style={[styles.price, isSelected && styles.textSelected]}>
-          {item.price}
-        </Text>
+        {onCancel ? (
+          <Pressable
+            style={styles.cancelButton}
+            onPress={onCancel}
+            disabled={isCancelling}
+          >
+            {isCancelling ? (
+              <ActivityIndicator size="small" color={colors.error} />
+            ) : (
+              <Text style={styles.cancelText}>Cancel</Text>
+            )}
+          </Pressable>
+        ) : (
+          <Text style={[styles.price, isSelected && styles.textSelected]}>
+            {item.price}
+          </Text>
+        )}
       </View>
       {isSelected && (
         <View style={styles.checkmark}>
@@ -104,6 +132,19 @@ const createStyles = (c: Colors) =>
       fontWeight: '700',
       color: c.successText,
     },
+    stockBadge: {
+      backgroundColor: useFlatStyle ? c.errorSurface : c.glassError,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+      borderWidth: useFlatStyle ? 1 : 0.5,
+      borderColor: c.error,
+    },
+    stockBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: c.errorText,
+    },
     cutoffBadge: {
       backgroundColor: useFlatStyle ? c.warningSurface : c.glassWarning,
       paddingHorizontal: 8,
@@ -142,6 +183,19 @@ const createStyles = (c: Colors) =>
       flex: 1,
       fontSize: 11,
       color: c.textTertiary,
+    },
+    cancelButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: c.error,
+      marginLeft: 8,
+    },
+    cancelText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: c.error,
     },
     checkmark: {
       position: 'absolute',

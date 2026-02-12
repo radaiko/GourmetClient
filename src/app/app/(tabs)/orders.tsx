@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -20,11 +19,13 @@ import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { Colors } from '../../src-rn/theme/colors';
 import { tintedBanner, buttonPrimary } from '../../src-rn/theme/platformStyles';
+import { useDialog } from '../../src-rn/components/DialogProvider';
 
 type Tab = 'upcoming' | 'past';
 
 export default function OrdersScreen() {
   const { colors } = useTheme();
+  const { confirm } = useDialog();
   const insets = useSafeAreaInsets();
   const { isWideLayout, panelWidth } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -57,19 +58,16 @@ export default function OrdersScreen() {
   const orders = activeTab === 'upcoming' ? upcoming : past;
   const unconfirmedCount = getUnconfirmedCount();
 
-  const handleCancel = (positionId: string, title: string) => {
-    Alert.alert(
+  const handleCancel = async (positionId: string, title: string) => {
+    const confirmed = await confirm(
       'Cancel Order',
       `Cancel "${title}"?`,
-      [
-        { text: 'Keep', style: 'cancel' },
-        {
-          text: 'Cancel Order',
-          style: 'destructive',
-          onPress: () => cancelOrder(positionId),
-        },
-      ]
+      'Cancel Order',
+      'Keep'
     );
+    if (confirmed) {
+      cancelOrder(positionId);
+    }
   };
 
   if (authStatus !== 'authenticated') {
