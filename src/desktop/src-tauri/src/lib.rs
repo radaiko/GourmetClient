@@ -223,6 +223,21 @@ async fn check_for_updates() -> Result<Option<String>, String> {
 }
 
 #[tauri::command]
+async fn download_update() -> Result<Option<String>, String> {
+    let source = ProxyAwareHttpSource::new(UPDATE_URL);
+    let um = UpdateManager::new(source, None, None).map_err(|e| e.to_string())?;
+
+    match um.check_for_updates().map_err(|e| e.to_string())? {
+        UpdateCheck::UpdateAvailable(info) => {
+            um.download_updates(&info, None)
+                .map_err(|e| e.to_string())?;
+            Ok(Some(info.TargetFullRelease.Version.clone()))
+        }
+        _ => Ok(None),
+    }
+}
+
+#[tauri::command]
 async fn install_update() -> Result<(), String> {
     let source = ProxyAwareHttpSource::new(UPDATE_URL);
     let um = UpdateManager::new(source, None, None).map_err(|e| e.to_string())?;
@@ -230,8 +245,6 @@ async fn install_update() -> Result<(), String> {
     if let UpdateCheck::UpdateAvailable(info) =
         um.check_for_updates().map_err(|e| e.to_string())?
     {
-        um.download_updates(&info, None)
-            .map_err(|e| e.to_string())?;
         um.apply_updates_and_restart(&info.TargetFullRelease)
             .map_err(|e| e.to_string())?;
     }
@@ -243,6 +256,7 @@ pub fn run() {
         .manage(HttpProxy::new())
         .invoke_handler(tauri::generate_handler![
             check_for_updates,
+            download_update,
             install_update,
             http_request,
             http_reset,

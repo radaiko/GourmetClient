@@ -6,6 +6,7 @@ import { useTheme } from '../theme/useTheme';
 import { useDesktopLayout } from '../hooks/useDesktopLayout';
 import { Colors } from '../theme/colors';
 import { sidebarSurface } from '../theme/platformStyles';
+import { useUpdateStore, applyUpdate } from '../utils/desktopUpdater';
 
 const ICONS: Record<string, { outline: keyof typeof Ionicons.glyphMap; filled: keyof typeof Ionicons.glyphMap; label: string }> = {
   index: { outline: 'restaurant-outline', filled: 'restaurant', label: 'Menus' },
@@ -19,6 +20,7 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
   const { sidebarWidth, sidebarCollapsed, toggleSidebar } = useDesktopLayout();
   const styles = createStyles(colors, sidebarWidth, sidebarCollapsed);
   const [version, setVersion] = useState(require('../../package.json').version);
+  const pendingVersion = useUpdateStore((s) => s.pendingVersion);
 
   useEffect(() => {
     const internals = (window as any).__TAURI_INTERNALS__;
@@ -79,6 +81,19 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
         })}
       </View>
 
+      {pendingVersion && (
+        <Pressable
+          onPress={applyUpdate}
+          style={sidebarCollapsed ? styles.updateHintCollapsed : styles.updateHint}
+        >
+          <Ionicons name="download-outline" size={14} color={colors.primary} />
+          {!sidebarCollapsed && (
+            <Text style={styles.updateText} numberOfLines={1}>
+              v{pendingVersion}
+            </Text>
+          )}
+        </Pressable>
+      )}
       {!sidebarCollapsed && <Text style={styles.version}>v{version}</Text>}
     </View>
   );
@@ -149,6 +164,36 @@ const createStyles = (c: Colors, sidebarWidth: number, collapsed: boolean) =>
     navLabelActive: {
       color: c.primary,
       fontWeight: '600',
+    },
+    updateHint: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginHorizontal: 6,
+      marginBottom: 4,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 4,
+      backgroundColor: c.primarySurface,
+      borderWidth: 1,
+      borderColor: c.primary,
+    },
+    updateHintCollapsed: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 4,
+      marginBottom: 4,
+      paddingVertical: 5,
+      borderRadius: 4,
+      backgroundColor: c.primarySurface,
+      borderWidth: 1,
+      borderColor: c.primary,
+    },
+    updateText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: c.primary,
+      flex: 1,
     },
     version: {
       fontSize: 10,

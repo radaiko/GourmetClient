@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
 import { isDesktop } from '../../src-rn/utils/platform';
-import { checkForDesktopUpdates } from '../../src-rn/utils/desktopUpdater';
+import { checkForDesktopUpdates, useUpdateStore, applyUpdate } from '../../src-rn/utils/desktopUpdater';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { useThemeStore, ThemePreference } from '../../src-rn/store/themeStore';
@@ -79,7 +79,8 @@ export default function SettingsScreen() {
   const [vSaving, setVSaving] = useState(false);
 
   // Desktop update state
-  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const pendingVersion = useUpdateStore((s) => s.pendingVersion);
+  const checkingUpdates = useUpdateStore((s) => s.checking);
 
   // Load saved credentials on mount
   useEffect(() => {
@@ -154,12 +155,7 @@ export default function SettingsScreen() {
   };
 
   const handleCheckForUpdates = async () => {
-    setCheckingUpdates(true);
-    try {
-      await checkForDesktopUpdates(true);
-    } finally {
-      setCheckingUpdates(false);
-    }
+    await checkForDesktopUpdates(true);
   };
 
   const gourmetCard = (
@@ -356,15 +352,34 @@ export default function SettingsScreen() {
     <View style={isWideLayout ? styles.desktopCard : undefined}>
       {!isWideLayout && <View style={styles.divider} />}
       <Text style={styles.sectionTitle}>Updates</Text>
-      <Pressable
-        style={[styles.button, styles.buttonSecondary]}
-        onPress={handleCheckForUpdates}
-        disabled={checkingUpdates}
-      >
-        <Text style={styles.buttonSecondaryText}>
-          {checkingUpdates ? 'Checking...' : 'Check for Updates'}
-        </Text>
-      </Pressable>
+      {pendingVersion ? (
+        <>
+          <Text style={styles.updateAvailableText}>
+            Version {pendingVersion} is ready to install.
+          </Text>
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={[styles.button, styles.buttonPrimary]}
+              onPress={applyUpdate}
+            >
+              <Text style={styles.buttonPrimaryText}>Update Now</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.updateHintText}>
+            The update will also apply automatically on next restart.
+          </Text>
+        </>
+      ) : (
+        <Pressable
+          style={[styles.button, styles.buttonSecondary]}
+          onPress={handleCheckForUpdates}
+          disabled={checkingUpdates}
+        >
+          <Text style={styles.buttonSecondaryText}>
+            {checkingUpdates ? 'Checking...' : 'Check for Updates'}
+          </Text>
+        </Pressable>
+      )}
     </View>
   ) : null;
 
@@ -541,5 +556,15 @@ const createStyles = (c: Colors) =>
     },
     themeOptionTextActive: {
       color: c.primary,
+    },
+    updateAvailableText: {
+      fontSize: isCompactDesktop ? 13 : 14,
+      color: c.textSecondary,
+      marginBottom: isCompactDesktop ? 8 : 12,
+    },
+    updateHintText: {
+      fontSize: isCompactDesktop ? 11 : 12,
+      color: c.textTertiary,
+      marginTop: isCompactDesktop ? 6 : 8,
     },
   });
