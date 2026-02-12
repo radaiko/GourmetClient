@@ -349,6 +349,16 @@ export default function SettingsScreen() {
     </View>
   );
 
+  const privacyCard = (
+    <View style={isWideLayout ? styles.desktopCard : undefined}>
+      {!isWideLayout && <View style={styles.divider} />}
+      <Text style={styles.sectionTitle}>Privacy</Text>
+      <Text style={styles.privacyText}>
+        This app collects anonymous usage analytics, error reports, and session recordings to improve the user experience. All data is processed and stored in the EU via PostHog. No personal content (passwords, menu choices, or billing data) is tracked. Text inputs are automatically masked in session recordings.
+      </Text>
+    </View>
+  );
+
   const updatesCard = isDesktop() ? (
     <View style={isWideLayout ? styles.desktopCard : undefined}>
       {!isWideLayout && <View style={styles.divider} />}
@@ -395,8 +405,9 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.desktopRow}>
             {appearanceCard}
-            {updatesCard}
+            {updatesCard ?? privacyCard}
           </View>
+          {updatesCard && privacyCard}
         </>
       ) : (
         <>
@@ -404,6 +415,7 @@ export default function SettingsScreen() {
           {ventopayCard}
           {appearanceCard}
           {updatesCard}
+          {privacyCard}
         </>
       )}
     </ScrollView>
@@ -569,5 +581,10 @@ const createStyles = (c: Colors) =>
       fontSize: isCompactDesktop ? 11 : 12,
       color: c.textTertiary,
       marginTop: isCompactDesktop ? 6 : 8,
+    },
+    privacyText: {
+      fontSize: isCompactDesktop ? 12 : 14,
+      color: c.textSecondary,
+      lineHeight: isCompactDesktop ? 18 : 22,
     },
   });
