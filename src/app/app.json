@@ -22,6 +22,7 @@
       }
     },
     "android": {
+      "package": "dev.radaiko.gourmetclient",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#4a90d9"
