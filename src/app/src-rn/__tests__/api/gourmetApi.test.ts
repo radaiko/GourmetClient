@@ -102,6 +102,38 @@ describe('GourmetApi', () => {
 
       expect(api.isAuthenticated()).toBe(true);
     });
+
+    it('logs out stale session before login when native cookies persist', async () => {
+      const api = new GourmetApi();
+
+      // GET /start/ returns authenticated page (stale native cookies)
+      mockGet.mockResolvedValueOnce(loginSuccess);
+      // Logout POST
+      mockPostForm.mockResolvedValueOnce('');
+      // Re-GET /start/ returns login page after logout
+      mockGet.mockResolvedValueOnce(loginPage);
+      // Actual login POST
+      mockPostForm.mockResolvedValueOnce(loginSuccess);
+
+      const userInfo = await api.login('testuser', 'testpass');
+
+      // Should have called GET twice (stale check + after logout)
+      expect(mockGet).toHaveBeenCalledTimes(2);
+      // First postForm is logout, second is the actual login
+      expect(mockPostForm).toHaveBeenCalledTimes(2);
+      expect(mockPostForm).toHaveBeenNthCalledWith(1, '/start/', {
+        ufprt: 'CSRF-TOKEN-LOGOUT-DEF456',
+        __ncforminfo: 'NCFORM-TOKEN-LOGOUT-UVW012',
+      });
+      expect(mockPostForm).toHaveBeenNthCalledWith(2, '/start/', {
+        Username: 'testuser',
+        Password: 'testpass',
+        RememberMe: 'false',
+        ufprt: 'CSRF-TOKEN-LOGIN-ABC123',
+        __ncforminfo: 'NCFORM-TOKEN-LOGIN-XYZ789',
+      });
+      expect(userInfo.username).toBe('TestUser');
+    });
   });
 
   describe('getMenus', () => {

@@ -1,8 +1,6 @@
 const mockGet = jest.fn();
 const mockPostForm = jest.fn();
 const mockPost = jest.fn();
-const mockResponseInterceptors: Array<(response: any) => any> = [];
-const mockRequestInterceptors: Array<(config: any) => any> = [];
 
 jest.mock('axios', () => ({
   __esModule: true,
@@ -11,10 +9,6 @@ jest.mock('axios', () => ({
       get: mockGet,
       postForm: mockPostForm,
       post: mockPost,
-      interceptors: {
-        response: { use: jest.fn((fn: any) => { mockResponseInterceptors.push(fn); }) },
-        request: { use: jest.fn((fn: any) => { mockRequestInterceptors.push(fn); }) },
-      },
     })),
   },
 }));
@@ -23,12 +17,10 @@ describe('GourmetHttpClient', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    mockResponseInterceptors.length = 0;
-    mockRequestInterceptors.length = 0;
 
-    mockGet.mockResolvedValue({ data: '<html>test</html>', status: 200, headers: {} });
-    mockPostForm.mockResolvedValue({ data: '<html>post result</html>', status: 200, headers: {} });
-    mockPost.mockResolvedValue({ data: { success: true }, status: 200, headers: {} });
+    mockGet.mockResolvedValue({ data: '<html>test</html>', status: 200 });
+    mockPostForm.mockResolvedValue({ data: '<html>post result</html>', status: 200 });
+    mockPost.mockResolvedValue({ data: { success: true }, status: 200 });
   });
 
   function createClient() {
@@ -48,7 +40,7 @@ describe('GourmetHttpClient', () => {
       expect(axios.create).toHaveBeenCalledWith(
         expect.objectContaining({
           baseURL: 'https://alaclickneu.gourmet.at',
-          withCredentials: false,
+          withCredentials: true,
           maxRedirects: 5,
         })
       );
@@ -162,41 +154,6 @@ describe('GourmetHttpClient', () => {
     });
   });
 
-  describe('cookie management', () => {
-    it('registers response and request interceptors', () => {
-      createClient();
-      expect(mockResponseInterceptors).toHaveLength(1);
-      expect(mockRequestInterceptors).toHaveLength(1);
-    });
-
-    it('captures cookies from Set-Cookie response header', () => {
-      createClient();
-      const responseInterceptor = mockResponseInterceptors[0];
-
-      const response = {
-        headers: { 'set-cookie': ['session=abc123; Path=/; HttpOnly'] },
-        data: 'ok',
-      };
-      responseInterceptor(response);
-
-      // Verify cookie is injected on next request
-      const requestInterceptor = mockRequestInterceptors[0];
-      const config = { headers: {} as Record<string, string> };
-      requestInterceptor(config);
-
-      expect(config.headers['Cookie']).toBe('session=abc123');
-    });
-
-    it('does not inject Cookie header when no cookies stored', () => {
-      createClient();
-      const requestInterceptor = mockRequestInterceptors[0];
-      const config = { headers: {} as Record<string, string> };
-      requestInterceptor(config);
-
-      expect(config.headers['Cookie']).toBeUndefined();
-    });
-  });
-
   describe('resetClient()', () => {
     it('clears lastPageUrl so subsequent post uses url as Referer', async () => {
       const client = createClient();
@@ -217,33 +174,6 @@ describe('GourmetHttpClient', () => {
           }),
         })
       );
-    });
-
-    it('clears stored cookies', () => {
-      createClient();
-      const responseInterceptor = mockResponseInterceptors[0];
-      const requestInterceptor = mockRequestInterceptors[0];
-
-      // Simulate a response that sets cookies
-      responseInterceptor({
-        headers: { 'set-cookie': ['session=abc123; Path=/'] },
-        data: 'ok',
-      });
-
-      // Verify cookie is present
-      const configBefore = { headers: {} as Record<string, string> };
-      requestInterceptor(configBefore);
-      expect(configBefore.headers['Cookie']).toBe('session=abc123');
-
-      // Reset should clear cookies
-      const client = createClient();
-      client.resetClient();
-
-      // The second client's interceptors are at index 1
-      const requestInterceptor2 = mockRequestInterceptors[1];
-      const configAfter = { headers: {} as Record<string, string> };
-      requestInterceptor2(configAfter);
-      expect(configAfter.headers['Cookie']).toBeUndefined();
     });
   });
 });

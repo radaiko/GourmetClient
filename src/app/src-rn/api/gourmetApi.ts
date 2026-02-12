@@ -61,7 +61,24 @@ export class GourmetApi {
    */
   async login(username: string, password: string): Promise<GourmetUserInfo> {
     // Step 1: GET login page to extract CSRF tokens
-    const loginPageHtml = await this.client.get(GOURMET_LOGIN_URL);
+    let loginPageHtml = await this.client.get(GOURMET_LOGIN_URL);
+
+    // Handle stale session: native cookies (NSURLSession/OkHttp) persist across
+    // app restarts. If the server-side session is still valid, we get an
+    // authenticated page instead of the login form. Logout first to clear it.
+    if (isLoggedIn(loginPageHtml)) {
+      try {
+        const logoutTokens = extractLogoutFormTokens(loginPageHtml);
+        await this.client.postForm('/start/', {
+          ufprt: logoutTokens.ufprt,
+          __ncforminfo: logoutTokens.ncforminfo,
+        });
+      } catch {
+        // Logout failure is non-critical — session may have expired mid-check
+      }
+      loginPageHtml = await this.client.get(GOURMET_LOGIN_URL);
+    }
+
     const tokens = extractLoginFormTokens(loginPageHtml);
 
     // Step 2: POST login form with ALL required fields
