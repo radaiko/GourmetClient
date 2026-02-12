@@ -60,10 +60,10 @@ export default function OrdersScreen() {
 
   const handleCancel = async (positionId: string, title: string) => {
     const confirmed = await confirm(
-      'Cancel Order',
-      `Cancel "${title}"?`,
-      'Cancel Order',
-      'Keep'
+      'Bestellung stornieren',
+      `"${title}" stornieren?`,
+      'Stornieren',
+      'Behalten'
     );
     if (confirmed) {
       cancelOrder(positionId);
@@ -73,7 +73,7 @@ export default function OrdersScreen() {
   if (authStatus !== 'authenticated') {
     return (
       <View style={styles.center}>
-        <Text style={styles.hintText}>Login required</Text>
+        <Text style={styles.hintText}>Anmeldung erforderlich</Text>
       </View>
     );
   }
@@ -117,7 +117,7 @@ export default function OrdersScreen() {
                 !loading ? (
                   <View style={styles.center}>
                     <Text style={styles.emptyText}>
-                      {activeTab === 'upcoming' ? 'No upcoming orders' : 'No past orders'}
+                      {activeTab === 'upcoming' ? 'Keine kommenden Bestellungen' : 'Keine vergangenen Bestellungen'}
                     </Text>
                   </View>
                 ) : null
@@ -138,7 +138,7 @@ export default function OrdersScreen() {
             onPress={() => setActiveTab('upcoming')}
           >
             <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
-              Upcoming ({upcoming.length})
+              Kommende ({upcoming.length})
             </Text>
           </Pressable>
           <Pressable
@@ -146,7 +146,7 @@ export default function OrdersScreen() {
             onPress={() => setActiveTab('past')}
           >
             <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
-              Past ({past.length})
+              Vergangene ({past.length})
             </Text>
           </Pressable>
         </View>
@@ -154,14 +154,14 @@ export default function OrdersScreen() {
         {unconfirmedCount > 0 && activeTab === 'upcoming' && (
           <View style={styles.confirmBanner}>
             <Text style={styles.confirmBannerText}>
-              {unconfirmedCount} unconfirmed order{unconfirmedCount > 1 ? 's' : ''}
+              {unconfirmedCount} unbestätigte Bestellung{unconfirmedCount > 1 ? 'en' : ''}
             </Text>
             <Pressable
               style={styles.confirmButton}
               onPress={confirmOrders}
               disabled={loading}
             >
-              <Text style={styles.confirmButtonText}>Confirm</Text>
+              <Text style={styles.confirmButtonText}>Bestätigen</Text>
             </Pressable>
           </View>
         )}
@@ -190,7 +190,7 @@ export default function OrdersScreen() {
             !loading ? (
               <View style={styles.center}>
                 <Text style={styles.emptyText}>
-                  {activeTab === 'upcoming' ? 'No upcoming orders' : 'No past orders'}
+                  {activeTab === 'upcoming' ? 'Keine kommenden Bestellungen' : 'Keine vergangenen Bestellungen'}
                 </Text>
               </View>
             ) : null

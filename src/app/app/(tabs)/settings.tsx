@@ -31,8 +31,8 @@ import {
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
+  { value: 'light', label: 'Hell' },
+  { value: 'dark', label: 'Dunkel' },
 ];
 
 export default function SettingsScreen() {
@@ -99,14 +99,14 @@ export default function SettingsScreen() {
   // Gourmet handlers
   const handleGourmetSave = async () => {
     if (!gUsername || !gPassword) {
-      alert('Error', 'Please enter username and password');
+      alert('Fehler', 'Bitte Benutzername und Passwort eingeben');
       return;
     }
     setGSaving(true);
     await gourmetSaveCredentials(gUsername, gPassword);
     await gourmetLogin(gUsername, gPassword);
     setGSaving(false);
-    alert('Saved', 'Gourmet credentials saved securely');
+    alert('Gespeichert', 'Gourmet-Zugangsdaten sicher gespeichert');
   };
 
   const handleGourmetLogout = async () => {
@@ -116,14 +116,14 @@ export default function SettingsScreen() {
   // Ventopay handlers
   const handleVentopaySave = async () => {
     if (!vUsername || !vPassword) {
-      alert('Error', 'Please enter username and password');
+      alert('Fehler', 'Bitte Benutzername und Passwort eingeben');
       return;
     }
     setVSaving(true);
     await ventopaySaveCredentials(vUsername, vPassword);
     await ventopayLogin(vUsername, vPassword);
     setVSaving(false);
-    alert('Saved', 'Ventopay credentials saved securely');
+    alert('Gespeichert', 'Ventopay-Zugangsdaten sicher gespeichert');
   };
 
   const handleVentopayLogout = async () => {
@@ -132,15 +132,15 @@ export default function SettingsScreen() {
 
   const gourmetCard = (
     <View style={isWideLayout ? styles.desktopCard : undefined}>
-      <Text style={styles.sectionTitle}>Gourmet Credentials</Text>
+      <Text style={styles.sectionTitle}>Gourmet-Zugangsdaten</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Username</Text>
+        <Text style={styles.label}>Benutzername</Text>
         <TextInput
           style={styles.input}
           value={gUsername}
           onChangeText={setGUsername}
-          placeholder="Enter username"
+          placeholder="Benutzername eingeben"
           placeholderTextColor={colors.textTertiary}
           autoCapitalize="none"
           autoCorrect={false}
@@ -148,12 +148,12 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Password</Text>
+        <Text style={styles.label}>Passwort</Text>
         <TextInput
           style={styles.input}
           value={gPassword}
           onChangeText={setGPassword}
-          placeholder="Enter password"
+          placeholder="Passwort eingeben"
           placeholderTextColor={colors.textTertiary}
           secureTextEntry
           autoCapitalize="none"
@@ -167,17 +167,17 @@ export default function SettingsScreen() {
         disabled={gSaving}
       >
         <Text style={styles.buttonPrimaryText}>
-          {gSaving ? 'Saving...' : 'Save'}
+          {gSaving ? 'Speichern...' : 'Speichern'}
         </Text>
       </Pressable>
 
       {gourmetStatus === 'authenticated' && (
         <View style={styles.sessionSection}>
           <Text style={styles.sessionInfo}>
-            Logged in as: {userInfo?.username}
+            Angemeldet als: {userInfo?.username}
           </Text>
           <Pressable style={styles.buttonDanger} onPress={handleGourmetLogout}>
-            <Text style={styles.buttonDangerText}>Logout</Text>
+            <Text style={styles.buttonDangerText}>Abmelden</Text>
           </Pressable>
         </View>
       )}
@@ -187,16 +187,16 @@ export default function SettingsScreen() {
   const ventopayCard = (
     <View style={isWideLayout ? styles.desktopCard : undefined}>
       {!isWideLayout && <View style={styles.divider} />}
-      <Text style={styles.sectionTitle}>Ventopay Credentials</Text>
-      <Text style={styles.sectionSubtitle}>For vending machines and POS billing</Text>
+      <Text style={styles.sectionTitle}>Ventopay-Zugangsdaten</Text>
+      <Text style={styles.sectionSubtitle}>Für Automaten und Kassenabrechnungen</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Username</Text>
+        <Text style={styles.label}>Benutzername</Text>
         <TextInput
           style={styles.input}
           value={vUsername}
           onChangeText={setVUsername}
-          placeholder="Enter username"
+          placeholder="Benutzername eingeben"
           placeholderTextColor={colors.textTertiary}
           autoCapitalize="none"
           autoCorrect={false}
@@ -204,12 +204,12 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Password</Text>
+        <Text style={styles.label}>Passwort</Text>
         <TextInput
           style={styles.input}
           value={vPassword}
           onChangeText={setVPassword}
-          placeholder="Enter password"
+          placeholder="Passwort eingeben"
           placeholderTextColor={colors.textTertiary}
           secureTextEntry
           autoCapitalize="none"
@@ -223,15 +223,15 @@ export default function SettingsScreen() {
         disabled={vSaving}
       >
         <Text style={styles.buttonPrimaryText}>
-          {vSaving ? 'Saving...' : 'Save'}
+          {vSaving ? 'Speichern...' : 'Speichern'}
         </Text>
       </Pressable>
 
       {ventopayStatus === 'authenticated' && (
         <View style={styles.sessionSection}>
-          <Text style={styles.sessionInfo}>Ventopay session active</Text>
+          <Text style={styles.sessionInfo}>Ventopay-Sitzung aktiv</Text>
           <Pressable style={styles.buttonDanger} onPress={handleVentopayLogout}>
-            <Text style={styles.buttonDangerText}>Logout</Text>
+            <Text style={styles.buttonDangerText}>Abmelden</Text>
           </Pressable>
         </View>
       )}
@@ -241,7 +241,7 @@ export default function SettingsScreen() {
   const appearanceCard = (
     <View style={isWideLayout ? styles.desktopCard : styles.appearanceSection}>
       {!isWideLayout && <View style={styles.divider} />}
-      <Text style={styles.sectionTitle}>Appearance</Text>
+      <Text style={styles.sectionTitle}>Darstellung</Text>
       <View style={styles.themeRow}>
         {THEME_OPTIONS.map((opt) => (
           <Pressable
@@ -270,11 +270,11 @@ export default function SettingsScreen() {
     <View style={styles.privacyRow}>
       <Pressable
         onPress={() => alert(
-          'Privacy',
-          'This app collects anonymous usage analytics, error reports, and session recordings to improve the user experience. All data is processed and stored in the EU via PostHog. No personal content (passwords, menu choices, or billing data) is tracked. Text inputs are automatically masked in session recordings.'
+          'Datenschutz',
+          'Diese App erfasst anonyme Nutzungsanalysen, Fehlerberichte und Sitzungsaufzeichnungen zur Verbesserung der Benutzererfahrung. Alle Daten werden in der EU über PostHog verarbeitet und gespeichert. Es werden keine persönlichen Inhalte (Passwörter, Menüauswahl oder Abrechnungsdaten) erfasst. Texteingaben werden in Sitzungsaufzeichnungen automatisch maskiert.'
         )}
       >
-        <Text style={styles.privacyLink}>Privacy</Text>
+        <Text style={styles.privacyLink}>Datenschutz</Text>
       </Pressable>
       {analyticsId && (
         <Pressable
@@ -294,18 +294,18 @@ export default function SettingsScreen() {
       {!isWideLayout && <View style={styles.divider} />}
       <Text style={styles.sectionTitle}>Updates</Text>
       <Text style={styles.updateAvailableText}>
-        Version {pendingVersion} is ready to install.
+        Version {pendingVersion} ist bereit zur Installation.
       </Text>
       <View style={styles.buttonRow}>
         <Pressable
           style={[styles.button, styles.buttonPrimary]}
           onPress={applyUpdate}
         >
-          <Text style={styles.buttonPrimaryText}>Update Now</Text>
+          <Text style={styles.buttonPrimaryText}>Jetzt aktualisieren</Text>
         </Pressable>
       </View>
       <Text style={styles.updateHintText}>
-        The update will also apply automatically on next restart.
+        Das Update wird auch beim nächsten Neustart automatisch angewendet.
       </Text>
     </View>
   ) : null;

@@ -61,7 +61,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
   );
 
   const confirm = useCallback(
-    async (title: string, message: string, confirmLabel = 'Confirm', cancelLabel = 'Cancel') => {
+    async (title: string, message: string, confirmLabel = 'Bestätigen', cancelLabel = 'Abbrechen') => {
       const idx = await showDialog({
         title,
         message,

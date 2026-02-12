@@ -21,7 +21,7 @@ import { Colors } from '../../src-rn/theme/colors';
 import { bannerSurface, tintedBanner } from '../../src-rn/theme/platformStyles';
 
 const SOURCE_FILTERS: { value: BillingSource; label: string }[] = [
-  { value: 'all', label: 'All' },
+  { value: 'all', label: 'Alle' },
   { value: 'gourmet', label: 'Gourmet' },
   { value: 'ventopay', label: 'Ventopay' },
 ];
@@ -120,7 +120,7 @@ export default function BillingScreen() {
   if (!hasAnyAuth) {
     return (
       <View style={[styles.container, styles.center, { paddingTop: insets.top }]}>
-        <Text style={styles.emptyText}>Login required</Text>
+        <Text style={styles.emptyText}>Anmeldung erforderlich</Text>
       </View>
     );
   }
@@ -156,7 +156,7 @@ export default function BillingScreen() {
 
       {!loading && !hasData && (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No billing data for this month</Text>
+          <Text style={styles.emptyText}>Keine Abrechnungsdaten für diesen Monat</Text>
         </View>
       )}
     </>
@@ -243,16 +243,16 @@ export default function BillingScreen() {
           {/* Summary bar */}
           <View style={styles.summaryBar}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={styles.summaryLabel}>Gesamt</Text>
               <Text style={styles.summaryValue}>{formatCurrency(totals.total)}</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Bills</Text>
+              <Text style={styles.summaryLabel}>Belege</Text>
               <Text style={styles.summaryValue}>{totals.count}</Text>
             </View>
             {totals.subsidy > 0 && (
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Subsidy</Text>
+                <Text style={styles.summaryLabel}>Zuschuss</Text>
                 <Text style={[styles.summaryValue, { color: colors.success }]}>
                   {formatCurrency(totals.subsidy)}
                 </Text>
@@ -275,7 +275,7 @@ export default function BillingScreen() {
 
       {!loading && !hasData && (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>No billing data for this month</Text>
+          <Text style={styles.emptyText}>Keine Abrechnungsdaten für diesen Monat</Text>
         </View>
       )}
     </View>

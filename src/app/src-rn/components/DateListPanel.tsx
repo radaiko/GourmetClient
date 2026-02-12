@@ -17,7 +17,7 @@ export function DateListPanel({ dates, selectedDate, onSelectDate, width }: Date
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.header}>Dates</Text>
+      <Text style={styles.header}>Termine</Text>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {dates.map((date) => {
           const isSelected = date.toDateString() === selectedDate.toDateString();

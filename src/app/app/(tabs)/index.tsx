@@ -27,10 +27,10 @@ import { Colors } from '../../src-rn/theme/colors';
 import { tintedBanner, buttonPrimary, fab as fabStyle } from '../../src-rn/theme/platformStyles';
 
 const ORDER_PROGRESS_LABELS: Record<NonNullable<OrderProgress>, string> = {
-  adding: 'Adding to cart...',
-  confirming: 'Confirming order...',
-  cancelling: 'Cancelling order...',
-  refreshing: 'Updating menus...',
+  adding: 'Wird in den Warenkorb gelegt...',
+  confirming: 'Bestellung wird bestätigt...',
+  cancelling: 'Bestellung wird storniert...',
+  refreshing: 'Menüs werden aktualisiert...',
 };
 
 const CATEGORY_ORDER = [
@@ -146,10 +146,10 @@ export default function MenusScreen() {
       const positionId = orderPositionByCategory.get(category);
       if (!positionId) return;
       const confirmed = await confirm(
-        'Cancel Order',
-        `Cancel your ${category} order?`,
-        'Cancel Order',
-        'Keep'
+        'Bestellung stornieren',
+        `${category} Bestellung stornieren?`,
+        'Stornieren',
+        'Behalten'
       );
       if (!confirmed) return;
       try {
@@ -192,8 +192,8 @@ export default function MenusScreen() {
   if (authStatus === 'error' || authStatus === 'no_credentials') {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Not logged in</Text>
-        <Text style={styles.hintText}>Go to Settings to enter credentials</Text>
+        <Text style={styles.errorText}>Nicht angemeldet</Text>
+        <Text style={styles.hintText}>Gehe zu Einstellungen, um Zugangsdaten einzugeben</Text>
       </View>
     );
   }
@@ -203,7 +203,7 @@ export default function MenusScreen() {
       {refreshing && !orderProgress && (
         <View style={styles.refreshBanner}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={styles.refreshBannerText}>Updating...</Text>
+          <Text style={styles.refreshBannerText}>Aktualisiere...</Text>
         </View>
       )}
 
@@ -254,7 +254,7 @@ export default function MenusScreen() {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.center}>
-              <Text style={styles.emptyText}>No menus available</Text>
+              <Text style={styles.emptyText}>Keine Menüs verfügbar</Text>
             </View>
           ) : null
         }
@@ -282,7 +282,7 @@ export default function MenusScreen() {
         {pendingCount > 0 && !orderProgress && (
           <Pressable style={styles.fabDesktop} onPress={submitOrders}>
             <Text style={styles.fabText}>
-              Order ({pendingCount})
+              Bestellen ({pendingCount})
             </Text>
           </Pressable>
         )}
@@ -305,7 +305,7 @@ export default function MenusScreen() {
       {pendingCount > 0 && !orderProgress && (
         <Pressable style={styles.fab} onPress={submitOrders}>
           <Text style={styles.fabText}>
-            Order ({pendingCount})
+            Bestellen ({pendingCount})
           </Text>
         </Pressable>
       )}

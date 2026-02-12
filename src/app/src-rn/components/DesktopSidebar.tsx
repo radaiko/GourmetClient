@@ -9,10 +9,10 @@ import { sidebarSurface } from '../theme/platformStyles';
 import { useUpdateStore, applyUpdate, checkForDesktopUpdates } from '../utils/desktopUpdater';
 
 const ICONS: Record<string, { outline: keyof typeof Ionicons.glyphMap; filled: keyof typeof Ionicons.glyphMap; label: string }> = {
-  index: { outline: 'restaurant-outline', filled: 'restaurant', label: 'Menus' },
-  orders: { outline: 'receipt-outline', filled: 'receipt', label: 'Orders' },
-  billing: { outline: 'wallet-outline', filled: 'wallet', label: 'Billing' },
-  settings: { outline: 'settings-outline', filled: 'settings', label: 'Settings' },
+  index: { outline: 'restaurant-outline', filled: 'restaurant', label: 'Menüs' },
+  orders: { outline: 'receipt-outline', filled: 'receipt', label: 'Bestellungen' },
+  billing: { outline: 'wallet-outline', filled: 'wallet', label: 'Abrechnung' },
+  settings: { outline: 'settings-outline', filled: 'settings', label: 'Einstellungen' },
 };
 
 export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
@@ -98,7 +98,7 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
       {!sidebarCollapsed && (
         <Pressable onPress={() => checkForDesktopUpdates(true)} disabled={checkingUpdates}>
           <Text style={styles.version}>
-            {checkingUpdates ? 'Checking...' : `v${version}`}
+            {checkingUpdates ? 'Prüfe...' : `v${version}`}
           </Text>
         </Pressable>
       )}

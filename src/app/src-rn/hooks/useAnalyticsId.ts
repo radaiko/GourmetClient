@@ -7,7 +7,7 @@ export function useAnalyticsId(): string | null {
   const [id, setId] = useState<string | null>(null);
 
   useEffect(() => {
-    posthog.getDistinctId().then(setId);
+    posthog?.getDistinctId().then(setId);
   }, [posthog]);
 
   return id;

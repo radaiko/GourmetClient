@@ -29,11 +29,11 @@ export function OrderItem({ order, isCancelling, onCancel, canCancel }: OrderIte
       <View style={styles.right}>
         {order.approved ? (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Confirmed</Text>
+            <Text style={styles.badgeText}>Bestätigt</Text>
           </View>
         ) : (
           <View style={[styles.badge, styles.badgePending]}>
-            <Text style={[styles.badgeText, styles.badgePendingText]}>Pending</Text>
+            <Text style={[styles.badgeText, styles.badgePendingText]}>Ausstehend</Text>
           </View>
         )}
         {canCancel && (

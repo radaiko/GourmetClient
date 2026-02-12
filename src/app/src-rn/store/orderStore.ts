@@ -31,7 +31,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const orders = await api.getOrders();
       set({ orders, loading: false });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch orders';
+      const message = err instanceof Error ? err.message : 'Bestellungen konnten nicht geladen werden';
       set({ error: message, loading: false });
     }
   },
@@ -45,7 +45,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       // Refresh orders to reflect confirmed state
       await get().fetchOrders();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to confirm orders';
+      const message = err instanceof Error ? err.message : 'Bestellungen konnten nicht bestätigt werden';
       set({ error: message, loading: false });
     }
   },
@@ -59,7 +59,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       // Refresh orders after cancellation
       await get().fetchOrders();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to cancel order';
+      const message = err instanceof Error ? err.message : 'Bestellung konnte nicht storniert werden';
       set({ error: message, cancellingId: null });
     }
   },

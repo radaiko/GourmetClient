@@ -229,7 +229,7 @@ export const useBillingStore = create<BillingState>((set, get) => ({
         loading: false,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch billing';
+      const message = err instanceof Error ? err.message : 'Abrechnung konnte nicht geladen werden';
       set({ error: message, loading: false });
     }
   },

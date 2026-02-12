@@ -118,10 +118,10 @@ const styles = StyleSheet.create({
 });
 
 const TAB_TITLES: Record<string, string> = {
-  index: 'Menus',
-  orders: 'Orders',
-  billing: 'Billing',
-  settings: 'Settings',
+  index: 'Menüs',
+  orders: 'Bestellungen',
+  billing: 'Abrechnung',
+  settings: 'Einstellungen',
 };
 
 export default function TabLayout() {
@@ -151,10 +151,10 @@ export default function TabLayout() {
           },
         })}
       >
-        <Tabs.Screen name="index" options={{ title: 'Menus' }} />
-        <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
-        <Tabs.Screen name="billing" options={{ title: 'Billing' }} />
-        <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+        <Tabs.Screen name="index" options={{ title: 'Menüs' }} />
+        <Tabs.Screen name="orders" options={{ title: 'Bestellungen' }} />
+        <Tabs.Screen name="billing" options={{ title: 'Abrechnung' }} />
+        <Tabs.Screen name="settings" options={{ title: 'Einstellungen' }} />
       </Tabs>
     );
   }
@@ -165,10 +165,10 @@ export default function TabLayout() {
         tabBar={(props) => <DesktopSidebar {...props} />}
         screenOptions={{ headerShown: false, tabBarPosition: 'left' }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Menus' }} />
-        <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
-        <Tabs.Screen name="billing" options={{ title: 'Billing' }} />
-        <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+        <Tabs.Screen name="index" options={{ title: 'Menüs' }} />
+        <Tabs.Screen name="orders" options={{ title: 'Bestellungen' }} />
+        <Tabs.Screen name="billing" options={{ title: 'Abrechnung' }} />
+        <Tabs.Screen name="settings" options={{ title: 'Einstellungen' }} />
       </Tabs>
     );
   }
@@ -178,10 +178,10 @@ export default function TabLayout() {
       tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Menus' }} />
-      <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
-      <Tabs.Screen name="billing" options={{ title: 'Billing' }} />
-      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      <Tabs.Screen name="index" options={{ title: 'Menüs' }} />
+      <Tabs.Screen name="orders" options={{ title: 'Bestellungen' }} />
+      <Tabs.Screen name="billing" options={{ title: 'Abrechnung' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Einstellungen' }} />
     </Tabs>
   );
 }

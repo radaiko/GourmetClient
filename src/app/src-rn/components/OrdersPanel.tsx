@@ -6,8 +6,8 @@ import { panelSurface, buttonPrimary } from '../theme/platformStyles';
 type Tab = 'upcoming' | 'past';
 
 const VIEW_OPTIONS: { value: Tab; label: string }[] = [
-  { value: 'upcoming', label: 'Upcoming' },
-  { value: 'past', label: 'Past' },
+  { value: 'upcoming', label: 'Kommende' },
+  { value: 'past', label: 'Vergangene' },
 ];
 
 interface OrdersPanelProps {
@@ -40,7 +40,7 @@ export function OrdersPanel({
     <View style={styles.wrapper}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* View selector */}
-        <Text style={styles.sectionHeader}>View</Text>
+        <Text style={styles.sectionHeader}>Ansicht</Text>
         <View style={styles.section}>
           {VIEW_OPTIONS.map((opt) => {
             const isSelected = activeTab === opt.value;
@@ -60,18 +60,18 @@ export function OrdersPanel({
         </View>
 
         {/* Summary */}
-        <Text style={styles.sectionHeader}>Summary</Text>
+        <Text style={styles.sectionHeader}>Übersicht</Text>
         <View style={styles.summarySection}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Upcoming</Text>
+            <Text style={styles.summaryLabel}>Kommende</Text>
             <Text style={styles.summaryValue}>{upcomingCount}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Past</Text>
+            <Text style={styles.summaryLabel}>Vergangene</Text>
             <Text style={styles.summaryValue}>{pastCount}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Unconfirmed</Text>
+            <Text style={styles.summaryLabel}>Unbestätigt</Text>
             <Text
               style={[
                 styles.summaryValue,
@@ -86,14 +86,14 @@ export function OrdersPanel({
         {/* Confirm section */}
         {unconfirmedCount > 0 && (
           <>
-            <Text style={styles.sectionHeader}>Confirm</Text>
+            <Text style={styles.sectionHeader}>Bestätigen</Text>
             <View style={styles.confirmSection}>
               <Pressable
                 style={styles.confirmButton}
                 onPress={onConfirm}
                 disabled={loading}
               >
-                <Text style={styles.confirmButtonText}>Confirm All</Text>
+                <Text style={styles.confirmButtonText}>Alle bestätigen</Text>
               </Pressable>
             </View>
           </>

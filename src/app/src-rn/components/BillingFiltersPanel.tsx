@@ -17,7 +17,7 @@ interface Totals {
 }
 
 const SOURCE_FILTERS: { value: BillingSource; label: string }[] = [
-  { value: 'all', label: 'All' },
+  { value: 'all', label: 'Alle' },
   { value: 'gourmet', label: 'Gourmet' },
   { value: 'ventopay', label: 'Ventopay' },
 ];
@@ -52,7 +52,7 @@ export function BillingFiltersPanel({
     <View style={styles.wrapper}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Month selector */}
-        <Text style={styles.sectionHeader}>Month</Text>
+        <Text style={styles.sectionHeader}>Monat</Text>
         <View style={styles.section}>
           {monthOptions.map((opt, idx) => {
             const isSelected = selectedMonthIndex === idx;
@@ -72,7 +72,7 @@ export function BillingFiltersPanel({
         </View>
 
         {/* Source filter */}
-        <Text style={styles.sectionHeader}>Source</Text>
+        <Text style={styles.sectionHeader}>Quelle</Text>
         <View style={styles.section}>
           {SOURCE_FILTERS.map((sf) => {
             const isSelected = sourceFilter === sf.value;
@@ -92,19 +92,19 @@ export function BillingFiltersPanel({
         </View>
 
         {/* Summary */}
-        <Text style={styles.sectionHeader}>Summary</Text>
+        <Text style={styles.sectionHeader}>Übersicht</Text>
         <View style={styles.summarySection}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total</Text>
+            <Text style={styles.summaryLabel}>Gesamt</Text>
             <Text style={styles.summaryValue}>{formatCurrency(totals.total)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Bills</Text>
+            <Text style={styles.summaryLabel}>Belege</Text>
             <Text style={styles.summaryValue}>{totals.count}</Text>
           </View>
           {totals.subsidy > 0 && (
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subsidy</Text>
+              <Text style={styles.summaryLabel}>Zuschuss</Text>
               <Text style={[styles.summaryValue, { color: colors.success }]}>
                 {formatCurrency(totals.subsidy)}
               </Text>

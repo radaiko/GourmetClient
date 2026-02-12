@@ -72,7 +72,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
         set({ selectedDate: dates[0] });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch menus';
+      const message = err instanceof Error ? err.message : 'Menüs konnten nicht geladen werden';
       set({ error: message, loading: false });
     }
   },
@@ -168,7 +168,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     // Block today's orders after 12:30 Vienna time
     const blocked = orderItems.filter((i) => isOrderingCutoff(i.date));
     if (blocked.length > 0) {
-      set({ error: 'Ordering for today is closed (cutoff 12:30)' });
+      set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
       return;
     }
 
@@ -197,7 +197,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
       set({ orderProgress: null });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to submit order';
+      const message = err instanceof Error ? err.message : 'Bestellung konnte nicht aufgegeben werden';
       set({ error: message, orderProgress: null });
       // Revert optimistic update on failure (silent, keep error visible)
       try {

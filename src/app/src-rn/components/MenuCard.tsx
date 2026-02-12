@@ -36,22 +36,22 @@ export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCance
       <View style={styles.badgeRow}>
         {ordered && (
           <View style={styles.orderedBadge}>
-            <Text style={styles.orderedBadgeText}>Ordered</Text>
+            <Text style={styles.orderedBadgeText}>Bestellt</Text>
           </View>
         )}
         {!ordered && !item.available && (
           <View style={styles.stockBadge}>
-            <Text style={styles.stockBadgeText}>Out of stock</Text>
+            <Text style={styles.stockBadgeText}>Ausverkauft</Text>
           </View>
         )}
         {blocked && !ordered && item.available && (
           <View style={styles.cutoffBadge}>
-            <Text style={styles.cutoffBadgeText}>Blocked</Text>
+            <Text style={styles.cutoffBadgeText}>Gesperrt</Text>
           </View>
         )}
         {cutoff && !ordered && !blocked && item.available && (
           <View style={styles.cutoffBadge}>
-            <Text style={styles.cutoffBadgeText}>Closed</Text>
+            <Text style={styles.cutoffBadgeText}>Geschlossen</Text>
           </View>
         )}
       </View>
@@ -63,7 +63,7 @@ export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCance
       </Text>
       <View style={styles.bottomRow}>
         <Text style={[styles.allergens, isSelected && styles.textSelected]} numberOfLines={1}>
-          {item.allergens.length > 0 ? `Allergens: ${item.allergens.join(', ')}` : ''}
+          {item.allergens.length > 0 ? `Allergene: ${item.allergens.join(', ')}` : ''}
         </Text>
         {onCancel ? (
           <Pressable
@@ -74,7 +74,7 @@ export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCance
             {isCancelling ? (
               <ActivityIndicator size="small" color={colors.error} />
             ) : (
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={styles.cancelText}>Stornieren</Text>
             )}
           </Pressable>
         ) : (
