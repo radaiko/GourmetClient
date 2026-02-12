@@ -1,6 +1,7 @@
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetOrderedMenu } from '../types/order';
 import { formatDisplayDate } from '../utils/dateUtils';
+import { useFlatStyle, isCompactDesktop } from '../utils/platform';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { cardSurface } from '../theme/platformStyles';
@@ -53,16 +54,14 @@ export function OrderItem({ order, isCancelling, onCancel, canCancel }: OrderIte
   );
 }
 
-const isAndroid = Platform.OS === 'android';
-
 const createStyles = (c: Colors) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      padding: 16,
-      marginBottom: 8,
+      padding: isCompactDesktop ? 10 : 16,
+      marginBottom: isCompactDesktop ? 4 : 8,
       ...cardSurface(c),
     },
     containerCancelling: {
@@ -90,15 +89,15 @@ const createStyles = (c: Colors) =>
       marginBottom: 2,
     },
     title: {
-      fontSize: 16,
+      fontSize: isCompactDesktop ? 13 : 16,
       color: c.textPrimary,
     },
     badge: {
-      backgroundColor: isAndroid ? c.successSurface : c.glassSuccess,
+      backgroundColor: useFlatStyle ? c.successSurface : c.glassSuccess,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,
-      borderWidth: isAndroid ? 1 : 0.5,
+      borderWidth: useFlatStyle ? 1 : 0.5,
       borderColor: c.success,
     },
     badgeText: {
@@ -107,7 +106,7 @@ const createStyles = (c: Colors) =>
       color: c.successText,
     },
     badgePending: {
-      backgroundColor: isAndroid ? c.warningSurface : c.glassWarning,
+      backgroundColor: useFlatStyle ? c.warningSurface : c.glassWarning,
       borderColor: c.warning,
     },
     badgePendingText: {
@@ -117,10 +116,10 @@ const createStyles = (c: Colors) =>
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: isAndroid ? c.errorSurface : c.glassError,
+      backgroundColor: useFlatStyle ? c.errorSurface : c.glassError,
       justifyContent: 'center',
       alignItems: 'center',
-      borderWidth: isAndroid ? 1 : 0.5,
+      borderWidth: useFlatStyle ? 1 : 0.5,
       borderColor: c.error,
     },
     cancelX: {

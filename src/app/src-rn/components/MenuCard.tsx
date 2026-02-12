@@ -1,6 +1,7 @@
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetMenuItem } from '../types/menu';
 import { isOrderingCutoff } from '../utils/dateUtils';
+import { useFlatStyle, isCompactDesktop } from '../utils/platform';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { cardSurface } from '../theme/platformStyles';
@@ -63,26 +64,24 @@ export function MenuCard({ item, isSelected, onToggle }: MenuCardProps) {
   );
 }
 
-const isAndroid = Platform.OS === 'android';
-
 const createStyles = (c: Colors) =>
   StyleSheet.create({
     card: {
-      padding: 16,
-      marginBottom: 10,
+      padding: isCompactDesktop ? 10 : 16,
+      marginBottom: isCompactDesktop ? 6 : 10,
       position: 'relative',
       ...cardSurface(c),
     },
     cardOrdered: {
-      backgroundColor: isAndroid ? c.successSurface : c.glassSuccess,
-      borderColor: isAndroid ? c.successBorder : undefined,
+      backgroundColor: useFlatStyle ? c.successSurface : c.glassSuccess,
+      borderColor: useFlatStyle ? c.successBorder : undefined,
     },
     cardSelected: {
       backgroundColor: c.primary,
-      borderColor: isAndroid ? c.primaryDark : undefined,
-      borderTopColor: isAndroid ? c.primaryDark : 'rgba(255,255,255,0.30)',
-      borderLeftColor: isAndroid ? c.primaryDark : 'rgba(255,255,255,0.15)',
-      borderBottomColor: isAndroid ? c.primaryDark : c.primaryDark,
+      borderColor: useFlatStyle ? c.primaryDark : undefined,
+      borderTopColor: useFlatStyle ? c.primaryDark : 'rgba(255,255,255,0.30)',
+      borderLeftColor: useFlatStyle ? c.primaryDark : 'rgba(255,255,255,0.15)',
+      borderBottomColor: useFlatStyle ? c.primaryDark : c.primaryDark,
     },
     cardDisabled: {
       opacity: 0.5,
@@ -93,11 +92,11 @@ const createStyles = (c: Colors) =>
       marginBottom: 2,
     },
     orderedBadge: {
-      backgroundColor: isAndroid ? c.successSurface : c.glassSuccess,
+      backgroundColor: useFlatStyle ? c.successSurface : c.glassSuccess,
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 12,
-      borderWidth: isAndroid ? 1 : 0.5,
+      borderWidth: useFlatStyle ? 1 : 0.5,
       borderColor: c.success,
     },
     orderedBadgeText: {
@@ -106,11 +105,11 @@ const createStyles = (c: Colors) =>
       color: c.successText,
     },
     cutoffBadge: {
-      backgroundColor: isAndroid ? c.warningSurface : c.glassWarning,
+      backgroundColor: useFlatStyle ? c.warningSurface : c.glassWarning,
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 12,
-      borderWidth: isAndroid ? 1 : 0.5,
+      borderWidth: useFlatStyle ? 1 : 0.5,
       borderColor: c.warning,
     },
     cutoffBadgeText: {
@@ -132,9 +131,9 @@ const createStyles = (c: Colors) =>
       marginLeft: 8,
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: isCompactDesktop ? 13 : 16,
       color: c.textPrimary,
-      lineHeight: 21,
+      lineHeight: isCompactDesktop ? 18 : 21,
     },
     textSelected: {
       color: '#fff',

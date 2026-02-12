@@ -1,9 +1,11 @@
 import { Platform, ViewStyle } from 'react-native';
 import { Colors } from './colors';
+import { isDesktop } from '../utils/platform';
 
 const isAndroid = Platform.OS === 'android';
+const isDesktopWeb = isDesktop();
 
-/** Card / surface container — glass on iOS, solid + elevation on Android */
+/** Card / surface container — glass on iOS, solid + elevation on Android, flat on desktop */
 export function cardSurface(c: Colors): ViewStyle {
   if (isAndroid) {
     return {
@@ -12,6 +14,14 @@ export function cardSurface(c: Colors): ViewStyle {
       borderWidth: 1,
       borderColor: c.border,
       elevation: 2,
+    };
+  }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surface,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: c.border,
     };
   }
   return {
@@ -43,6 +53,14 @@ export function bannerSurface(c: Colors): ViewStyle {
       elevation: 1,
     };
   }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surface,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: c.border,
+    };
+  }
   return {
     backgroundColor: c.glassSurface,
     borderRadius: 14,
@@ -72,6 +90,14 @@ export function tintedBanner(c: Colors, bg: string): ViewStyle {
       elevation: 1,
     };
   }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: bg,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: c.border,
+    };
+  }
   return {
     backgroundColor: bg,
     borderRadius: 14,
@@ -97,6 +123,12 @@ export function buttonPrimary(c: Colors): ViewStyle {
       backgroundColor: c.primary,
       borderRadius: 12,
       elevation: 2,
+    };
+  }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.primary,
+      borderRadius: 4,
     };
   }
   return {
@@ -127,6 +159,14 @@ export function buttonSecondary(c: Colors): ViewStyle {
       elevation: 0,
     };
   }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surface,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: c.primary,
+    };
+  }
   return {
     backgroundColor: c.glassSurface,
     borderRadius: 14,
@@ -154,6 +194,12 @@ export function buttonDanger(c: Colors): ViewStyle {
       elevation: 2,
     };
   }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.error,
+      borderRadius: 4,
+    };
+  }
   return {
     backgroundColor: c.error,
     borderRadius: 14,
@@ -177,6 +223,16 @@ export function inputField(c: Colors): ViewStyle {
       paddingHorizontal: 14,
       paddingVertical: 12,
       elevation: 0,
+    };
+  }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surface,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: c.borderInput,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
     };
   }
   return {
@@ -208,6 +264,12 @@ export function circleButton(c: Colors): ViewStyle {
       elevation: 1,
     };
   }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surfaceVariant,
+      borderRadius: 24,
+    };
+  }
   return {
     backgroundColor: c.glassSurfaceVariant,
     borderRadius: 24,
@@ -226,8 +288,15 @@ export function circleButton(c: Colors): ViewStyle {
   };
 }
 
-/** Desktop sidebar surface — glass bg, right border, right shadow */
+/** Desktop sidebar surface — solid on desktop, glass on web */
 export function sidebarSurface(c: Colors): ViewStyle {
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surface,
+      borderRightWidth: 1,
+      borderRightColor: c.border,
+    };
+  }
   return {
     backgroundColor: c.glassSurface,
     borderRightWidth: 0.5,
@@ -239,8 +308,15 @@ export function sidebarSurface(c: Colors): ViewStyle {
   };
 }
 
-/** Desktop side-panel surface — glass bg, right border */
+/** Desktop side-panel surface — solid on desktop, glass on web */
 export function panelSurface(c: Colors): ViewStyle {
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.surface,
+      borderRightWidth: 1,
+      borderRightColor: c.border,
+    };
+  }
   return {
     backgroundColor: c.glassSurface,
     borderRightWidth: 0.5,
@@ -255,6 +331,16 @@ export function fab(c: Colors): ViewStyle {
       backgroundColor: c.primary,
       borderRadius: 16,
       elevation: 6,
+    };
+  }
+  if (isDesktopWeb) {
+    return {
+      backgroundColor: c.primary,
+      borderRadius: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.12,
+      shadowRadius: 3,
     };
   }
   return {

@@ -2,7 +2,6 @@ import { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
 import { useBillingStore, BillingSource } from '../../src-rn/store/billingStore';
 import { BillCard, BillingEntry } from '../../src-rn/components/BillCard';
 import { BillingFiltersPanel } from '../../src-rn/components/BillingFiltersPanel';
+import { useFlatStyle } from '../../src-rn/utils/platform';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { Colors } from '../../src-rn/theme/colors';
@@ -296,9 +296,9 @@ const createStyles = (c: Colors) =>
     },
     monthSelector: {
       flexDirection: 'row',
-      backgroundColor: Platform.OS === 'android' ? c.surface : c.glassSurface,
-      borderBottomWidth: Platform.OS === 'android' ? 1 : 0.5,
-      borderBottomColor: Platform.OS === 'android' ? c.border : c.glassHighlight,
+      backgroundColor: useFlatStyle ? c.surface : c.glassSurface,
+      borderBottomWidth: useFlatStyle ? 1 : 0.5,
+      borderBottomColor: useFlatStyle ? c.border : c.glassHighlight,
     },
     monthTab: {
       flex: 1,
@@ -328,12 +328,12 @@ const createStyles = (c: Colors) =>
       paddingHorizontal: 14,
       paddingVertical: 6,
       borderRadius: 20,
-      backgroundColor: Platform.OS === 'android' ? c.surface : c.glassSurface,
+      backgroundColor: useFlatStyle ? c.surface : c.glassSurface,
       borderWidth: 1,
-      borderColor: Platform.OS === 'android' ? c.border : c.glassHighlight,
+      borderColor: useFlatStyle ? c.border : c.glassHighlight,
     },
     sourceTabActive: {
-      backgroundColor: Platform.OS === 'android' ? c.primarySurface : c.glassPrimary,
+      backgroundColor: useFlatStyle ? c.primarySurface : c.glassPrimary,
       borderColor: c.primary,
     },
     sourceTabText: {
@@ -372,7 +372,7 @@ const createStyles = (c: Colors) =>
       paddingBottom: 100,
     },
     listDesktop: {
-      padding: 16,
+      padding: 12,
       paddingBottom: 40,
     },
     desktopRow: {

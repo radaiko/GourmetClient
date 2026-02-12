@@ -18,6 +18,7 @@ import { DateListPanel } from '../../src-rn/components/DateListPanel';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
 import { GourmetMenuItem, GourmetMenuCategory } from '../../src-rn/types/menu';
 import { formatGourmetDate, localDateKey } from '../../src-rn/utils/dateUtils';
+import { isCompactDesktop } from '../../src-rn/utils/platform';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { Colors } from '../../src-rn/theme/colors';
@@ -244,7 +245,7 @@ const createStyles = (c: Colors) =>
       paddingBottom: 100,
     },
     listDesktop: {
-      padding: 16,
+      padding: 12,
       paddingBottom: 40,
     },
     desktopRow: {
@@ -255,14 +256,14 @@ const createStyles = (c: Colors) =>
       flex: 1,
     },
     categoryGroup: {
-      marginBottom: 16,
+      marginBottom: isCompactDesktop ? 10 : 16,
     },
     categoryTitle: {
-      fontSize: 22,
+      fontSize: isCompactDesktop ? 14 : 22,
       fontWeight: '600',
       color: c.primary,
       letterSpacing: 0.5,
-      marginBottom: 8,
+      marginBottom: isCompactDesktop ? 4 : 8,
       paddingLeft: 4,
     },
     refreshBanner: {
@@ -329,15 +330,15 @@ const createStyles = (c: Colors) =>
     },
     fabDesktop: {
       position: 'absolute',
-      bottom: 24,
-      right: 24,
-      paddingHorizontal: 24,
-      paddingVertical: 14,
+      bottom: 16,
+      right: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
       ...fabStyle(c),
     },
     fabText: {
       color: '#fff',
-      fontSize: 16,
+      fontSize: isCompactDesktop ? 13 : 16,
       fontWeight: '700',
     },
   });

@@ -1,5 +1,6 @@
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { AdaptiveBlurView } from './AdaptiveBlurView';
+import { useFlatStyle } from '../utils/platform';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { bannerSurface } from '../theme/platformStyles';
@@ -14,8 +15,8 @@ export function LoadingOverlay() {
     </View>
   );
 
-  if (Platform.OS === 'android') {
-    return <View style={styles.androidContainer}>{spinner}</View>;
+  if (useFlatStyle) {
+    return <View style={styles.opaqueContainer}>{spinner}</View>;
   }
 
   return (
@@ -37,7 +38,7 @@ const createStyles = (c: Colors) =>
       alignItems: 'center',
       zIndex: 10,
     },
-    androidContainer: {
+    opaqueContainer: {
       ...StyleSheet.absoluteFillObject,
       justifyContent: 'center',
       alignItems: 'center',

@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useFlatStyle, isCompactDesktop } from '../../src-rn/utils/platform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
@@ -405,7 +406,7 @@ const createStyles = (c: Colors) =>
       paddingBottom: 100,
     },
     contentDesktop: {
-      padding: 24,
+      padding: 16,
       paddingBottom: 40,
       maxWidth: 900,
       alignSelf: 'center' as const,
@@ -413,54 +414,54 @@ const createStyles = (c: Colors) =>
     },
     desktopRow: {
       flexDirection: 'row' as const,
-      gap: 20,
-      marginBottom: 20,
+      gap: 12,
+      marginBottom: 12,
     },
     desktopCard: {
       flex: 1,
-      padding: 20,
+      padding: 14,
       ...cardSurface(c),
     },
     sectionTitle: {
-      fontSize: 22,
+      fontSize: isCompactDesktop ? 15 : 22,
       fontWeight: '600',
       color: c.textPrimary,
-      marginBottom: 16,
+      marginBottom: isCompactDesktop ? 10 : 16,
     },
     sectionSubtitle: {
-      fontSize: 13,
+      fontSize: isCompactDesktop ? 12 : 13,
       color: c.textTertiary,
-      marginTop: -12,
-      marginBottom: 16,
+      marginTop: isCompactDesktop ? -8 : -12,
+      marginBottom: isCompactDesktop ? 10 : 16,
     },
     divider: {
       height: 1,
-      backgroundColor: c.glassHighlight,
+      backgroundColor: useFlatStyle ? c.border : c.glassHighlight,
       marginVertical: 24,
     },
     inputGroup: {
-      marginBottom: 16,
+      marginBottom: isCompactDesktop ? 10 : 16,
     },
     label: {
-      fontSize: 13,
+      fontSize: isCompactDesktop ? 12 : 13,
       fontWeight: '600',
       color: c.textSecondary,
-      marginBottom: 6,
+      marginBottom: isCompactDesktop ? 4 : 6,
     },
     input: {
-      fontSize: 15,
+      fontSize: isCompactDesktop ? 13 : 15,
       color: c.textPrimary,
       ...inputField(c),
     },
     buttonRow: {
       flexDirection: 'row',
-      gap: 12,
-      marginTop: 8,
+      gap: isCompactDesktop ? 8 : 12,
+      marginTop: isCompactDesktop ? 6 : 8,
     },
     button: {
       flex: 1,
-      paddingVertical: 14,
-      borderRadius: 14,
+      paddingVertical: isCompactDesktop ? 8 : 14,
+      borderRadius: isCompactDesktop ? 4 : 14,
       alignItems: 'center',
     },
     buttonPrimary: {
@@ -469,7 +470,7 @@ const createStyles = (c: Colors) =>
     buttonPrimaryText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 15,
+      fontSize: isCompactDesktop ? 13 : 15,
     },
     buttonSecondary: {
       ...buttonSecondary(c),
@@ -477,21 +478,21 @@ const createStyles = (c: Colors) =>
     buttonSecondaryText: {
       color: c.primary,
       fontWeight: '700',
-      fontSize: 15,
+      fontSize: isCompactDesktop ? 13 : 15,
     },
     buttonDanger: {
       flex: 0,
-      paddingHorizontal: 24,
+      paddingHorizontal: isCompactDesktop ? 16 : 24,
       ...buttonDanger(c),
     },
     buttonDangerText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 15,
+      fontSize: isCompactDesktop ? 13 : 15,
     },
     statusSuccess: {
-      padding: 14,
-      marginTop: 16,
+      padding: isCompactDesktop ? 10 : 14,
+      marginTop: isCompactDesktop ? 10 : 16,
       ...tintedBanner(c, c.glassSuccess),
     },
     statusSuccessText: {
@@ -499,8 +500,8 @@ const createStyles = (c: Colors) =>
       fontWeight: '600',
     },
     statusError: {
-      padding: 14,
-      marginTop: 16,
+      padding: isCompactDesktop ? 10 : 14,
+      marginTop: isCompactDesktop ? 10 : 16,
       ...tintedBanner(c, c.glassError),
     },
     statusErrorText: {
@@ -508,12 +509,12 @@ const createStyles = (c: Colors) =>
       fontWeight: '600',
     },
     sessionSection: {
-      marginTop: 16,
+      marginTop: isCompactDesktop ? 10 : 16,
     },
     sessionInfo: {
-      fontSize: 14,
+      fontSize: isCompactDesktop ? 13 : 14,
       color: c.textSecondary,
-      marginBottom: 12,
+      marginBottom: isCompactDesktop ? 8 : 12,
     },
     appearanceSection: {
       marginTop: 32,
@@ -524,17 +525,17 @@ const createStyles = (c: Colors) =>
     },
     themeOption: {
       flex: 1,
-      paddingVertical: 12,
+      paddingVertical: isCompactDesktop ? 7 : 12,
       alignItems: 'center',
       ...bannerSurface(c),
     },
     themeOptionActive: {
-      backgroundColor: Platform.OS === 'android' ? c.primarySurface : c.glassPrimary,
-      borderColor: Platform.OS === 'android' ? c.primary : undefined,
+      backgroundColor: useFlatStyle ? c.primarySurface : c.glassPrimary,
+      borderColor: useFlatStyle ? c.primary : undefined,
       borderBottomColor: c.primary,
     },
     themeOptionText: {
-      fontSize: 14,
+      fontSize: isCompactDesktop ? 12 : 14,
       fontWeight: '600',
       color: c.textSecondary,
     },

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { AdaptiveBlurView } from './AdaptiveBlurView';
 import { useTheme } from '../theme/useTheme';
 import { useDesktopLayout } from '../hooks/useDesktopLayout';
 import { Colors } from '../theme/colors';
@@ -17,8 +16,8 @@ const ICONS: Record<string, { outline: keyof typeof Ionicons.glyphMap; filled: k
 
 export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
-  const { sidebarWidth } = useDesktopLayout();
-  const styles = createStyles(colors, sidebarWidth);
+  const { sidebarWidth, sidebarCollapsed, toggleSidebar } = useDesktopLayout();
+  const styles = createStyles(colors, sidebarWidth, sidebarCollapsed);
   const [version, setVersion] = useState(require('../../package.json').version);
 
   useEffect(() => {
@@ -30,14 +29,16 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={styles.wrapper}>
-      <AdaptiveBlurView
-        intensity={colors.blurIntensityStrong}
-        tint={colors.blurTint as any}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[StyleSheet.absoluteFill, styles.surface]} />
-
-      <Text style={styles.appName}>Gourmet Client</Text>
+      <View style={styles.header}>
+        {!sidebarCollapsed && <Text style={styles.appName}>Gourmet Client</Text>}
+        <Pressable onPress={toggleSidebar} style={styles.collapseButton}>
+          <Ionicons
+            name={sidebarCollapsed ? 'chevron-forward' : 'chevron-back'}
+            size={14}
+            color={colors.textTertiary}
+          />
+        </Pressable>
+      </View>
 
       <View style={styles.nav}>
         {state.routes.map((route, index) => {
@@ -65,53 +66,67 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
               {isFocused && <View style={styles.activeAccent} />}
               <Ionicons
                 name={isFocused ? icon.filled : icon.outline}
-                size={20}
+                size={16}
                 color={isFocused ? colors.primary : colors.textTertiary}
               />
-              <Text style={[styles.navLabel, isFocused && styles.navLabelActive]}>
-                {icon.label}
-              </Text>
+              {!sidebarCollapsed && (
+                <Text style={[styles.navLabel, isFocused && styles.navLabelActive]}>
+                  {icon.label}
+                </Text>
+              )}
             </Pressable>
           );
         })}
       </View>
 
-      <Text style={styles.version}>v{version}</Text>
+      {!sidebarCollapsed && <Text style={styles.version}>v{version}</Text>}
     </View>
   );
 }
 
-const createStyles = (c: Colors, sidebarWidth: number) =>
+const createStyles = (c: Colors, sidebarWidth: number, collapsed: boolean) =>
   StyleSheet.create({
     wrapper: {
       width: sidebarWidth,
       overflow: 'hidden',
       ...sidebarSurface(c),
     },
-    surface: {
-      backgroundColor: c.glassSurface,
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: collapsed ? 'center' : 'space-between',
+      paddingHorizontal: collapsed ? 0 : 14,
+      paddingTop: 10,
+      paddingBottom: 8,
     },
     appName: {
-      fontSize: 15,
+      fontSize: 12,
       fontWeight: '700',
       color: c.textPrimary,
-      paddingHorizontal: 20,
-      paddingTop: 24,
-      paddingBottom: 20,
       letterSpacing: 0.3,
+      textTransform: 'uppercase',
+      flex: 1,
+    },
+    collapseButton: {
+      width: 24,
+      height: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 4,
     },
     nav: {
       flex: 1,
-      paddingHorizontal: 10,
-      gap: 2,
+      paddingHorizontal: collapsed ? 4 : 6,
+      gap: 1,
     },
     navItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      paddingVertical: 10,
-      paddingHorizontal: 12,
-      borderRadius: 10,
+      justifyContent: collapsed ? 'center' : 'flex-start',
+      gap: collapsed ? 0 : 8,
+      paddingVertical: 6,
+      paddingHorizontal: collapsed ? 0 : 10,
+      borderRadius: 4,
       position: 'relative',
     },
     navItemActive: {
@@ -120,15 +135,15 @@ const createStyles = (c: Colors, sidebarWidth: number) =>
     activeAccent: {
       position: 'absolute',
       left: 0,
-      top: 6,
-      bottom: 6,
-      width: 3,
-      borderRadius: 2,
+      top: 4,
+      bottom: 4,
+      width: 2,
+      borderRadius: 1,
       backgroundColor: c.primary,
     },
     navLabel: {
-      fontSize: 14,
-      fontWeight: '500',
+      fontSize: 13,
+      fontWeight: '400',
       color: c.textTertiary,
     },
     navLabelActive: {
@@ -136,9 +151,9 @@ const createStyles = (c: Colors, sidebarWidth: number) =>
       fontWeight: '600',
     },
     version: {
-      fontSize: 11,
+      fontSize: 10,
       color: c.textTertiary,
-      paddingHorizontal: 20,
-      paddingBottom: 16,
+      paddingHorizontal: 14,
+      paddingBottom: 10,
     },
   });

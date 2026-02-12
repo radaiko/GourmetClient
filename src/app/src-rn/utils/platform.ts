@@ -15,3 +15,9 @@ export function getAppPlatform(): AppPlatform {
 export const isDesktop = (): boolean => getAppPlatform() === 'desktop';
 export const isWeb = (): boolean => Platform.OS === 'web';
 export const isNative = (): boolean => Platform.OS !== 'web';
+
+/** True on Android and desktop — use opaque/flat styles instead of glass morphism */
+export const useFlatStyle: boolean = Platform.OS === 'android' || isDesktop();
+
+/** True only on desktop — use compact sizing (smaller padding, fonts, radius) */
+export const isCompactDesktop: boolean = isDesktop();

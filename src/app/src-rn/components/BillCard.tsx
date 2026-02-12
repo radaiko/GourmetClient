@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { GourmetBill } from '../types/billing';
 import { VentopayTransaction } from '../types/ventopay';
+import { isCompactDesktop } from '../utils/platform';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { cardSurface } from '../theme/platformStyles';
@@ -106,22 +107,22 @@ export function BillCard({ entry }: BillCardProps) {
 const createStyles = (c: Colors) =>
   StyleSheet.create({
     container: {
-      padding: 16,
-      marginBottom: 8,
+      padding: isCompactDesktop ? 10 : 16,
+      marginBottom: isCompactDesktop ? 4 : 8,
       ...cardSurface(c),
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
-      marginBottom: 12,
+      marginBottom: isCompactDesktop ? 8 : 12,
     },
     headerRight: {
       alignItems: 'flex-end',
       gap: 4,
     },
     date: {
-      fontSize: 14,
+      fontSize: isCompactDesktop ? 13 : 14,
       fontWeight: '600',
       color: c.textPrimary,
     },
@@ -131,7 +132,7 @@ const createStyles = (c: Colors) =>
       marginTop: 2,
     },
     billing: {
-      fontSize: 18,
+      fontSize: isCompactDesktop ? 15 : 18,
       fontWeight: '700',
       color: c.primary,
     },

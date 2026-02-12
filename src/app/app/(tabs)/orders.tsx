@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useOrderStore } from '../../src-rn/store/orderStore';
+import { useFlatStyle, isCompactDesktop } from '../../src-rn/utils/platform';
 import { OrderItem } from '../../src-rn/components/OrderItem';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
 import { DesktopContentWrapper } from '../../src-rn/components/DesktopContentWrapper';
@@ -164,22 +164,22 @@ const createStyles = (c: Colors) =>
     },
     tabs: {
       flexDirection: 'row',
-      backgroundColor: Platform.OS === 'android' ? c.surface : c.glassSurface,
-      borderBottomWidth: Platform.OS === 'android' ? 1 : 0.5,
-      borderBottomColor: Platform.OS === 'android' ? c.border : c.glassHighlight,
+      backgroundColor: useFlatStyle ? c.surface : c.glassSurface,
+      borderBottomWidth: useFlatStyle ? 1 : 0.5,
+      borderBottomColor: useFlatStyle ? c.border : c.glassHighlight,
     },
     tab: {
       flex: 1,
-      paddingVertical: 14,
+      paddingVertical: isCompactDesktop ? 8 : 14,
       alignItems: 'center',
-      borderBottomWidth: 3,
+      borderBottomWidth: isCompactDesktop ? 2 : 3,
       borderBottomColor: 'transparent',
     },
     tabActive: {
       borderBottomColor: c.primary,
     },
     tabText: {
-      fontSize: 14,
+      fontSize: isCompactDesktop ? 12 : 14,
       fontWeight: '600',
       color: c.textTertiary,
     },
@@ -190,29 +190,29 @@ const createStyles = (c: Colors) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: 12,
-      marginHorizontal: 16,
-      marginTop: 8,
+      padding: isCompactDesktop ? 8 : 12,
+      marginHorizontal: isCompactDesktop ? 12 : 16,
+      marginTop: isCompactDesktop ? 6 : 8,
       ...tintedBanner(c, c.glassWarning),
     },
     confirmBannerText: {
       color: c.warningText,
-      fontSize: 14,
+      fontSize: isCompactDesktop ? 12 : 14,
       fontWeight: '600',
       flex: 1,
     },
     confirmButton: {
-      paddingHorizontal: 20,
-      paddingVertical: 8,
+      paddingHorizontal: isCompactDesktop ? 14 : 20,
+      paddingVertical: isCompactDesktop ? 5 : 8,
       ...buttonPrimary(c),
     },
     confirmButtonText: {
       color: '#fff',
       fontWeight: '700',
-      fontSize: 14,
+      fontSize: isCompactDesktop ? 12 : 14,
     },
     list: {
-      padding: 16,
+      padding: isCompactDesktop ? 12 : 16,
       paddingBottom: 100,
     },
     hintText: {
