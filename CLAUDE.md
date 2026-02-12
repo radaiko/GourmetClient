@@ -302,6 +302,18 @@ npm run record-fixtures    # Re-record HTML fixtures from live sites (requires .
 
 Tests use a record & replay strategy with sanitized HTML fixtures. The test suite covers parsers, HTTP clients, API orchestration, stores, and utilities across 13 test files.
 
+### Visual Verification (iOS Simulator)
+
+After making UI changes, verify them visually on the iOS Simulator using the iOS Simulator MCP tools:
+
+1. Build and run the app: `cd src/app && npx expo run:ios`
+2. Use `mcp__ios-simulator__screenshot` to capture the current screen
+3. Use `mcp__ios-simulator__ui_describe_all` to inspect accessibility elements
+4. Use `mcp__ios-simulator__ui_tap` / `mcp__ios-simulator__ui_swipe` to navigate between tabs and screens
+5. Verify that UI changes render correctly before committing
+
+This should be done for any change that affects layout, styling, or component structure.
+
 ---
 
 ## Build & Run
