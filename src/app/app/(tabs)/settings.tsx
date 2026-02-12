@@ -232,7 +232,7 @@ export default function SettingsScreen() {
           <Text style={styles.sessionInfo}>
             Logged in as: {userInfo?.username}
           </Text>
-          <Pressable style={[styles.button, styles.buttonDanger]} onPress={handleGourmetLogout}>
+          <Pressable style={styles.buttonDanger} onPress={handleGourmetLogout}>
             <Text style={styles.buttonDangerText}>Logout</Text>
           </Pressable>
         </View>
@@ -312,7 +312,7 @@ export default function SettingsScreen() {
       {ventopayStatus === 'authenticated' && (
         <View style={styles.sessionSection}>
           <Text style={styles.sessionInfo}>Ventopay session active</Text>
-          <Pressable style={[styles.button, styles.buttonDanger]} onPress={handleVentopayLogout}>
+          <Pressable style={styles.buttonDanger} onPress={handleVentopayLogout}>
             <Text style={styles.buttonDangerText}>Logout</Text>
           </Pressable>
         </View>
@@ -496,8 +496,9 @@ const createStyles = (c: Colors) =>
       fontSize: isCompactDesktop ? 13 : 15,
     },
     buttonDanger: {
-      flex: 0,
       alignSelf: isCompactDesktop ? 'flex-start' as const : undefined,
+      alignItems: 'center' as const,
+      paddingVertical: isCompactDesktop ? 8 : 14,
       paddingHorizontal: isCompactDesktop ? 16 : 24,
       ...buttonDanger(c),
     },
