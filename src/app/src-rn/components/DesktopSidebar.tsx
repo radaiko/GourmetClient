@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -18,6 +19,14 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
   const { sidebarWidth } = useDesktopLayout();
   const styles = createStyles(colors, sidebarWidth);
+  const [version, setVersion] = useState(require('../../package.json').version);
+
+  useEffect(() => {
+    const internals = (window as any).__TAURI_INTERNALS__;
+    if (internals?.invoke) {
+      internals.invoke('plugin:app|version').then((v: string) => setVersion(v)).catch(() => {});
+    }
+  }, []);
 
   return (
     <View style={styles.wrapper}>
@@ -67,7 +76,7 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
         })}
       </View>
 
-      <Text style={styles.version}>v{require('../../package.json').version}</Text>
+      <Text style={styles.version}>v{version}</Text>
     </View>
   );
 }
