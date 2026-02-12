@@ -15,7 +15,9 @@ import { useFlatStyle, isCompactDesktop } from '../../src-rn/utils/platform';
 import { OrderItem } from '../../src-rn/components/OrderItem';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
 import { DesktopContentWrapper } from '../../src-rn/components/DesktopContentWrapper';
+import { OrdersPanel } from '../../src-rn/components/OrdersPanel';
 import { useTheme } from '../../src-rn/theme/useTheme';
+import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { Colors } from '../../src-rn/theme/colors';
 import { tintedBanner, buttonPrimary } from '../../src-rn/theme/platformStyles';
 
@@ -24,6 +26,7 @@ type Tab = 'upcoming' | 'past';
 export default function OrdersScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isWideLayout, panelWidth } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { status: authStatus } = useAuthStore();
@@ -73,6 +76,57 @@ export default function OrdersScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.hintText}>Login required</Text>
+      </View>
+    );
+  }
+
+  if (isWideLayout) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.desktopRow}>
+          <OrdersPanel
+            width={panelWidth}
+            activeTab={activeTab}
+            onSelectTab={setActiveTab}
+            upcomingCount={upcoming.length}
+            pastCount={past.length}
+            unconfirmedCount={unconfirmedCount}
+            onConfirm={confirmOrders}
+            loading={loading}
+          />
+          <View style={styles.desktopMain}>
+            {loading && <LoadingOverlay />}
+
+            {error && (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            )}
+
+            <FlatList
+              data={orders}
+              keyExtractor={(item) => item.positionId}
+              contentContainerStyle={styles.listDesktop}
+              renderItem={({ item }) => (
+                <OrderItem
+                  order={item}
+                  isCancelling={cancellingId === item.positionId}
+                  onCancel={() => handleCancel(item.positionId, item.title)}
+                  canCancel={activeTab === 'upcoming' && cancellingId === null}
+                />
+              )}
+              ListEmptyComponent={
+                !loading ? (
+                  <View style={styles.center}>
+                    <Text style={styles.emptyText}>
+                      {activeTab === 'upcoming' ? 'No upcoming orders' : 'No past orders'}
+                    </Text>
+                  </View>
+                ) : null
+              }
+            />
+          </View>
+        </View>
       </View>
     );
   }
@@ -214,6 +268,17 @@ const createStyles = (c: Colors) =>
     list: {
       padding: isCompactDesktop ? 12 : 16,
       paddingBottom: 100,
+    },
+    listDesktop: {
+      padding: 12,
+      paddingBottom: 40,
+    },
+    desktopRow: {
+      flex: 1,
+      flexDirection: 'row',
+    },
+    desktopMain: {
+      flex: 1,
     },
     hintText: {
       fontSize: 16,
