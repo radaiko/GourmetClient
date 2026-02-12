@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { AdaptiveBlurView } from '../../src-rn/components/AdaptiveBlurView';
+import { DesktopSidebar } from '../../src-rn/components/DesktopSidebar';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src-rn/theme/useTheme';
+import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 
 const ICONS: Record<string, { outline: keyof typeof Ionicons.glyphMap; filled: keyof typeof Ionicons.glyphMap }> = {
   index: { outline: 'restaurant-outline', filled: 'restaurant' },
@@ -124,6 +126,7 @@ const TAB_TITLES: Record<string, string> = {
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const { isWideLayout, sidebarWidth } = useDesktopLayout();
 
   if (Platform.OS === 'android') {
     return (
@@ -147,6 +150,20 @@ export default function TabLayout() {
             fontWeight: '600',
           },
         })}
+      >
+        <Tabs.Screen name="index" options={{ title: 'Menus' }} />
+        <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
+        <Tabs.Screen name="billing" options={{ title: 'Billing' }} />
+        <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      </Tabs>
+    );
+  }
+
+  if (isWideLayout) {
+    return (
+      <Tabs
+        tabBar={(props) => <DesktopSidebar {...props} />}
+        screenOptions={{ headerShown: false, tabBarPosition: 'left' }}
       >
         <Tabs.Screen name="index" options={{ title: 'Menus' }} />
         <Tabs.Screen name="orders" options={{ title: 'Orders' }} />

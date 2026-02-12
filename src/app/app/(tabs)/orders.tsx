@@ -14,6 +14,7 @@ import { useAuthStore } from '../../src-rn/store/authStore';
 import { useOrderStore } from '../../src-rn/store/orderStore';
 import { OrderItem } from '../../src-rn/components/OrderItem';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
+import { DesktopContentWrapper } from '../../src-rn/components/DesktopContentWrapper';
 import { useTheme } from '../../src-rn/theme/useTheme';
 import { Colors } from '../../src-rn/theme/colors';
 import { tintedBanner, buttonPrimary } from '../../src-rn/theme/platformStyles';
@@ -77,72 +78,74 @@ export default function OrdersScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.tabs}>
-        <Pressable
-          style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
-          onPress={() => setActiveTab('upcoming')}
-        >
-          <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
-            Upcoming ({upcoming.length})
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.tab, activeTab === 'past' && styles.tabActive]}
-          onPress={() => setActiveTab('past')}
-        >
-          <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
-            Past ({past.length})
-          </Text>
-        </Pressable>
-      </View>
-
-      {unconfirmedCount > 0 && activeTab === 'upcoming' && (
-        <View style={styles.confirmBanner}>
-          <Text style={styles.confirmBannerText}>
-            {unconfirmedCount} unconfirmed order{unconfirmedCount > 1 ? 's' : ''}
-          </Text>
+    <DesktopContentWrapper maxWidth={700}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <View style={styles.tabs}>
           <Pressable
-            style={styles.confirmButton}
-            onPress={confirmOrders}
-            disabled={loading}
+            style={[styles.tab, activeTab === 'upcoming' && styles.tabActive]}
+            onPress={() => setActiveTab('upcoming')}
           >
-            <Text style={styles.confirmButtonText}>Confirm</Text>
+            <Text style={[styles.tabText, activeTab === 'upcoming' && styles.tabTextActive]}>
+              Upcoming ({upcoming.length})
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.tab, activeTab === 'past' && styles.tabActive]}
+            onPress={() => setActiveTab('past')}
+          >
+            <Text style={[styles.tabText, activeTab === 'past' && styles.tabTextActive]}>
+              Past ({past.length})
+            </Text>
           </Pressable>
         </View>
-      )}
 
-      {loading && <LoadingOverlay />}
-
-      {error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item.positionId}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <OrderItem
-            order={item}
-            isCancelling={cancellingId === item.positionId}
-            onCancel={() => handleCancel(item.positionId, item.title)}
-            canCancel={activeTab === 'upcoming' && cancellingId === null}
-          />
+        {unconfirmedCount > 0 && activeTab === 'upcoming' && (
+          <View style={styles.confirmBanner}>
+            <Text style={styles.confirmBannerText}>
+              {unconfirmedCount} unconfirmed order{unconfirmedCount > 1 ? 's' : ''}
+            </Text>
+            <Pressable
+              style={styles.confirmButton}
+              onPress={confirmOrders}
+              disabled={loading}
+            >
+              <Text style={styles.confirmButtonText}>Confirm</Text>
+            </Pressable>
+          </View>
         )}
-        ListEmptyComponent={
-          !loading ? (
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>
-                {activeTab === 'upcoming' ? 'No upcoming orders' : 'No past orders'}
-              </Text>
-            </View>
-          ) : null
-        }
-      />
-    </View>
+
+        {loading && <LoadingOverlay />}
+
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
+        <FlatList
+          data={orders}
+          keyExtractor={(item) => item.positionId}
+          contentContainerStyle={styles.list}
+          renderItem={({ item }) => (
+            <OrderItem
+              order={item}
+              isCancelling={cancellingId === item.positionId}
+              onCancel={() => handleCancel(item.positionId, item.title)}
+              canCancel={activeTab === 'upcoming' && cancellingId === null}
+            />
+          )}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={styles.center}>
+                <Text style={styles.emptyText}>
+                  {activeTab === 'upcoming' ? 'No upcoming orders' : 'No past orders'}
+                </Text>
+              </View>
+            ) : null
+          }
+        />
+      </View>
+    </DesktopContentWrapper>
   );
 }
 

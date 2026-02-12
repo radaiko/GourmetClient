@@ -14,10 +14,12 @@ import { useAuthStore } from '../../src-rn/store/authStore';
 import { useMenuStore, OrderProgress } from '../../src-rn/store/menuStore';
 import { MenuCard } from '../../src-rn/components/MenuCard';
 import { DayNavigator } from '../../src-rn/components/DayNavigator';
+import { DateListPanel } from '../../src-rn/components/DateListPanel';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
 import { GourmetMenuItem, GourmetMenuCategory } from '../../src-rn/types/menu';
 import { formatGourmetDate, localDateKey } from '../../src-rn/utils/dateUtils';
 import { useTheme } from '../../src-rn/theme/useTheme';
+import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { Colors } from '../../src-rn/theme/colors';
 import { tintedBanner, buttonPrimary, fab as fabStyle } from '../../src-rn/theme/platformStyles';
 
@@ -38,6 +40,7 @@ const CATEGORY_ORDER = [
 export default function MenusScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isWideLayout, panelWidth } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const navigation = useNavigation();
@@ -122,16 +125,8 @@ export default function MenusScreen() {
     );
   }
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {dates.length > 0 && (
-        <DayNavigator
-          dates={dates}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-        />
-      )}
-
+  const menuContent = (
+    <>
       {refreshing && !orderProgress && (
         <View style={styles.refreshBanner}>
           <ActivityIndicator size="small" color={colors.primary} />
@@ -159,7 +154,7 @@ export default function MenusScreen() {
       <FlatList
         data={grouped}
         keyExtractor={(group) => group.category}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={isWideLayout ? styles.listDesktop : styles.list}
         renderItem={({ item: group }) => (
           <View style={styles.categoryGroup}>
             {group.category !== GourmetMenuCategory.SoupAndSalad && (
@@ -183,6 +178,48 @@ export default function MenusScreen() {
           ) : null
         }
       />
+    </>
+  );
+
+  if (isWideLayout) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.desktopRow}>
+          {dates.length > 0 && (
+            <DateListPanel
+              dates={dates}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+              width={panelWidth}
+            />
+          )}
+          <View style={styles.desktopMain}>
+            {menuContent}
+          </View>
+        </View>
+
+        {pendingCount > 0 && !orderProgress && (
+          <Pressable style={styles.fabDesktop} onPress={submitOrders}>
+            <Text style={styles.fabText}>
+              Order ({pendingCount})
+            </Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {dates.length > 0 && (
+        <DayNavigator
+          dates={dates}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+        />
+      )}
+
+      {menuContent}
 
       {pendingCount > 0 && !orderProgress && (
         <Pressable style={styles.fab} onPress={submitOrders}>
@@ -211,6 +248,17 @@ const createStyles = (c: Colors) =>
     list: {
       padding: 16,
       paddingBottom: 100,
+    },
+    listDesktop: {
+      padding: 16,
+      paddingBottom: 40,
+    },
+    desktopRow: {
+      flex: 1,
+      flexDirection: 'row',
+    },
+    desktopMain: {
+      flex: 1,
     },
     categoryGroup: {
       marginBottom: 16,
@@ -280,6 +328,14 @@ const createStyles = (c: Colors) =>
     fab: {
       position: 'absolute',
       bottom: Platform.OS === 'android' ? 24 : 80,
+      right: 24,
+      paddingHorizontal: 24,
+      paddingVertical: 14,
+      ...fabStyle(c),
+    },
+    fabDesktop: {
+      position: 'absolute',
+      bottom: 24,
       right: 24,
       paddingHorizontal: 24,
       paddingVertical: 14,

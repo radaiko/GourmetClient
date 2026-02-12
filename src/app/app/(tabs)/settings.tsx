@@ -16,6 +16,7 @@ import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
 import { isDesktop } from '../../src-rn/utils/platform';
 import { checkForDesktopUpdates } from '../../src-rn/utils/desktopUpdater';
 import { useTheme } from '../../src-rn/theme/useTheme';
+import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { useThemeStore, ThemePreference } from '../../src-rn/store/themeStore';
 import { Colors } from '../../src-rn/theme/colors';
 import {
@@ -25,6 +26,7 @@ import {
   buttonDanger,
   tintedBanner,
   bannerSurface,
+  cardSurface,
 } from '../../src-rn/theme/platformStyles';
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
@@ -36,6 +38,7 @@ const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isWideLayout } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const themePreference = useThemeStore((s) => s.preference);
@@ -158,10 +161,8 @@ export default function SettingsScreen() {
     }
   };
 
-  return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    <ScrollView style={[styles.container, { paddingTop: insets.top }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      {/* Gourmet Credentials */}
+  const gourmetCard = (
+    <View style={isWideLayout ? styles.desktopCard : undefined}>
       <Text style={styles.sectionTitle}>Gourmet Credentials</Text>
 
       <View style={styles.inputGroup}>
@@ -239,9 +240,12 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       )}
+    </View>
+  );
 
-      {/* Ventopay Credentials */}
-      <View style={styles.divider} />
+  const ventopayCard = (
+    <View style={isWideLayout ? styles.desktopCard : undefined}>
+      {!isWideLayout && <View style={styles.divider} />}
       <Text style={styles.sectionTitle}>Ventopay Credentials</Text>
       <Text style={styles.sectionSubtitle}>For vending machines and POS billing</Text>
 
@@ -316,46 +320,73 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       )}
+    </View>
+  );
 
-      {/* Appearance */}
-      <View style={styles.appearanceSection}>
-        <Text style={styles.sectionTitle}>Appearance</Text>
-        <View style={styles.themeRow}>
-          {THEME_OPTIONS.map((opt) => (
-            <Pressable
-              key={opt.value}
-              style={[
-                styles.themeOption,
-                themePreference === opt.value && styles.themeOptionActive,
-              ]}
-              onPress={() => setThemePreference(opt.value)}
-            >
-              <Text
-                style={[
-                  styles.themeOptionText,
-                  themePreference === opt.value && styles.themeOptionTextActive,
-                ]}
-              >
-                {opt.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      {isDesktop() && (
-        <>
-          <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Updates</Text>
+  const appearanceCard = (
+    <View style={isWideLayout ? styles.desktopCard : styles.appearanceSection}>
+      {!isWideLayout && <View style={styles.divider} />}
+      <Text style={styles.sectionTitle}>Appearance</Text>
+      <View style={styles.themeRow}>
+        {THEME_OPTIONS.map((opt) => (
           <Pressable
-            style={[styles.button, styles.buttonSecondary]}
-            onPress={handleCheckForUpdates}
-            disabled={checkingUpdates}
+            key={opt.value}
+            style={[
+              styles.themeOption,
+              themePreference === opt.value && styles.themeOptionActive,
+            ]}
+            onPress={() => setThemePreference(opt.value)}
           >
-            <Text style={styles.buttonSecondaryText}>
-              {checkingUpdates ? 'Checking...' : 'Check for Updates'}
+            <Text
+              style={[
+                styles.themeOptionText,
+                themePreference === opt.value && styles.themeOptionTextActive,
+              ]}
+            >
+              {opt.label}
             </Text>
           </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+
+  const updatesCard = isDesktop() ? (
+    <View style={isWideLayout ? styles.desktopCard : undefined}>
+      {!isWideLayout && <View style={styles.divider} />}
+      <Text style={styles.sectionTitle}>Updates</Text>
+      <Pressable
+        style={[styles.button, styles.buttonSecondary]}
+        onPress={handleCheckForUpdates}
+        disabled={checkingUpdates}
+      >
+        <Text style={styles.buttonSecondaryText}>
+          {checkingUpdates ? 'Checking...' : 'Check for Updates'}
+        </Text>
+      </Pressable>
+    </View>
+  ) : null;
+
+  return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <ScrollView style={[styles.container, { paddingTop: insets.top }]} contentContainerStyle={isWideLayout ? styles.contentDesktop : styles.content} keyboardShouldPersistTaps="handled">
+      {isWideLayout ? (
+        <>
+          <View style={styles.desktopRow}>
+            {gourmetCard}
+            {ventopayCard}
+          </View>
+          <View style={styles.desktopRow}>
+            {appearanceCard}
+            {updatesCard}
+          </View>
+        </>
+      ) : (
+        <>
+          {gourmetCard}
+          {ventopayCard}
+          {appearanceCard}
+          {updatesCard}
         </>
       )}
     </ScrollView>
@@ -372,6 +403,23 @@ const createStyles = (c: Colors) =>
     content: {
       padding: 20,
       paddingBottom: 100,
+    },
+    contentDesktop: {
+      padding: 24,
+      paddingBottom: 40,
+      maxWidth: 900,
+      alignSelf: 'center' as const,
+      width: '100%',
+    },
+    desktopRow: {
+      flexDirection: 'row' as const,
+      gap: 20,
+      marginBottom: 20,
+    },
+    desktopCard: {
+      flex: 1,
+      padding: 20,
+      ...cardSurface(c),
     },
     sectionTitle: {
       fontSize: 22,

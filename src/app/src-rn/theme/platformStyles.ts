@@ -226,6 +226,28 @@ export function circleButton(c: Colors): ViewStyle {
   };
 }
 
+/** Desktop sidebar surface — glass bg, right border, right shadow */
+export function sidebarSurface(c: Colors): ViewStyle {
+  return {
+    backgroundColor: c.glassSurface,
+    borderRightWidth: 0.5,
+    borderRightColor: c.glassShadowEdge,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+  };
+}
+
+/** Desktop side-panel surface — glass bg, right border */
+export function panelSurface(c: Colors): ViewStyle {
+  return {
+    backgroundColor: c.glassSurface,
+    borderRightWidth: 0.5,
+    borderRightColor: c.glassShadowEdge,
+  };
+}
+
 /** Floating action button */
 export function fab(c: Colors): ViewStyle {
   if (isAndroid) {

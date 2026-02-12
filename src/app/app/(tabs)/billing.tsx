@@ -14,7 +14,9 @@ import { useAuthStore } from '../../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../../src-rn/store/ventopayAuthStore';
 import { useBillingStore, BillingSource } from '../../src-rn/store/billingStore';
 import { BillCard, BillingEntry } from '../../src-rn/components/BillCard';
+import { BillingFiltersPanel } from '../../src-rn/components/BillingFiltersPanel';
 import { useTheme } from '../../src-rn/theme/useTheme';
+import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { Colors } from '../../src-rn/theme/colors';
 import { bannerSurface, tintedBanner } from '../../src-rn/theme/platformStyles';
 
@@ -31,6 +33,7 @@ function formatCurrency(value: number): string {
 export default function BillingScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isWideLayout, panelWidth } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { status: gourmetAuthStatus } = useAuthStore();
@@ -123,6 +126,62 @@ export default function BillingScreen() {
   }
 
   const hasData = entries.length > 0;
+
+  const billListContent = (
+    <>
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
+      {loading && !hasData && (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
+
+      {hasData && (
+        <FlatList
+          data={entries}
+          keyExtractor={(item) =>
+            item.source === 'gourmet'
+              ? `g-${item.data.billNr}`
+              : `v-${item.data.id}`
+          }
+          contentContainerStyle={isWideLayout ? styles.listDesktop : styles.list}
+          renderItem={({ item }) => <BillCard entry={item} />}
+        />
+      )}
+
+      {!loading && !hasData && (
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>No billing data for this month</Text>
+        </View>
+      )}
+    </>
+  );
+
+  if (isWideLayout) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.desktopRow}>
+          <BillingFiltersPanel
+            width={panelWidth}
+            monthOptions={monthOptions}
+            selectedMonthIndex={selectedMonthIndex}
+            onSelectMonth={selectMonth}
+            sourceFilter={sourceFilter}
+            onSetSourceFilter={setSourceFilter}
+            totals={totals}
+          />
+          <View style={styles.desktopMain}>
+            {billListContent}
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -311,6 +370,17 @@ const createStyles = (c: Colors) =>
     list: {
       padding: 16,
       paddingBottom: 100,
+    },
+    listDesktop: {
+      padding: 16,
+      paddingBottom: 40,
+    },
+    desktopRow: {
+      flex: 1,
+      flexDirection: 'row',
+    },
+    desktopMain: {
+      flex: 1,
     },
     emptyText: {
       fontSize: 16,
