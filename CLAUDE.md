@@ -282,6 +282,28 @@ SUPPE & SALAT        # Literal match
 
 ---
 
+## Testing
+
+### Credentials
+
+Login credentials for both Gourmet and Ventopay are stored in `src/app/.env` (gitignored). These are used by the recorder script and can also be used for manual testing on simulators/emulators. See `src/app/.env.example` for the required format.
+
+### Running Tests
+
+```bash
+cd src/app
+npm test                   # Run all 178 tests
+npm run test:watch         # Watch mode
+npm run test:coverage      # With coverage report
+npm run record-fixtures    # Re-record HTML fixtures from live sites (requires .env)
+```
+
+### Test Architecture
+
+Tests use a record & replay strategy with sanitized HTML fixtures. The test suite covers parsers, HTTP clients, API orchestration, stores, and utilities across 13 test files.
+
+---
+
 ## Build & Run
 
 ```bash
