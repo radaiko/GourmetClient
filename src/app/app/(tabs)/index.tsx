@@ -44,7 +44,7 @@ export default function MenusScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const navigation = useNavigation();
-  const { status: authStatus, loginWithSaved } = useAuthStore();
+  const { status: authStatus } = useAuthStore();
   const {
     items,
     loading,
@@ -62,12 +62,6 @@ export default function MenusScreen() {
     getMenusForDate,
     getPendingCount,
   } = useMenuStore();
-
-  useEffect(() => {
-    if (authStatus === 'idle') {
-      loginWithSaved();
-    }
-  }, [authStatus, loginWithSaved]);
 
   const triggerRefresh = useCallback(() => {
     const auth = useAuthStore.getState().status;
