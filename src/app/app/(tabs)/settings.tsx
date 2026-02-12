@@ -19,6 +19,7 @@ import { useTheme } from '../../src-rn/theme/useTheme';
 import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { useDialog } from '../../src-rn/components/DialogProvider';
 import { useThemeStore, ThemePreference } from '../../src-rn/store/themeStore';
+import { useAnalyticsId } from '../../src-rn/hooks/useAnalyticsId';
 import { Colors } from '../../src-rn/theme/colors';
 import {
   inputField,
@@ -72,6 +73,9 @@ export default function SettingsScreen() {
   const [vUsername, setVUsername] = useState('');
   const [vPassword, setVPassword] = useState('');
   const [vSaving, setVSaving] = useState(false);
+
+  // Analytics
+  const analyticsId = useAnalyticsId();
 
   // Desktop update state
   const pendingVersion = useUpdateStore((s) => s.pendingVersion);
@@ -263,14 +267,26 @@ export default function SettingsScreen() {
   );
 
   const privacyCard = (
-    <Pressable
-      onPress={() => alert(
-        'Privacy',
-        'This app collects anonymous usage analytics, error reports, and session recordings to improve the user experience. All data is processed and stored in the EU via PostHog. No personal content (passwords, menu choices, or billing data) is tracked. Text inputs are automatically masked in session recordings.'
+    <View style={styles.privacyRow}>
+      <Pressable
+        onPress={() => alert(
+          'Privacy',
+          'This app collects anonymous usage analytics, error reports, and session recordings to improve the user experience. All data is processed and stored in the EU via PostHog. No personal content (passwords, menu choices, or billing data) is tracked. Text inputs are automatically masked in session recordings.'
+        )}
+      >
+        <Text style={styles.privacyLink}>Privacy</Text>
+      </Pressable>
+      {analyticsId && (
+        <Pressable
+          onPress={() => alert(
+            'Analytics-ID',
+            `Deine anonyme Analytics-ID:\n\n${analyticsId}\n\nGib diese ID an, wenn du die Löschung deiner Analysedaten beantragen möchtest.`
+          )}
+        >
+          <Text style={styles.privacyLink}>Analytics-ID</Text>
+        </Pressable>
       )}
-    >
-      <Text style={styles.privacyLink}>Privacy</Text>
-    </Pressable>
+    </View>
   );
 
   const updatesCard = isDesktop() && pendingVersion ? (
@@ -456,10 +472,15 @@ const createStyles = (c: Colors) =>
       color: c.textTertiary,
       marginTop: isCompactDesktop ? 6 : 8,
     },
+    privacyRow: {
+      flexDirection: 'row' as const,
+      justifyContent: 'center' as const,
+      gap: 24,
+    },
     privacyLink: {
       fontSize: isCompactDesktop ? 12 : 14,
       color: c.textTertiary,
-      textAlign: 'center',
+      textAlign: 'center' as const,
       paddingVertical: 16,
     },
   });
