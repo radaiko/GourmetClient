@@ -5,6 +5,11 @@
  * On native (iOS/Android), the no-op tauriHttp.ts is used instead.
  *
  * Bypasses the webview's CORS/CSP restrictions without touching the scraping layer.
+ *
+ * IMPORTANT: The patch runs at module load time (not via a function call) so that
+ * axios.create is patched BEFORE any Zustand stores import and create their
+ * Axios instances.  _layout.tsx imports this module before the store modules,
+ * guaranteeing correct ordering.
  */
 import axios from 'axios';
 import type { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
@@ -123,19 +128,18 @@ async function tauriAdapter(config: InternalAxiosRequestConfig): Promise<AxiosRe
   };
 }
 
-/**
- * Call once at app startup. Patches `axios.create` so all Axios instances
- * created afterwards automatically use the Tauri HTTP proxy on desktop.
- * No-op on browser web (non-Tauri) and never bundled on native.
- */
-export function installTauriHttpProxy(): void {
-  if (!isDesktop()) return;
-
+// Patch axios.create at module load time so all Axios instances (including those
+// created by Zustand stores during their module evaluation) use the Tauri adapter.
+// No-op on browser web (non-Tauri) and never bundled on native.
+if (isDesktop()) {
   const originalCreate = axios.create.bind(axios);
   axios.create = function patchedCreate(config?: any) {
     return originalCreate({ ...config, adapter: tauriAdapter });
   };
 }
+
+/** @deprecated Patch now runs automatically at module load. Kept for back-compat. */
+export function installTauriHttpProxy(): void {}
 
 /** Reset the Rust HTTP client (clears cookies). Call on logout. */
 export async function resetTauriHttp(): Promise<void> {

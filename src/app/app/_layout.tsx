@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { installTauriHttpProxy } from '../src-rn/utils/tauriHttp';
+// IMPORTANT: tauriHttp must be imported BEFORE any store modules.
+// The module patches axios.create at load time so Zustand stores get
+// Tauri-aware Axios instances when they call axios.create() during init.
+import '../src-rn/utils/tauriHttp';
 import { useAuthStore } from '../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../src-rn/store/ventopayAuthStore';
-
-// Patch Axios to route HTTP through Rust on desktop (no-op on native/browser)
-installTauriHttpProxy();
 
 export default function RootLayout() {
   const gourmetLoginWithSaved = useAuthStore((s) => s.loginWithSaved);
