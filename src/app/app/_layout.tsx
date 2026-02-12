@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { PostHogProvider } from 'posthog-react-native';
 // IMPORTANT: tauriHttp must be imported BEFORE any store modules.
 // The module patches axios.create at load time so Zustand stores get
 // Tauri-aware Axios instances when they call axios.create() during init.
@@ -11,6 +10,7 @@ import { useAuthStore } from '../src-rn/store/authStore';
 import { useVentopayAuthStore } from '../src-rn/store/ventopayAuthStore';
 import { useTheme } from '../src-rn/theme/useTheme';
 import { DialogProvider } from '../src-rn/components/DialogProvider';
+import { AnalyticsProvider } from '../src-rn/components/AnalyticsProvider';
 
 function AppContent() {
   const gourmetLoginWithSaved = useAuthStore((s) => s.loginWithSaved);
@@ -44,30 +44,8 @@ export default function RootLayout() {
   }
 
   return (
-    <PostHogProvider
-      apiKey="phc_F2Bzuz5BQGxVxsj73fl0REhelkw6DP99YbrDsrVnIHo"
-      options={{
-        host: 'https://eu.i.posthog.com',
-        captureNativeAppLifecycleEvents: true,
-        enableSessionReplay: true,
-        sessionReplayConfig: {
-          maskAllTextInputs: true,
-          maskAllImages: false,
-        },
-        errorTracking: {
-          autocapture: {
-            uncaughtExceptions: true,
-            unhandledRejections: true,
-          },
-        },
-      }}
-      autocapture={{
-        captureTouches: true,
-        captureScreens: true,
-        captureLifecycleEvents: true,
-      }}
-    >
+    <AnalyticsProvider>
       <AppContent />
-    </PostHogProvider>
+    </AnalyticsProvider>
   );
 }

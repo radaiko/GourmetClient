@@ -350,13 +350,14 @@ export default function SettingsScreen() {
   );
 
   const privacyCard = (
-    <View style={isWideLayout ? styles.desktopCard : undefined}>
-      {!isWideLayout && <View style={styles.divider} />}
-      <Text style={styles.sectionTitle}>Privacy</Text>
-      <Text style={styles.privacyText}>
-        This app collects anonymous usage analytics, error reports, and session recordings to improve the user experience. All data is processed and stored in the EU via PostHog. No personal content (passwords, menu choices, or billing data) is tracked. Text inputs are automatically masked in session recordings.
-      </Text>
-    </View>
+    <Pressable
+      onPress={() => alert(
+        'Privacy',
+        'This app collects anonymous usage analytics, error reports, and session recordings to improve the user experience. All data is processed and stored in the EU via PostHog. No personal content (passwords, menu choices, or billing data) is tracked. Text inputs are automatically masked in session recordings.'
+      )}
+    >
+      <Text style={styles.privacyLink}>Privacy</Text>
+    </Pressable>
   );
 
   const updatesCard = isDesktop() ? (
@@ -405,9 +406,9 @@ export default function SettingsScreen() {
           </View>
           <View style={styles.desktopRow}>
             {appearanceCard}
-            {updatesCard ?? privacyCard}
+            {updatesCard}
           </View>
-          {updatesCard && privacyCard}
+          {privacyCard}
         </>
       ) : (
         <>
@@ -582,9 +583,10 @@ const createStyles = (c: Colors) =>
       color: c.textTertiary,
       marginTop: isCompactDesktop ? 6 : 8,
     },
-    privacyText: {
+    privacyLink: {
       fontSize: isCompactDesktop ? 12 : 14,
-      color: c.textSecondary,
-      lineHeight: isCompactDesktop ? 18 : 22,
+      color: c.textTertiary,
+      textAlign: 'center',
+      paddingVertical: 16,
     },
   });
