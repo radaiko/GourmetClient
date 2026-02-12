@@ -1,6 +1,6 @@
 # GourmetClient
 
-Expo React Native app (mobile + desktop via Tauri) that scrapes two external websites for company cafeteria menu and billing data.
+Cross-platform app (mobile + desktop) for company cafeteria menu ordering and billing. Scrapes two external websites (Gourmet and Ventopay) for menu data, order management, and expense tracking. Mobile via Expo React Native, desktop via Tauri v2.
 
 ## README Requirements
 
@@ -66,7 +66,7 @@ analysis/                         # Playwright findings document
 - Expo Router (file-based navigation with tabs)
 - Zustand (state management)
 - Cheerio (HTML parsing)
-- Axios + tough-cookie (HTTP client with cookie jar)
+- Axios (HTTP client; Gourmet uses native cookie handling via `withCredentials`, Ventopay uses manual cookie management via interceptors)
 - expo-secure-store (credential storage on native), localStorage (web/desktop)
 - Tauri v2 (desktop wrapper with webview)
 - Velopack (auto-updates via GitHub Releases)
@@ -261,9 +261,9 @@ SUPPE & SALAT        # Literal match
 
 ## Session & Cookie Management
 
-- **tough-cookie** with **axios-cookiejar-support** for automatic cookie persistence
-- Each client (`gourmetClient.ts`, `ventopayClient.ts`) maintains its own cookie jar
-- Cookies persist across all requests within a session
+- **Gourmet client**: Uses `withCredentials: true` so the platform's native HTTP stack (NSURLSession on iOS) handles cookies automatically
+- **Ventopay client**: Manual cookie management via axios interceptors (captures `Set-Cookie` headers, injects `Cookie` headers) because `withCredentials` would conflict with the manual approach
+- Each client maintains its own session state; cookies persist across all requests within a session
 
 ---
 
