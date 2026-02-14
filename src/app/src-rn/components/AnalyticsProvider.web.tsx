@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from 'react';
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
+import Constants from 'expo-constants';
 
 const POSTHOG_KEY = 'phc_F2Bzuz5BQGxVxsj73fl0REhelkw6DP99YbrDsrVnIHo';
 const POSTHOG_HOST = 'https://eu.i.posthog.com';
@@ -17,6 +18,10 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
         maskTextSelector: '*',
       },
       persistence: 'localStorage',
+    });
+
+    posthog.register({
+      $app_version: Constants.expoConfig?.version,
     });
   }, []);
 
