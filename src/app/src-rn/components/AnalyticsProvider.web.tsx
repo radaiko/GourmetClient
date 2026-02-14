@@ -20,8 +20,13 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
       persistence: 'localStorage',
     });
 
+    const appearance = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+
     posthog.register({
       $app_version: Constants.expoConfig?.version,
+      $appearance: appearance,
     });
   }, []);
 

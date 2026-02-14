@@ -1,8 +1,9 @@
 import { ReactNode, useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import * as Network from 'expo-network';
 
 const POSTHOG_KEY = 'phc_F2Bzuz5BQGxVxsj73fl0REhelkw6DP99YbrDsrVnIHo';
 const POSTHOG_HOST = 'https://eu.i.posthog.com';
@@ -31,6 +32,13 @@ function RegisterSuperProperties() {
       $app_version: Constants.expoConfig?.version,
       $app_build: appBuild,
       $device_model: Device.modelName,
+      $appearance: Appearance.getColorScheme() ?? 'unknown',
+    });
+
+    Network.getNetworkStateAsync().then((state) => {
+      posthog.register({
+        $network_type: state.type?.toLowerCase() ?? 'unknown',
+      });
     });
   }, [posthog]);
 
