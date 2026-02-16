@@ -104,9 +104,14 @@ export default function SettingsScreen() {
     }
     setGSaving(true);
     await gourmetSaveCredentials(gUsername, gPassword);
-    await gourmetLogin(gUsername, gPassword);
+    const success = await gourmetLogin(gUsername, gPassword);
     setGSaving(false);
-    alert('Gespeichert', 'Kantine-Zugangsdaten sicher gespeichert');
+    if (success) {
+      alert('Gespeichert', 'Kantine-Zugangsdaten sicher gespeichert');
+    } else {
+      const error = useAuthStore.getState().error;
+      alert('Login fehlgeschlagen', error || 'Anmeldung nicht möglich. Bitte Zugangsdaten prüfen.');
+    }
   };
 
   const handleGourmetLogout = async () => {
@@ -121,9 +126,14 @@ export default function SettingsScreen() {
     }
     setVSaving(true);
     await ventopaySaveCredentials(vUsername, vPassword);
-    await ventopayLogin(vUsername, vPassword);
+    const success = await ventopayLogin(vUsername, vPassword);
     setVSaving(false);
-    alert('Gespeichert', 'Automaten-Zugangsdaten sicher gespeichert');
+    if (success) {
+      alert('Gespeichert', 'Automaten-Zugangsdaten sicher gespeichert');
+    } else {
+      const error = useVentopayAuthStore.getState().error;
+      alert('Login fehlgeschlagen', error || 'Anmeldung nicht möglich. Bitte Zugangsdaten prüfen.');
+    }
   };
 
   const handleVentopayLogout = async () => {
