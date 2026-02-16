@@ -343,3 +343,4 @@ healthchecksdb
 .DS_Store
 .claude/
 .ship-history
+google-play-key.json

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "SnackPilot",
-    "slug": "SnackPilot",
+    "slug": "GourmetApp",
     "scheme": "snackpilot",
     "version": "1.2.10",
     "orientation": "portrait",
@@ -45,6 +45,7 @@
       "eas": {
         "projectId": "efb12eb3-0729-4ea2-a3db-8026d95db7d3"
       }
-    }
+    },
+    "owner": "radaiko"
   }
 }
