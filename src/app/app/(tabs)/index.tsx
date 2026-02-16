@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useNavigation } from 'expo-router';
@@ -181,6 +184,82 @@ export default function MenusScreen() {
     [pendingOrders]
   );
 
+  // ── Swipe-between-days gesture ──
+  const { width: screenWidth } = useWindowDimensions();
+  const translateX = useRef(new Animated.Value(0)).current;
+  const currentIndex = dates.findIndex(
+    (d) => d.toDateString() === selectedDate.toDateString()
+  );
+  // Use refs so PanResponder callbacks always see latest values
+  const currentIndexRef = useRef(currentIndex);
+  currentIndexRef.current = currentIndex;
+  const datesRef = useRef(dates);
+  datesRef.current = dates;
+
+  const SWIPE_THRESHOLD = 50;
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gs) =>
+          Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 10,
+        onPanResponderMove: (_, gs) => {
+          const idx = currentIndexRef.current;
+          const len = datesRef.current.length;
+          let dx = gs.dx;
+          // Rubber-band resistance at edges
+          if ((idx <= 0 && dx > 0) || (idx >= len - 1 && dx < 0)) {
+            dx *= 0.3;
+          }
+          translateX.setValue(dx);
+        },
+        onPanResponderRelease: (_, gs) => {
+          const idx = currentIndexRef.current;
+          const d = datesRef.current;
+          if (gs.dx > SWIPE_THRESHOLD && idx > 0) {
+            // Swipe right → previous day
+            Animated.timing(translateX, {
+              toValue: screenWidth,
+              duration: 180,
+              useNativeDriver: true,
+            }).start(() => {
+              setSelectedDate(d[idx - 1]);
+              translateX.setValue(-screenWidth);
+              Animated.spring(translateX, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 65,
+                friction: 11,
+              }).start();
+            });
+          } else if (gs.dx < -SWIPE_THRESHOLD && idx < d.length - 1) {
+            // Swipe left → next day
+            Animated.timing(translateX, {
+              toValue: -screenWidth,
+              duration: 180,
+              useNativeDriver: true,
+            }).start(() => {
+              setSelectedDate(d[idx + 1]);
+              translateX.setValue(screenWidth);
+              Animated.spring(translateX, {
+                toValue: 0,
+                useNativeDriver: true,
+                tension: 65,
+                friction: 11,
+              }).start();
+            });
+          } else {
+            // Below threshold — snap back
+            Animated.spring(translateX, {
+              toValue: 0,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }),
+    [translateX, screenWidth, setSelectedDate]
+  );
+
   if (authStatus === 'idle' || authStatus === 'loading') {
     return (
       <View style={styles.center}>
@@ -300,7 +379,12 @@ export default function MenusScreen() {
         />
       )}
 
-      {menuContent}
+      <Animated.View
+        {...panResponder.panHandlers}
+        style={[styles.swipeContainer, { transform: [{ translateX }] }]}
+      >
+        {menuContent}
+      </Animated.View>
 
       {pendingCount > 0 && !orderProgress && (
         <Pressable style={styles.fab} onPress={submitOrders}>
@@ -318,6 +402,9 @@ const createStyles = (c: Colors) =>
     container: {
       flex: 1,
       backgroundColor: c.background,
+    },
+    swipeContainer: {
+      flex: 1,
     },
     center: {
       flex: 1,
