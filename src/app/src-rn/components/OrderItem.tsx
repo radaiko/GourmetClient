@@ -8,12 +8,13 @@ import { cardSurface } from '../theme/platformStyles';
 
 interface OrderItemProps {
   order: GourmetOrderedMenu;
+  menuDescription?: string;
   isCancelling: boolean;
   onCancel: () => void;
   canCancel: boolean;
 }
 
-export function OrderItem({ order, isCancelling, onCancel, canCancel }: OrderItemProps) {
+export function OrderItem({ order, menuDescription, isCancelling, onCancel, canCancel }: OrderItemProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
@@ -23,7 +24,7 @@ export function OrderItem({ order, isCancelling, onCancel, canCancel }: OrderIte
         <Text style={styles.date}>{formatDisplayDate(order.date)}</Text>
         <Text style={styles.categoryLabel}>{order.title}</Text>
         <Text style={styles.title} numberOfLines={2}>
-          {order.subtitle || order.title}
+          {menuDescription || order.subtitle || order.title}
         </Text>
       </View>
       <View style={styles.right}>

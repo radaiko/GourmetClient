@@ -10,6 +10,8 @@ import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useOrderStore } from '../../src-rn/store/orderStore';
+import { useMenuStore } from '../../src-rn/store/menuStore';
+import { isSameDay } from '../../src-rn/utils/dateUtils';
 import { useFlatStyle, isCompactDesktop } from '../../src-rn/utils/platform';
 import { OrderItem } from '../../src-rn/components/OrderItem';
 import { LoadingOverlay } from '../../src-rn/components/LoadingOverlay';
@@ -44,19 +46,34 @@ export default function OrdersScreen() {
   } = useOrderStore();
 
   const [activeTab, setActiveTab] = useState<Tab>('upcoming');
+  const { items: menuItems, fetchMenus } = useMenuStore();
 
   useFocusEffect(
     useCallback(() => {
       if (authStatus === 'authenticated') {
         fetchOrders();
+        // Ensure menus are loaded so we can show full descriptions
+        fetchMenus();
       }
-    }, [authStatus, fetchOrders])
+    }, [authStatus, fetchOrders, fetchMenus])
   );
 
   const upcoming = getUpcomingOrders();
   const past = getPastOrders();
   const orders = activeTab === 'upcoming' ? upcoming : past;
   const unconfirmedCount = getUnconfirmedCount();
+
+  // Build lookup: "dateStr|category" → subtitle from menu items
+  const menuDescriptions = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of menuItems) {
+      if (item.subtitle) {
+        const key = `${item.day.toDateString()}|${item.title}`;
+        map.set(key, item.subtitle);
+      }
+    }
+    return map;
+  }, [menuItems]);
 
   const handleCancel = async (positionId: string, title: string) => {
     const confirmed = await confirm(
@@ -108,6 +125,7 @@ export default function OrdersScreen() {
               renderItem={({ item }) => (
                 <OrderItem
                   order={item}
+                  menuDescription={menuDescriptions.get(`${item.date.toDateString()}|${item.title}`)}
                   isCancelling={cancellingId === item.positionId}
                   onCancel={() => handleCancel(item.positionId, item.title)}
                   canCancel={activeTab === 'upcoming' && cancellingId === null}
@@ -181,6 +199,7 @@ export default function OrdersScreen() {
           renderItem={({ item }) => (
             <OrderItem
               order={item}
+              menuDescription={menuDescriptions.get(`${item.date.toDateString()}|${item.title}`)}
               isCancelling={cancellingId === item.positionId}
               onCancel={() => handleCancel(item.positionId, item.title)}
               canCancel={activeTab === 'upcoming' && cancellingId === null}
