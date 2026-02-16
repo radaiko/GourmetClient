@@ -1,6 +1,6 @@
-# GourmetClient
+# SnackPilot
 
-Cross-platform app for company cafeteria menu ordering and billing. Scrapes two external websites (Gourmet and Ventopay) to view menus, place orders, and track expenses.
+Cross-platform app for company cafeteria menu ordering and billing. Connects to the Kantine and Automaten systems to view menus, place orders, and track expenses.
 
 Built with Expo React Native (mobile) and Tauri v2 (desktop).
 

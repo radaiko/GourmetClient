@@ -8,7 +8,7 @@
  *   cp .env.example .env   # fill in real credentials (in project root)
  *   npm run record-fixtures
  *
- * Requires: GOURMET_USERNAME, GOURMET_PASSWORD, VENTOPAY_USERNAME, VENTOPAY_PASSWORD in .env
+ * Requires: KANTINE_USERNAME, KANTINE_PASSWORD, AUTOMATEN_USERNAME, AUTOMATEN_PASSWORD in .env
  */
 
 import * as path from 'path';
@@ -61,7 +61,7 @@ function requireEnv(name: string): string {
 // ---------------------------------------------------------------------------
 
 async function recordGourmet() {
-  console.log('\n=== Recording Gourmet fixtures ===\n');
+  console.log('\n=== Recording Kantine fixtures ===\n');
 
   const jar = new CookieJar();
   const client = wrapper(axios.create({
@@ -70,8 +70,8 @@ async function recordGourmet() {
     validateStatus: (s) => s >= 200 && s < 400,
   }));
 
-  const username = requireEnv('GOURMET_USERNAME');
-  const password = requireEnv('GOURMET_PASSWORD');
+  const username = requireEnv('KANTINE_USERNAME');
+  const password = requireEnv('KANTINE_PASSWORD');
 
   // Step 1: GET login page
   console.log('1. GET /start/ (login page)');
@@ -181,7 +181,7 @@ async function recordGourmet() {
   );
   saveFixture('gourmet/billing-last-month.json', billingLastRes.data);
 
-  console.log('\nGourmet recording complete.');
+  console.log('\nKantine recording complete.');
 
   // Return values needed for sanitization
   return { username, shopModelId, eaterId, staffGroupId, displayName };
@@ -192,7 +192,7 @@ async function recordGourmet() {
 // ---------------------------------------------------------------------------
 
 async function recordVentopay() {
-  console.log('\n=== Recording Ventopay fixtures ===\n');
+  console.log('\n=== Recording Automaten fixtures ===\n');
 
   const jar = new CookieJar();
   const client = wrapper(axios.create({
@@ -201,8 +201,8 @@ async function recordVentopay() {
     validateStatus: (s) => s >= 200 && s < 400,
   }));
 
-  const username = requireEnv('VENTOPAY_USERNAME');
-  const password = requireEnv('VENTOPAY_PASSWORD');
+  const username = requireEnv('AUTOMATEN_USERNAME');
+  const password = requireEnv('AUTOMATEN_PASSWORD');
 
   // Step 1: GET login page
   console.log('1. GET Login.aspx');
@@ -278,7 +278,7 @@ async function recordVentopay() {
   });
   saveFixture('ventopay/transactions-empty.html', emptyRes.data);
 
-  console.log('\nVentopay recording complete.');
+  console.log('\nAutomaten recording complete.');
 
   return { username };
 }
@@ -362,13 +362,13 @@ async function main() {
   try {
     gourmetInfo = await recordGourmet();
   } catch (err) {
-    console.error('\nGourmet recording FAILED:', err instanceof Error ? err.message : err);
+    console.error('\nKantine recording FAILED:', err instanceof Error ? err.message : err);
   }
 
   try {
     ventopayInfo = await recordVentopay();
   } catch (err) {
-    console.error('\nVentopay recording FAILED:', err instanceof Error ? err.message : err);
+    console.error('\nAutomaten recording FAILED:', err instanceof Error ? err.message : err);
   }
 
   // Sanitize whatever we managed to record

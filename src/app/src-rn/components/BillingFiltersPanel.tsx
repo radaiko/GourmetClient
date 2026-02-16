@@ -18,8 +18,8 @@ interface Totals {
 
 const SOURCE_FILTERS: { value: BillingSource; label: string }[] = [
   { value: 'all', label: 'Alle' },
-  { value: 'gourmet', label: 'Gourmet' },
-  { value: 'ventopay', label: 'Ventopay' },
+  { value: 'gourmet', label: 'Kantine' },
+  { value: 'ventopay', label: 'Automaten' },
 ];
 
 function formatCurrency(value: number): string {

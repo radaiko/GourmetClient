@@ -36,7 +36,7 @@ eas build --platform ios --auto-submit
 ### 3. Release from TestFlight
 
 1. Go to [App Store Connect](https://appstoreconnect.apple.com)
-2. Select **Gourmet Client**
+2. Select **SnackPilot**
 3. Wait for the build to finish processing (~15-30 min)
 4. Test via TestFlight on your device
 5. When ready: create a new version, select the build, click **Submit for Review**

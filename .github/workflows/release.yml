@@ -15,13 +15,13 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            main-exe: gourmet-client
+            main-exe: snack-pilot
             artifact: macos
           - os: windows-latest
-            main-exe: gourmet-client.exe
+            main-exe: snack-pilot.exe
             artifact: windows
           - os: ubuntu-latest
-            main-exe: gourmet-client
+            main-exe: snack-pilot
             artifact: linux
     runs-on: ${{ matrix.os }}
     steps:
@@ -95,8 +95,8 @@ jobs:
           PACK_DIR="$(mktemp -d)"
           cp "src/desktop/src-tauri/target/release/${{ matrix.main-exe }}" "$PACK_DIR/"
           vpk pack \
-            --packId "dev.radaiko.gourmetclient" \
-            --packTitle "Gourmet Client" \
+            --packId "dev.radaiko.snackpilot" \
+            --packTitle "SnackPilot" \
             --packVersion "$VERSION" \
             --packDir "$PACK_DIR" \
             --mainExe "${{ matrix.main-exe }}" \

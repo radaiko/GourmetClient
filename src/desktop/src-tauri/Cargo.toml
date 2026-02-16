@@ -1,11 +1,11 @@
 [package]
-name = "gourmet-client"
+name = "snack-pilot"
 version = "1.2.10"
-description = "Desktop client for Gourmet cafeteria system"
+description = "Desktop client for company cafeteria menu ordering and billing"
 edition = "2021"
 
 [lib]
-name = "gourmet_client_lib"
+name = "snack_pilot_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]

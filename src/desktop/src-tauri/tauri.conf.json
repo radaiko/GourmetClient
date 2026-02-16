@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-config-schema/schema.json",
-  "productName": "Gourmet Client",
+  "productName": "SnackPilot",
   "version": "1.2.10",
   "identifier": "dev.radaiko.gourmetclient",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Gourmet Client",
+        "title": "SnackPilot",
         "width": 1000,
         "height": 700,
         "resizable": true,

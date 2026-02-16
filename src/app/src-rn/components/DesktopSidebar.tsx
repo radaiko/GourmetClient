@@ -33,7 +33,7 @@ export function DesktopSidebar({ state, navigation }: BottomTabBarProps) {
   return (
     <View style={styles.wrapper}>
       <View style={styles.header}>
-        {!sidebarCollapsed && <Text style={styles.appName}>Gourmet Client</Text>}
+        {!sidebarCollapsed && <Text style={styles.appName}>SnackPilot</Text>}
         <Pressable onPress={toggleSidebar} style={styles.collapseButton}>
           <Ionicons
             name={sidebarCollapsed ? 'chevron-forward' : 'chevron-back'}

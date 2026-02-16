@@ -1,6 +1,6 @@
-# GourmetClient
+# SnackPilot
 
-Cross-platform app (mobile + desktop) for company cafeteria menu ordering and billing. Scrapes two external websites (Gourmet and Ventopay) for menu data, order management, and expense tracking. Mobile via Expo React Native, desktop via Tauri v2.
+Cross-platform app (mobile + desktop) for company cafeteria menu ordering and billing. Scrapes two external websites (Kantine and Automaten) for menu data, order management, and expense tracking. Mobile via Expo React Native, desktop via Tauri v2.
 
 ## README Requirements
 
@@ -74,13 +74,13 @@ analysis/                         # Playwright findings document
 
 ## Two External Data Sources
 
-### 1. Gourmet System (Menu & Orders)
+### 1. Kantine System (Menu & Orders)
 
 - **Base URL**: `https://alaclickneu.gourmet.at/`
 - **Client**: `src-rn/api/gourmetClient.ts`
 - **Purpose**: Menu data, order management, billing
 
-### 2. Ventopay System (Billing)
+### 2. Automaten System (Billing)
 
 - **Base URL**: `https://my.ventopay.com/mocca.website/`
 - **Client**: `src-rn/api/ventopayClient.ts`
@@ -357,12 +357,12 @@ The desktop app uses Velopack for auto-updates with GitHub Releases:
 3. Package with Velopack:
    ```bash
    vpk pack \
-     --packId "dev.radaiko.gourmetclient" \
+     --packId "dev.radaiko.snackpilot" \
      --packVersion "1.1.0" \
      --packDir "./src-tauri/target/release/bundle" \
-     --mainExe "gourmet-client"
+     --mainExe "snack-pilot"
    ```
-4. Upload to GitHub Releases: `vpk upload github --repoUrl "https://github.com/radaiko/GourmetClient"`
+4. Upload to GitHub Releases: `vpk upload github --repoUrl "https://github.com/radaiko/SnackPilot"`
 5. Velopack generates delta updates automatically from previous releases
 
 **Prerequisites**: .NET SDK 8+ (for `vpk` CLI), Rust toolchain (for Tauri build)

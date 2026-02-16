@@ -106,7 +106,7 @@ export default function SettingsScreen() {
     await gourmetSaveCredentials(gUsername, gPassword);
     await gourmetLogin(gUsername, gPassword);
     setGSaving(false);
-    alert('Gespeichert', 'Gourmet-Zugangsdaten sicher gespeichert');
+    alert('Gespeichert', 'Kantine-Zugangsdaten sicher gespeichert');
   };
 
   const handleGourmetLogout = async () => {
@@ -123,7 +123,7 @@ export default function SettingsScreen() {
     await ventopaySaveCredentials(vUsername, vPassword);
     await ventopayLogin(vUsername, vPassword);
     setVSaving(false);
-    alert('Gespeichert', 'Ventopay-Zugangsdaten sicher gespeichert');
+    alert('Gespeichert', 'Automaten-Zugangsdaten sicher gespeichert');
   };
 
   const handleVentopayLogout = async () => {
@@ -132,7 +132,7 @@ export default function SettingsScreen() {
 
   const gourmetCard = (
     <View style={isWideLayout ? styles.desktopCard : undefined}>
-      <Text style={styles.sectionTitle}>Gourmet-Zugangsdaten</Text>
+      <Text style={styles.sectionTitle}>Kantine-Zugangsdaten</Text>
 
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Benutzername</Text>
@@ -187,7 +187,7 @@ export default function SettingsScreen() {
   const ventopayCard = (
     <View style={isWideLayout ? styles.desktopCard : undefined}>
       {!isWideLayout && <View style={styles.divider} />}
-      <Text style={styles.sectionTitle}>Ventopay-Zugangsdaten</Text>
+      <Text style={styles.sectionTitle}>Automaten-Zugangsdaten</Text>
       <Text style={styles.sectionSubtitle}>Für Automaten und Kassenabrechnungen</Text>
 
       <View style={styles.inputGroup}>
@@ -229,7 +229,7 @@ export default function SettingsScreen() {
 
       {ventopayStatus === 'authenticated' && (
         <View style={styles.sessionSection}>
-          <Text style={styles.sessionInfo}>Ventopay-Sitzung aktiv</Text>
+          <Text style={styles.sessionInfo}>Automaten-Sitzung aktiv</Text>
           <Pressable style={styles.buttonDanger} onPress={handleVentopayLogout}>
             <Text style={styles.buttonDangerText}>Abmelden</Text>
           </Pressable>

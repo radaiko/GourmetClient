@@ -207,7 +207,7 @@ async fn http_reset(state: tauri::State<'_, HttpProxy>) -> Result<(), String> {
     Ok(())
 }
 
-const UPDATE_URL: &str = "https://github.com/radaiko/GourmetClient/releases/latest/download";
+const UPDATE_URL: &str = "https://github.com/radaiko/SnackPilot/releases/latest/download";
 
 #[tauri::command]
 async fn check_for_updates() -> Result<Option<String>, String> {

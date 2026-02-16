@@ -129,5 +129,5 @@ ok "Pushed v${VERSION} — CI will build: ${PLATFORM_LABEL}"
 echo "$VERSION" >> "$HISTORY_FILE"
 
 echo ""
-echo "  Monitor: https://github.com/radaiko/GourmetClient/actions"
+echo "  Monitor: https://github.com/radaiko/SnackPilot/actions"
 echo ""
