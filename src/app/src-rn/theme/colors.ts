@@ -60,48 +60,48 @@ export interface Colors {
 }
 
 export const LightColors: Colors = {
-  background: '#f5f5f5',
+  background: '#F5F5F7',
   surface: '#fff',
-  surfaceVariant: '#f5f5f5',
+  surfaceVariant: '#EDEDF0',
 
-  textPrimary: '#333',
-  textSecondary: '#666',
-  textTertiary: '#999',
+  textPrimary: '#1D1D1F',
+  textSecondary: '#6E6E73',
+  textTertiary: '#AEAEB2',
 
-  primary: '#4a90d9',
-  primaryDark: '#3a7bc8',
-  primarySurface: '#e3f0ff',
+  primary: '#D4501A',
+  primaryDark: '#B84415',
+  primarySurface: '#FFF1EB',
 
-  border: '#e0e0e0',
-  borderInput: '#ddd',
+  border: '#D6D6D8',
+  borderInput: '#CECED0',
 
-  success: '#4caf50',
-  successSurface: '#e8f5e9',
-  successText: '#2e7d32',
-  successBorder: '#4caf50',
+  success: '#34A853',
+  successSurface: '#EBF5EE',
+  successText: '#1E7E34',
+  successBorder: '#34A853',
 
-  warning: '#ff9800',
-  warningSurface: '#fff3e0',
-  warningText: '#e65100',
-  warningBorder: '#ffcc80',
+  warning: '#F5A623',
+  warningSurface: '#FEF6E6',
+  warningText: '#B57A10',
+  warningBorder: '#F5C564',
 
-  error: '#f44336',
-  errorSurface: '#ffebee',
-  errorText: '#c62828',
+  error: '#D93025',
+  errorSurface: '#FCE8E6',
+  errorText: '#B3261E',
 
   overlay: 'rgba(255,255,255,0.7)',
 
   // Glass (opaque on Android since BlurView is not used)
-  glassSurface: useFlatStyle ? '#ffffff' : 'rgba(255,255,255,0.68)',
-  glassSurfaceVariant: useFlatStyle ? '#f5f5f5' : 'rgba(245,245,245,0.60)',
+  glassSurface: useFlatStyle ? '#ffffff' : 'rgba(255,255,255,0.70)',
+  glassSurfaceVariant: useFlatStyle ? '#EDEDF0' : 'rgba(237,237,240,0.60)',
 
-  glassHighlight: useFlatStyle ? '#e0e0e0' : 'rgba(255,255,255,0.80)',
-  glassShadowEdge: useFlatStyle ? '#e0e0e0' : 'rgba(0,0,0,0.08)',
+  glassHighlight: useFlatStyle ? '#D6D6D8' : 'rgba(255,255,255,0.85)',
+  glassShadowEdge: useFlatStyle ? '#D6D6D8' : 'rgba(0,0,0,0.06)',
 
-  glassSuccess: useFlatStyle ? '#e8f5e9' : 'rgba(76,175,80,0.15)',
-  glassWarning: useFlatStyle ? '#fff3e0' : 'rgba(255,152,0,0.15)',
-  glassError: useFlatStyle ? '#ffebee' : 'rgba(244,67,54,0.15)',
-  glassPrimary: useFlatStyle ? '#e3f0ff' : 'rgba(74,144,217,0.12)',
+  glassSuccess: useFlatStyle ? '#EBF5EE' : 'rgba(52,168,83,0.10)',
+  glassWarning: useFlatStyle ? '#FEF6E6' : 'rgba(245,166,35,0.10)',
+  glassError: useFlatStyle ? '#FCE8E6' : 'rgba(217,48,37,0.10)',
+  glassPrimary: useFlatStyle ? '#FFF1EB' : 'rgba(212,80,26,0.08)',
 
   blurTint: 'systemThinMaterial',
   blurIntensity: 40,
@@ -110,48 +110,48 @@ export const LightColors: Colors = {
 };
 
 export const DarkColors: Colors = {
-  background: '#121212',
-  surface: '#1e1e1e',
-  surfaceVariant: '#2c2c2c',
+  background: '#000000',
+  surface: '#1C1C1E',
+  surfaceVariant: '#2C2C2E',
 
-  textPrimary: '#e0e0e0',
-  textSecondary: '#aaa',
-  textTertiary: '#777',
+  textPrimary: '#F5F5F7',
+  textSecondary: '#A1A1A6',
+  textTertiary: '#636366',
 
-  primary: '#6aadf0',
-  primaryDark: '#4a90d9',
-  primarySurface: '#1a2d3d',
+  primary: '#FF6B35',
+  primaryDark: '#D4501A',
+  primarySurface: '#2A1A10',
 
-  border: '#333',
-  borderInput: '#444',
+  border: '#38383A',
+  borderInput: '#48484A',
 
-  success: '#4caf50',
-  successSurface: '#1b3a1b',
-  successText: '#66bb6a',
-  successBorder: '#2e7d32',
+  success: '#34A853',
+  successSurface: '#142018',
+  successText: '#5DB075',
+  successBorder: '#2E7D32',
 
-  warning: '#ff9800',
-  warningSurface: '#3d2e10',
-  warningText: '#ffb74d',
-  warningBorder: '#f57c00',
+  warning: '#F5A623',
+  warningSurface: '#2A1E0E',
+  warningText: '#F5C564',
+  warningBorder: '#B57A10',
 
-  error: '#f44336',
-  errorSurface: '#3d1a1a',
-  errorText: '#ef5350',
+  error: '#EA4335',
+  errorSurface: '#2A1614',
+  errorText: '#F28B82',
 
   overlay: 'rgba(0,0,0,0.7)',
 
   // Glass (opaque on Android since BlurView is not used)
-  glassSurface: useFlatStyle ? '#1e1e1e' : 'rgba(30,30,30,0.70)',
-  glassSurfaceVariant: useFlatStyle ? '#2c2c2c' : 'rgba(44,44,44,0.60)',
+  glassSurface: useFlatStyle ? '#1C1C1E' : 'rgba(28,28,30,0.72)',
+  glassSurfaceVariant: useFlatStyle ? '#2C2C2E' : 'rgba(44,44,46,0.60)',
 
-  glassHighlight: useFlatStyle ? '#333' : 'rgba(255,255,255,0.15)',
-  glassShadowEdge: useFlatStyle ? '#111' : 'rgba(0,0,0,0.40)',
+  glassHighlight: useFlatStyle ? '#38383A' : 'rgba(255,255,255,0.12)',
+  glassShadowEdge: useFlatStyle ? '#000000' : 'rgba(0,0,0,0.40)',
 
-  glassSuccess: useFlatStyle ? '#1b3a1b' : 'rgba(76,175,80,0.20)',
-  glassWarning: useFlatStyle ? '#3d2e10' : 'rgba(255,152,0,0.20)',
-  glassError: useFlatStyle ? '#3d1a1a' : 'rgba(244,67,54,0.20)',
-  glassPrimary: useFlatStyle ? '#1a2d3d' : 'rgba(106,173,240,0.18)',
+  glassSuccess: useFlatStyle ? '#142018' : 'rgba(52,168,83,0.16)',
+  glassWarning: useFlatStyle ? '#2A1E0E' : 'rgba(245,166,35,0.16)',
+  glassError: useFlatStyle ? '#2A1614' : 'rgba(234,67,53,0.16)',
+  glassPrimary: useFlatStyle ? '#2A1A10' : 'rgba(255,107,53,0.14)',
 
   blurTint: 'systemThickMaterialDark',
   blurIntensity: 50,

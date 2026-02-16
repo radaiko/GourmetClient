@@ -47,7 +47,7 @@ function GourmetBillCard({ bill, colors }: { bill: GourmetBill; colors: Colors }
         </View>
         <View style={styles.headerRight}>
           <View style={[styles.badge, styles.badgeGourmet]}>
-            <Text style={styles.badgeText}>Gourmet</Text>
+            <Text style={styles.badgeText}>Kantine</Text>
           </View>
           <Text style={styles.billing}>{formatCurrency(bill.billing)}</Text>
         </View>
@@ -80,7 +80,7 @@ function VentopayBillCard({ transaction, colors }: { transaction: VentopayTransa
         </View>
         <View style={styles.headerRight}>
           <View style={[styles.badge, styles.badgeVentopay]}>
-            <Text style={styles.badgeText}>Ventopay</Text>
+            <Text style={styles.badgeText}>Automaten</Text>
           </View>
           <Text style={styles.billing}>{formatCurrency(transaction.amount)}</Text>
         </View>

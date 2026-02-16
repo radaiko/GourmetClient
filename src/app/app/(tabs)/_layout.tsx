@@ -75,6 +75,9 @@ function GlassTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                   size={26}
                   color={isFocused ? colors.primary : colors.textTertiary}
                 />
+                {isFocused && (
+                  <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
+                )}
               </Pressable>
             );
           })}
@@ -114,6 +117,13 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  activeDot: {
+    position: 'absolute',
+    bottom: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
 });
 
