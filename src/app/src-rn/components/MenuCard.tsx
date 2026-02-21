@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetMenuItem } from '../types/menu';
 import { isOrderingCutoff } from '../utils/dateUtils';
 import { useFlatStyle, isCompactDesktop } from '../utils/platform';
@@ -10,30 +10,39 @@ interface MenuCardProps {
   item: GourmetMenuItem;
   isSelected: boolean;
   ordered: boolean;
+  isPendingCancel: boolean;
   onToggle: () => void;
-  onCancel?: () => void;
-  isCancelling?: boolean;
 }
 
-export function MenuCard({ item, isSelected, ordered, onToggle, onCancel, isCancelling }: MenuCardProps) {
+export function MenuCard({ item, isSelected, ordered, isPendingCancel, onToggle }: MenuCardProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const cutoff = isOrderingCutoff(item.day);
-  const canOrder = item.available && !ordered && !cutoff;
+
+  // Ordered items are tappable (to mark for cancellation)
+  // Available items are tappable (to select for ordering)
+  // Unavailable/cutoff items that are NOT ordered are disabled
+  const canInteract = ordered || (item.available && !cutoff);
 
   return (
     <Pressable
       style={[
         styles.card,
-        ordered && styles.cardOrdered,
+        ordered && !isPendingCancel && styles.cardOrdered,
+        isPendingCancel && styles.cardPendingCancel,
         isSelected && styles.cardSelected,
         (!item.available || cutoff) && !ordered && styles.cardDisabled,
       ]}
-      onPress={canOrder ? onToggle : undefined}
-      disabled={!canOrder}
+      onPress={canInteract ? onToggle : undefined}
+      disabled={!canInteract}
     >
       <View style={styles.badgeRow}>
-        {ordered && (
+        {isPendingCancel && (
+          <View style={styles.pendingCancelBadge}>
+            <Text style={styles.pendingCancelBadgeText}>Wird storniert</Text>
+          </View>
+        )}
+        {ordered && !isPendingCancel && (
           <View style={styles.orderedBadge}>
             <Text style={styles.orderedBadgeText}>Bestellt</Text>
           </View>
@@ -50,32 +59,35 @@ export function MenuCard({ item, isSelected, ordered, onToggle, onCancel, isCanc
         )}
       </View>
       <Text
-        style={[styles.subtitle, isSelected && styles.textSelected]}
+        style={[
+          styles.subtitle,
+          isSelected && styles.textSelected,
+          isPendingCancel && styles.textPendingCancel,
+        ]}
         numberOfLines={4}
       >
         {item.subtitle}
       </Text>
       <View style={styles.bottomRow}>
-        <Text style={[styles.allergens, isSelected && styles.textSelected]} numberOfLines={1}>
+        <Text
+          style={[
+            styles.allergens,
+            isSelected && styles.textSelected,
+            isPendingCancel && styles.textPendingCancel,
+          ]}
+          numberOfLines={1}
+        >
           {item.allergens.length > 0 ? `Allergene: ${item.allergens.join(', ')}` : ''}
         </Text>
-        {onCancel ? (
-          <Pressable
-            style={styles.cancelButton}
-            onPress={onCancel}
-            disabled={isCancelling}
-          >
-            {isCancelling ? (
-              <ActivityIndicator size="small" color={colors.error} />
-            ) : (
-              <Text style={styles.cancelText}>Stornieren</Text>
-            )}
-          </Pressable>
-        ) : (
-          <Text style={[styles.price, isSelected && styles.textSelected]}>
-            {item.price}
-          </Text>
-        )}
+        <Text
+          style={[
+            styles.price,
+            isSelected && styles.textSelected,
+            isPendingCancel && styles.textPendingCancel,
+          ]}
+        >
+          {item.price}
+        </Text>
       </View>
       {isSelected && (
         <View style={styles.checkmark}>
@@ -107,6 +119,23 @@ const createStyles = (c: Colors) =>
     },
     cardDisabled: {
       opacity: 0.5,
+    },
+    cardPendingCancel: {
+      opacity: 0.55,
+      borderStyle: 'dashed' as const,
+    },
+    pendingCancelBadge: {
+      backgroundColor: useFlatStyle ? c.warningSurface : c.glassWarning,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+      borderWidth: useFlatStyle ? 1 : 0.5,
+      borderColor: c.warning,
+    },
+    pendingCancelBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: c.warningText,
     },
     badgeRow: {
       flexDirection: 'row',
@@ -173,23 +202,14 @@ const createStyles = (c: Colors) =>
     textSelected: {
       color: '#fff',
     },
+    textPendingCancel: {
+      textDecorationLine: 'line-through' as const,
+      color: c.textTertiary,
+    },
     allergens: {
       flex: 1,
       fontSize: 11,
       color: c.textTertiary,
-    },
-    cancelButton: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: c.error,
-      marginLeft: 8,
-    },
-    cancelText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: c.error,
     },
     checkmark: {
       position: 'absolute',
