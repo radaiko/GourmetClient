@@ -13,6 +13,13 @@ jest.mock('../../store/authStore', () => {
     },
   };
 });
+jest.mock('../../store/orderStore', () => ({
+  useOrderStore: {
+    getState: () => ({ fetchOrders: jest.fn().mockResolvedValue(undefined) }),
+    setState: jest.fn(),
+    subscribe: jest.fn(),
+  },
+}));
 
 import { useMenuStore } from '../../store/menuStore';
 import { useAuthStore } from '../../store/authStore';
@@ -172,8 +179,8 @@ describe('menuStore', () => {
       expect(useMenuStore.getState().pendingOrders.size).toBe(2);
 
       const keys = Array.from(useMenuStore.getState().pendingOrders);
-      expect(keys.some((k) => k.includes('menu-001'))).toBe(true);
-      expect(keys.some((k) => k.includes('menu-002'))).toBe(true);
+      expect(keys.some((k) => k.startsWith('menu-001|'))).toBe(true);
+      expect(keys.some((k) => k.startsWith('menu-002|'))).toBe(true);
     });
   });
 
@@ -209,6 +216,7 @@ describe('menuStore', () => {
       useMenuStore.getState().togglePendingOrder('menu-002', date);
 
       await useMenuStore.getState().submitOrders();
+      expect(useMenuStore.getState().error).toBeNull();
 
       expect(mockApi.addToCart).toHaveBeenCalledTimes(1);
       const callArg: { menuId: string; date: Date }[] = mockApi.addToCart.mock.calls[0][0];
