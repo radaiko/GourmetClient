@@ -53,6 +53,7 @@ beforeEach(() => {
     error: null,
     selectedDate: new Date(),
     pendingOrders: new Set(),
+    pendingCancellations: new Set(),
     orderProgress: null,
   });
 });
@@ -181,6 +182,46 @@ describe('menuStore', () => {
       const keys = Array.from(useMenuStore.getState().pendingOrders);
       expect(keys.some((k) => k.startsWith('menu-001|'))).toBe(true);
       expect(keys.some((k) => k.startsWith('menu-002|'))).toBe(true);
+    });
+  });
+
+  describe('pendingCancellations', () => {
+    it('togglePendingOrder on ordered item adds to pendingCancellations', () => {
+      const items = [
+        makeItem({ id: 'menu-001', day: new Date(2026, 1, 10), ordered: true }),
+      ];
+      useMenuStore.setState({ items });
+
+      useMenuStore.getState().togglePendingOrder('menu-001', new Date(2026, 1, 10));
+
+      expect(useMenuStore.getState().pendingCancellations.size).toBe(1);
+      expect(useMenuStore.getState().pendingOrders.size).toBe(0);
+    });
+
+    it('togglePendingOrder on non-ordered item still adds to pendingOrders', () => {
+      const items = [
+        makeItem({ id: 'menu-001', day: new Date(2026, 1, 10), ordered: false }),
+      ];
+      useMenuStore.setState({ items });
+
+      useMenuStore.getState().togglePendingOrder('menu-001', new Date(2026, 1, 10));
+
+      expect(useMenuStore.getState().pendingOrders.size).toBe(1);
+      expect(useMenuStore.getState().pendingCancellations.size).toBe(0);
+    });
+
+    it('second toggle on ordered item removes from pendingCancellations', () => {
+      const items = [
+        makeItem({ id: 'menu-001', day: new Date(2026, 1, 10), ordered: true }),
+      ];
+      useMenuStore.setState({ items });
+
+      const date = new Date(2026, 1, 10);
+      useMenuStore.getState().togglePendingOrder('menu-001', date);
+      expect(useMenuStore.getState().pendingCancellations.size).toBe(1);
+
+      useMenuStore.getState().togglePendingOrder('menu-001', date);
+      expect(useMenuStore.getState().pendingCancellations.size).toBe(0);
     });
   });
 

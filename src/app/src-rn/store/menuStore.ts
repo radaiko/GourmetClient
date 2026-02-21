@@ -16,6 +16,7 @@ interface MenuState {
   selectedDate: Date;
   pendingOrders: Set<string>; // Set of "menuId|dateStr" keys for items to order
   orderProgress: OrderProgress; // Non-blocking background order step
+  pendingCancellations: Set<string>; // Set of "menuId|dateStr" keys for ordered items to cancel
 
   fetchMenus: (force?: boolean) => Promise<void>;
   refreshAvailability: () => Promise<void>;
@@ -42,6 +43,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   selectedDate: new Date(),
   pendingOrders: new Set(),
   orderProgress: null,
+  pendingCancellations: new Set(),
 
   fetchMenus: async (force = false) => {
     const { lastFetched, loading } = get();
@@ -121,16 +123,31 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   togglePendingOrder: (menuId: string, date: Date) => {
     const key = makePendingKey(menuId, date);
-    const pending = new Set(get().pendingOrders);
-    if (pending.has(key)) {
-      pending.delete(key);
+    const item = get().items.find(
+      (i) => i.id === menuId && localDateKey(i.day) === localDateKey(date)
+    );
+    const isOrdered = item?.ordered ?? false;
+
+    if (isOrdered) {
+      const cancellations = new Set(get().pendingCancellations);
+      if (cancellations.has(key)) {
+        cancellations.delete(key);
+      } else {
+        cancellations.add(key);
+      }
+      set({ pendingCancellations: cancellations });
     } else {
-      pending.add(key);
+      const pending = new Set(get().pendingOrders);
+      if (pending.has(key)) {
+        pending.delete(key);
+      } else {
+        pending.add(key);
+      }
+      set({ pendingOrders: pending });
     }
-    set({ pendingOrders: pending });
   },
 
-  clearPendingOrders: () => set({ pendingOrders: new Set() }),
+  clearPendingOrders: () => set({ pendingOrders: new Set(), pendingCancellations: new Set() }),
 
   submitOrders: async () => {
     const { pendingOrders } = get();
