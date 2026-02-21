@@ -20,7 +20,7 @@ import { useDesktopLayout } from '../../src-rn/hooks/useDesktopLayout';
 import { useDialog } from '../../src-rn/components/DialogProvider';
 import { useThemeStore, ThemePreference } from '../../src-rn/store/themeStore';
 import { useAnalyticsId } from '../../src-rn/hooks/useAnalyticsId';
-import { Colors } from '../../src-rn/theme/colors';
+import { Colors, ACCENT_COLORS, AccentColorId } from '../../src-rn/theme/colors';
 import {
   inputField,
   buttonPrimary,
@@ -44,6 +44,8 @@ export default function SettingsScreen() {
 
   const themePreference = useThemeStore((s) => s.preference);
   const setThemePreference = useThemeStore((s) => s.setPreference);
+  const accentColor = useThemeStore((s) => s.accentColor);
+  const setAccentColor = useThemeStore((s) => s.setAccentColor);
 
   // Gourmet auth
   const {
@@ -248,6 +250,8 @@ export default function SettingsScreen() {
     </View>
   );
 
+  const ACCENT_OPTIONS = Object.entries(ACCENT_COLORS) as [AccentColorId, typeof ACCENT_COLORS[AccentColorId]][];
+
   const appearanceCard = (
     <View style={isWideLayout ? styles.desktopCard : styles.appearanceSection}>
       {!isWideLayout && <View style={styles.divider} />}
@@ -269,6 +273,37 @@ export default function SettingsScreen() {
               ]}
             >
               {opt.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Text style={styles.accentLabel}>Akzentfarbe</Text>
+      <View style={styles.accentRow}>
+        {ACCENT_OPTIONS.map(([id, config]) => (
+          <Pressable
+            key={id}
+            style={styles.accentOption}
+            onPress={() => setAccentColor(id)}
+          >
+            <View
+              style={[
+                styles.accentCircle,
+                { backgroundColor: config.light.primary },
+                accentColor === id && { borderColor: config.light.primary, borderWidth: 3 },
+              ]}
+            >
+              {accentColor === id && (
+                <Text style={styles.accentCheck}>✓</Text>
+              )}
+            </View>
+            <Text
+              style={[
+                styles.accentOptionText,
+                accentColor === id && { color: colors.primary },
+              ]}
+            >
+              {config.label}
             </Text>
           </Pressable>
         ))}
@@ -492,5 +527,40 @@ const createStyles = (c: Colors) =>
       color: c.textTertiary,
       textAlign: 'center' as const,
       paddingVertical: 16,
+    },
+    accentLabel: {
+      fontSize: isCompactDesktop ? 12 : 13,
+      fontWeight: '600',
+      color: c.textSecondary,
+      marginTop: isCompactDesktop ? 14 : 20,
+      marginBottom: isCompactDesktop ? 8 : 12,
+    },
+    accentRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      gap: isCompactDesktop ? 12 : 16,
+    },
+    accentOption: {
+      alignItems: 'center',
+      gap: isCompactDesktop ? 4 : 6,
+    },
+    accentCircle: {
+      width: isCompactDesktop ? 28 : 36,
+      height: isCompactDesktop ? 28 : 36,
+      borderRadius: isCompactDesktop ? 14 : 18,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    accentCheck: {
+      color: '#fff',
+      fontSize: isCompactDesktop ? 13 : 16,
+      fontWeight: '700',
+    },
+    accentOptionText: {
+      fontSize: isCompactDesktop ? 10 : 12,
+      color: c.textTertiary,
+      fontWeight: '500',
     },
   });
