@@ -1,26 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="bg-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bg-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#FFFFFF"/>
       <stop offset="100%" style="stop-color:#F0F0F2"/>
     </linearGradient>
-    <linearGradient id="accent-orange" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#D4501A"/>
-      <stop offset="100%" style="stop-color:#B84415"/>
+    <linearGradient id="accent-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2E7D4F"/>
+      <stop offset="100%" style="stop-color:#236B3F"/>
     </linearGradient>
   </defs>
 
   <!-- Background -->
-  <rect width="1024" height="1024" rx="224" fill="url(#bg-orange)"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg-emerald)"/>
 
   <!-- Subtle plate circle -->
-  <circle cx="512" cy="512" r="320" fill="none" stroke="#D4501A" stroke-opacity="0.08" stroke-width="6"/>
-  <circle cx="512" cy="512" r="260" fill="none" stroke="#D4501A" stroke-opacity="0.05" stroke-width="3"/>
+  <circle cx="512" cy="512" r="320" fill="none" stroke="#2E7D4F" stroke-opacity="0.08" stroke-width="6"/>
+  <circle cx="512" cy="512" r="260" fill="none" stroke="#2E7D4F" stroke-opacity="0.05" stroke-width="3"/>
 
   <!-- Crossed Fork and Knife -->
   <g transform="translate(512, 512) rotate(-30) translate(-512, -512)">
     <!-- Fork -->
-    <g transform="translate(400, 220)" fill="url(#accent-orange)">
+    <g transform="translate(400, 220)" fill="url(#accent-emerald)">
       <rect x="10" y="0" width="14" height="130" rx="7"/>
       <rect x="38" y="0" width="14" height="130" rx="7"/>
       <rect x="66" y="0" width="14" height="130" rx="7"/>
@@ -32,7 +32,7 @@
 
   <g transform="translate(512, 512) rotate(30) translate(-512, -512)">
     <!-- Knife -->
-    <g transform="translate(510, 220)" fill="url(#accent-orange)">
+    <g transform="translate(510, 220)" fill="url(#accent-emerald)">
       <path d="M 20 0 C 20 0, 90 12, 90 70 L 90 155 L 20 155 Z"/>
       <rect x="20" y="145" width="70" height="34" rx="6"/>
       <rect x="36" y="169" width="38" height="420" rx="19"/>
