@@ -176,6 +176,12 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }
     }
 
+    if (cancellationPositionIds.length < pendingCancellations.size) {
+      console.warn(
+        `Could not resolve all cancellations: ${cancellationPositionIds.length}/${pendingCancellations.size}`
+      );
+    }
+
     // --- Resolve new orders ---
     const newOrderItems = Array.from(pendingOrders).map((key) => {
       const [menuId, dateStr] = key.split('|');
@@ -213,12 +219,10 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     });
 
     try {
-      // Step 1: Cancel orders
+      // Step 1: Cancel orders (batched — single edit-mode toggle)
       if (cancellationPositionIds.length > 0) {
         set({ orderProgress: 'cancelling' });
-        for (const positionId of cancellationPositionIds) {
-          await orderStoreState.cancelOrder(positionId);
-        }
+        await api.cancelOrders(cancellationPositionIds);
       }
 
       // Step 2: Add new orders to cart

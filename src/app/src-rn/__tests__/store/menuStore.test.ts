@@ -4,6 +4,7 @@ jest.mock('../../store/authStore', () => {
     getMenus: jest.fn(),
     addToCart: jest.fn(),
     confirmOrders: jest.fn(),
+    cancelOrders: jest.fn().mockResolvedValue(undefined),
   };
   return {
     useAuthStore: {
@@ -320,7 +321,7 @@ describe('menuStore', () => {
 
       await useMenuStore.getState().submitOrders();
 
-      expect(mockCancelOrder).toHaveBeenCalledWith('P1');
+      expect(mockApi.cancelOrders).toHaveBeenCalledWith(['P1']);
       expect(mockApi.addToCart).toHaveBeenCalled();
       expect(mockApi.confirmOrders).toHaveBeenCalled();
     });
@@ -343,7 +344,7 @@ describe('menuStore', () => {
 
       await useMenuStore.getState().submitOrders();
 
-      expect(mockCancelOrder).toHaveBeenCalledWith('P1');
+      expect(mockApi.cancelOrders).toHaveBeenCalledWith(['P1']);
       expect(mockApi.addToCart).not.toHaveBeenCalled();
     });
 
