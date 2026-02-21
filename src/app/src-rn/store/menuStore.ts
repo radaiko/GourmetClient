@@ -183,11 +183,13 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       return { menuId, date: new Date(y, m - 1, d) };
     });
 
-    // Block today's orders after 12:30 Vienna time
-    const blocked = newOrderItems.filter((i) => isOrderingCutoff(i.date));
-    if (blocked.length > 0) {
-      set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
-      return;
+    // Block today's new orders after 12:30 Vienna time (cancellations are always allowed)
+    if (newOrderItems.length > 0) {
+      const blocked = newOrderItems.filter((i) => isOrderingCutoff(i.date));
+      if (blocked.length > 0) {
+        set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
+        return;
+      }
     }
 
     // --- Optimistic UI update ---

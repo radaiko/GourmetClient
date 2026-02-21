@@ -240,6 +240,12 @@ describe('menuStore', () => {
       mockApi.addToCart.mockResolvedValue(undefined);
       mockApi.confirmOrders.mockResolvedValue(undefined);
       mockApi.getMenus.mockResolvedValue([]);
+      // Restore default orderStore mock (tests that override getState must not leak)
+      (require('../../store/orderStore').useOrderStore as any).getState = () => ({
+        fetchOrders: mockFetchOrders,
+        cancelOrder: mockCancelOrder,
+        orders: [],
+      });
     });
 
     it('calls addToCart and confirmOrders', async () => {
