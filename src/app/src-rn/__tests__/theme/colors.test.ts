@@ -19,6 +19,7 @@ describe('ACCENT_COLORS', () => {
       expect(accent.light.primary).toMatch(/^#[0-9A-Fa-f]{6}$/);
       expect(accent.dark.primary).toMatch(/^#[0-9A-Fa-f]{6}$/);
       expect(accent.light.primaryDark).toMatch(/^#[0-9A-Fa-f]{6}$/);
+      expect(accent.dark.primaryDark).toMatch(/^#[0-9A-Fa-f]{6}$/);
       expect(accent.light.primarySurface).toMatch(/^#[0-9A-Fa-f]{6}$/);
       expect(accent.dark.primarySurface).toMatch(/^#[0-9A-Fa-f]{6}$/);
     }

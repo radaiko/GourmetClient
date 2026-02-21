@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFlatStyle, isCompactDesktop } from '../../src-rn/utils/platform';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
@@ -294,7 +295,7 @@ export default function SettingsScreen() {
               ]}
             >
               {accentColor === id && (
-                <Text style={styles.accentCheck}>✓</Text>
+                <Ionicons name="checkmark" size={isCompactDesktop ? 16 : 20} color="#fff" />
               )}
             </View>
             <Text

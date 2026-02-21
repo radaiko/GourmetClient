@@ -1,8 +1,14 @@
+const mockSetAppIcon = jest.fn();
+jest.mock('@g9k/expo-dynamic-app-icon', () => ({
+  setAppIcon: (...args: unknown[]) => mockSetAppIcon(...args),
+}));
+
 import { useThemeStore } from '../../store/themeStore';
 
 // Reset store between tests
 beforeEach(() => {
   useThemeStore.setState({ preference: 'system', accentColor: 'orange' });
+  mockSetAppIcon.mockClear();
 });
 
 describe('themeStore', () => {
@@ -28,5 +34,20 @@ describe('themeStore', () => {
     useThemeStore.getState().setAccentColor('berry');
     expect(useThemeStore.getState().preference).toBe('dark');
     expect(useThemeStore.getState().accentColor).toBe('berry');
+  });
+
+  it('calls setAppIcon(null) when switching to orange (default)', () => {
+    useThemeStore.getState().setAccentColor('emerald');
+    mockSetAppIcon.mockClear();
+    useThemeStore.getState().setAccentColor('orange');
+    expect(mockSetAppIcon).toHaveBeenCalledWith(null);
+  });
+
+  it('calls setAppIcon with accent name for non-orange themes', () => {
+    useThemeStore.getState().setAccentColor('emerald');
+    expect(mockSetAppIcon).toHaveBeenCalledWith('emerald');
+
+    useThemeStore.getState().setAccentColor('berry');
+    expect(mockSetAppIcon).toHaveBeenCalledWith('berry');
   });
 });
