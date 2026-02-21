@@ -333,5 +333,25 @@ describe('menuStore', () => {
 
       expect(useMenuStore.getState().getPendingCount()).toBe(1);
     });
+
+    it('getPendingCount includes both pendingOrders and pendingCancellations', () => {
+      useMenuStore.setState({
+        items: [makeItem()],
+        pendingOrders: new Set(['menu-001|2026-02-10']),
+        pendingCancellations: new Set(['menu-002|2026-02-11']),
+      });
+
+      expect(useMenuStore.getState().getPendingCount()).toBe(2);
+    });
+
+    it('getPendingCancellationCount returns only cancellations count', () => {
+      useMenuStore.setState({
+        items: [makeItem()],
+        pendingOrders: new Set(['menu-001|2026-02-10']),
+        pendingCancellations: new Set(['menu-002|2026-02-11']),
+      });
+
+      expect(useMenuStore.getState().getPendingCancellationCount()).toBe(1);
+    });
   });
 });

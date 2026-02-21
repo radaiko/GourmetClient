@@ -28,6 +28,7 @@ interface MenuState {
   getMenusForDate: (date: Date) => GourmetMenuItem[];
   getDayMenus: () => GourmetDayMenu[];
   getPendingCount: () => number;
+  getPendingCancellationCount: () => number;
 }
 
 function makePendingKey(menuId: string, date: Date): string {
@@ -229,5 +230,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     }));
   },
 
-  getPendingCount: () => get().pendingOrders.size,
+  getPendingCount: () => get().pendingOrders.size + get().pendingCancellations.size,
+
+  getPendingCancellationCount: () => get().pendingCancellations.size,
 }));
