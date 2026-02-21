@@ -112,7 +112,7 @@ export default function MenusScreen() {
     return `Bestellen (${newOrderCount})`;
   }, [pendingCount, cancellationCount, newOrderCount]);
 
-  // Collect ordered categories for the selected date (enables cancel buttons on ordered items)
+  // Collect ordered categories for the selected date (marks items as ordered in the UI)
   const orderedCategories = useMemo(() => {
     const orderedCats = new Set<GourmetMenuCategory>();
     for (const item of menuItems) {
