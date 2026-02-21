@@ -1,9 +1,28 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GourmetMenuItem, GourmetDayMenu } from '../types/menu';
 import { useAuthStore } from './authStore';
 import { useOrderStore } from './orderStore';
 import { MENU_CACHE_VALIDITY_MS } from '../utils/constants';
 import { isSameDay, isOrderingCutoff, localDateKey } from '../utils/dateUtils';
+
+const MENU_CACHE_KEY = 'menus_items';
+
+/** Serialize menu items for AsyncStorage (Date -> ISO string). */
+function serializeMenuItems(items: GourmetMenuItem[]): string {
+  return JSON.stringify(items.map((item) => ({
+    ...item,
+    day: item.day.toISOString(),
+  })));
+}
+
+/** Deserialize menu items from AsyncStorage (ISO string -> Date). */
+function deserializeMenuItems(json: string): GourmetMenuItem[] {
+  return JSON.parse(json).map((item: any) => ({
+    ...item,
+    day: new Date(item.day),
+  }));
+}
 
 export type OrderProgress = 'adding' | 'confirming' | 'cancelling' | 'refreshing' | null;
 
@@ -17,6 +36,7 @@ interface MenuState {
   pendingOrders: Set<string>; // Set of "menuId|dateStr" keys for items to order
   orderProgress: OrderProgress; // Non-blocking background order step
 
+  loadCachedMenus: () => Promise<void>;
   fetchMenus: (force?: boolean) => Promise<void>;
   refreshAvailability: () => Promise<void>;
   setSelectedDate: (date: Date) => void;
@@ -43,6 +63,14 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   pendingOrders: new Set(),
   orderProgress: null,
 
+  loadCachedMenus: async () => {
+    const cached = await AsyncStorage.getItem(MENU_CACHE_KEY);
+    if (cached) {
+      const items = deserializeMenuItems(cached);
+      set({ items });
+    }
+  },
+
   fetchMenus: async (force = false) => {
     const { lastFetched, loading } = get();
     if (loading) return;
@@ -57,6 +85,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       const api = useAuthStore.getState().api;
       const items = await api.getMenus();
       set({ items, lastFetched: Date.now(), loading: false });
+      await AsyncStorage.setItem(MENU_CACHE_KEY, serializeMenuItems(items));
 
       // Auto-select the first available date only if current selection is gone
       const dates = get().getAvailableDates();
@@ -110,6 +139,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       // Keep banner visible for at least 800ms so the user notices it
       await minVisible;
       set({ items: merged, lastFetched: Date.now(), refreshing: false });
+      await AsyncStorage.setItem(MENU_CACHE_KEY, serializeMenuItems(merged));
     } catch {
       await minVisible;
       // Silent fail — cached data remains visible
