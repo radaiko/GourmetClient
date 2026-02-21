@@ -6,6 +6,7 @@ describe('dateUtils', () => {
   let isSameDay: typeof import('../../utils/dateUtils').isSameDay;
   let isOrderingCutoff: typeof import('../../utils/dateUtils').isOrderingCutoff;
   let findNearestDate: typeof import('../../utils/dateUtils').findNearestDate;
+  let isCancellationCutoff: typeof import('../../utils/dateUtils').isCancellationCutoff;
 
   beforeEach(() => {
     jest.resetModules();
@@ -17,6 +18,7 @@ describe('dateUtils', () => {
     isSameDay = mod.isSameDay;
     isOrderingCutoff = mod.isOrderingCutoff;
     findNearestDate = mod.findNearestDate;
+    isCancellationCutoff = mod.isCancellationCutoff;
   });
 
   describe('formatGourmetDate', () => {
@@ -180,6 +182,58 @@ describe('dateUtils', () => {
       const dates = [new Date(2026, 1, 5)];
       const result = findNearestDate(dates, new Date(2026, 1, 10));
       expect(result!.getDate()).toBe(5);
+    });
+  });
+
+  describe('isCancellationCutoff', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('returns false for today before 09:00 Vienna time', () => {
+      // Feb 10 2026, 08:59 Vienna (CET = UTC+1) -> UTC 07:59
+      jest.setSystemTime(new Date('2026-02-10T07:59:00Z'));
+      const orderDate = new Date(2026, 1, 10);
+      expect(isCancellationCutoff(orderDate)).toBe(false);
+    });
+
+    it('returns true for today at 09:00 Vienna time', () => {
+      // Feb 10 2026, 09:00 Vienna (CET = UTC+1) -> UTC 08:00
+      jest.setSystemTime(new Date('2026-02-10T08:00:00Z'));
+      const orderDate = new Date(2026, 1, 10);
+      expect(isCancellationCutoff(orderDate)).toBe(true);
+    });
+
+    it('returns true for today after 09:00 Vienna time', () => {
+      // Feb 10 2026, 10:00 Vienna (CET = UTC+1) -> UTC 09:00
+      jest.setSystemTime(new Date('2026-02-10T09:00:00Z'));
+      const orderDate = new Date(2026, 1, 10);
+      expect(isCancellationCutoff(orderDate)).toBe(true);
+    });
+
+    it('returns false for a future date', () => {
+      // Current time: Feb 10 2026, 14:00 Vienna -> UTC 13:00
+      jest.setSystemTime(new Date('2026-02-10T13:00:00Z'));
+      const futureDate = new Date(2026, 1, 11); // Feb 11
+      expect(isCancellationCutoff(futureDate)).toBe(false);
+    });
+
+    it('returns true for today at 09:00 Vienna time (CEST / summer)', () => {
+      // Aug 10 2026, 09:00 Vienna CEST (UTC+2) -> UTC 07:00
+      jest.setSystemTime(new Date('2026-08-10T07:00:00Z'));
+      const orderDate = new Date(2026, 7, 10); // Aug 10
+      expect(isCancellationCutoff(orderDate)).toBe(true);
+    });
+
+    it('returns false for today before 09:00 Vienna time (CEST / summer)', () => {
+      // Aug 10 2026, 08:59 Vienna CEST (UTC+2) -> UTC 06:59
+      jest.setSystemTime(new Date('2026-08-10T06:59:00Z'));
+      const orderDate = new Date(2026, 7, 10);
+      expect(isCancellationCutoff(orderDate)).toBe(false);
     });
   });
 });

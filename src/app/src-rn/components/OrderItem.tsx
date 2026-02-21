@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetOrderedMenu } from '../types/order';
-import { formatDisplayDate } from '../utils/dateUtils';
+import { formatDisplayDate, isCancellationCutoff } from '../utils/dateUtils';
 import { useFlatStyle, isCompactDesktop } from '../utils/platform';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
@@ -17,6 +18,18 @@ interface OrderItemProps {
 export function OrderItem({ order, menuDescription, isCancelling, onCancel, canCancel }: OrderItemProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const [cutoff, setCutoff] = useState(() => isCancellationCutoff(order.date));
+
+  useEffect(() => {
+    if (cutoff) return; // already locked
+    const timer = setInterval(
+      () => setCutoff(isCancellationCutoff(order.date)),
+      30_000, // re-check every 30s
+    );
+    return () => clearInterval(timer);
+  }, [order.date, cutoff]);
+
+  const disabled = cutoff;
 
   return (
     <View style={[styles.container, isCancelling && styles.containerCancelling]}>
@@ -42,11 +55,12 @@ export function OrderItem({ order, menuDescription, isCancelling, onCancel, canC
             <ActivityIndicator size="small" color={colors.error} style={styles.cancelButton} />
           ) : (
             <Pressable
-              style={styles.cancelButton}
+              style={[styles.cancelButton, cutoff && styles.cancelButtonDisabled]}
               onPress={onCancel}
               hitSlop={8}
+              disabled={disabled}
             >
-              <Text style={styles.cancelX}>&#x2715;</Text>
+              <Text style={[styles.cancelX, cutoff && styles.cancelXDisabled]}>&#x2715;</Text>
             </Pressable>
           )
         )}
@@ -123,9 +137,17 @@ const createStyles = (c: Colors) =>
       borderWidth: useFlatStyle ? 1 : 0.5,
       borderColor: c.error,
     },
+    cancelButtonDisabled: {
+      opacity: 0.4,
+      borderColor: c.textTertiary,
+      backgroundColor: useFlatStyle ? c.surfaceVariant : c.glassSurfaceVariant,
+    },
     cancelX: {
       fontSize: 16,
       fontWeight: '700',
       color: c.error,
+    },
+    cancelXDisabled: {
+      color: c.textTertiary,
     },
   });
