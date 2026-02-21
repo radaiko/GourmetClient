@@ -15,14 +15,14 @@ interface MenuState {
   error: string | null;
   selectedDate: Date;
   pendingOrders: Set<string>; // Set of "menuId|dateStr" keys for items to order
-  orderProgress: OrderProgress; // Non-blocking background order step
   pendingCancellations: Set<string>; // Set of "menuId|dateStr" keys for ordered items to cancel
+  orderProgress: OrderProgress; // Non-blocking background order step
 
   fetchMenus: (force?: boolean) => Promise<void>;
   refreshAvailability: () => Promise<void>;
   setSelectedDate: (date: Date) => void;
   togglePendingOrder: (menuId: string, date: Date) => void;
-  clearPendingOrders: () => void;
+  clearPendingChanges: () => void;
   submitOrders: () => Promise<void>;
   getAvailableDates: () => Date[];
   getMenusForDate: (date: Date) => GourmetMenuItem[];
@@ -43,8 +43,8 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   error: null,
   selectedDate: new Date(),
   pendingOrders: new Set(),
-  orderProgress: null,
   pendingCancellations: new Set(),
+  orderProgress: null,
 
   fetchMenus: async (force = false) => {
     const { lastFetched, loading } = get();
@@ -148,7 +148,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     }
   },
 
-  clearPendingOrders: () => set({ pendingOrders: new Set(), pendingCancellations: new Set() }),
+  clearPendingChanges: () => set({ pendingOrders: new Set(), pendingCancellations: new Set() }),
 
   submitOrders: async () => {
     const { pendingOrders, pendingCancellations } = get();
@@ -189,13 +189,12 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       return { menuId, date: new Date(y, m - 1, d) };
     });
 
-    // Block today's new orders after 12:30 Vienna time (cancellations are always allowed)
-    if (newOrderItems.length > 0) {
-      const blocked = newOrderItems.filter((i) => isOrderingCutoff(i.date));
-      if (blocked.length > 0) {
-        set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
-        return;
-      }
+    // Filter out cutoff-blocked new orders (cancellations are always allowed)
+    const allowedNewOrders = newOrderItems.filter((i) => !isOrderingCutoff(i.date));
+    const hasCutoffBlocked = allowedNewOrders.length < newOrderItems.length;
+    if (hasCutoffBlocked && allowedNewOrders.length === 0 && cancellationPositionIds.length === 0) {
+      set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
+      return;
     }
 
     // --- Optimistic UI update ---
@@ -215,7 +214,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       items: optimisticItems,
       pendingOrders: new Set(),
       pendingCancellations: new Set(),
-      error: null,
+      error: hasCutoffBlocked ? 'Bestellung für heute geschlossen (Bestellschluss 12:30)' : null,
     });
 
     try {
@@ -226,9 +225,9 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       }
 
       // Step 2: Add new orders to cart
-      if (newOrderItems.length > 0) {
+      if (allowedNewOrders.length > 0) {
         set({ orderProgress: 'adding' });
-        await api.addToCart(newOrderItems);
+        await api.addToCart(allowedNewOrders);
 
         set({ orderProgress: 'confirming' });
         await api.confirmOrders();
@@ -239,7 +238,11 @@ export const useMenuStore = create<MenuState>((set, get) => ({
       await useOrderStore.getState().fetchOrders();
       await get().fetchMenus(true);
 
-      set({ orderProgress: null });
+      set({
+        orderProgress: null,
+        // Restore cutoff warning (fetchMenus clears error)
+        error: hasCutoffBlocked ? 'Bestellung für heute geschlossen (Bestellschluss 12:30)' : null,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Bestellung konnte nicht aufgegeben werden';
       set({ error: message, orderProgress: null });
