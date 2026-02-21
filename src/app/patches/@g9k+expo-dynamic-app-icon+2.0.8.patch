@@ -1,0 +1,101 @@
+diff --git a/node_modules/@g9k/expo-dynamic-app-icon/build/types.d.ts b/node_modules/@g9k/expo-dynamic-app-icon/build/types.d.ts
+index 33743a5..3d88369 100644
+--- a/node_modules/@g9k/expo-dynamic-app-icon/build/types.d.ts
++++ b/node_modules/@g9k/expo-dynamic-app-icon/build/types.d.ts
+@@ -1,4 +1,4 @@
+ export interface DynamicAppIconRegistry {
+-    IconName: string;
++    IconName: "emerald" | "berry" | "golden" | "ocean"
+ }
+ //# sourceMappingURL=types.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/@g9k/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift b/node_modules/@g9k/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift
+index 75fe495..6ada375 100644
+--- a/node_modules/@g9k/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift
++++ b/node_modules/@g9k/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift
+@@ -5,56 +5,43 @@ public class ExpoDynamicAppIconModule: Module {
+ 
+     Name("ExpoDynamicAppIcon")
+ 
+-    Function("setAppIcon") { (name: String?,isInBackground: Bool) -> String in
+-      self.setAppIcon(name, isInBackground)
+-
+-      // Return "DEFAULT" if name is nil or empty
+-      return name ?? "DEFAULT"
++    AsyncFunction("setAppIcon") { (name: String?, isInBackground: Bool, promise: Promise) in
++      guard UIApplication.shared.supportsAlternateIcons else {
++        promise.resolve("NO_SUPPORT")
++        return
++      }
++
++      var iconNameToUse: String? = nil
++      if let name = name, !name.isEmpty {
++        iconNameToUse = "AppIcon-\(name)"
++      }
++
++      self.setIconWithRetry(iconNameToUse, retriesLeft: 5, delay: 0.5, promise: promise)
+     }
+ 
+     Function("getAppIcon") { () -> String in
+-      // Return the current alternate icon name or "DEFAULT" if none is set
+       let iconName = UIApplication.shared.alternateIconName
+       return iconName?.replacingOccurrences(of: "AppIcon-", with: "") ?? "DEFAULT"
+     }
+   }
+ 
+-private func setAppIcon(_ iconName: String?,_ isInBackground: Bool = true) {
+-    if UIApplication.shared.responds(to: #selector(getter: UIApplication.supportsAlternateIcons)) &&
+-        UIApplication.shared.supportsAlternateIcons {
+-
+-       var iconNameToUse: String? = nil  
+-        if let iconName = iconName, !iconName.isEmpty {
+-            iconNameToUse = "AppIcon-\(iconName)"
+-        }
+-
+-        if isInBackground {
+-         
+-          typealias SetAlternateIconName = @convention(c) (NSObject, Selector, NSString?, @escaping (NSError?) -> ()) -> ()
+-          
+-          let selectorString = "_setAlternateIconName:completionHandler:"
+-          let selector = NSSelectorFromString(selectorString)
+-          
+-          if let methodIMP = UIApplication.shared.method(for: selector) {
+-              let method = unsafeBitCast(methodIMP, to: SetAlternateIconName.self)
+-              method(UIApplication.shared, selector, iconNameToUse as NSString?) { error in
+-                  if let error = error {
+-                      print("Failed to set app icon: \(error.localizedDescription)")
+-                  }
+-              }
+-          }
+-        }else{
+-
+-          UIApplication.shared.setAlternateIconName(
+-            iconNameToUse,
+-            completionHandler: { error in
+-              if let error = error {
+-                // Handle error if necessary
+-                print("Failed to set app icon: \(error.localizedDescription)")
+-              }
+-            })
++  private func setIconWithRetry(_ iconName: String?, retriesLeft: Int, delay: Double, promise: Promise) {
++    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
++      UIApplication.shared.setAlternateIconName(iconName) { [weak self] error in
++        if let error = error {
++          let nsError = error as NSError
++          let detail = "domain=\(nsError.domain) code=\(nsError.code) retries=\(retriesLeft)"
++          // Retry on ANY error if we have retries left
++          if retriesLeft > 0 {
++            self?.setIconWithRetry(iconName, retriesLeft: retriesLeft - 1, delay: delay * 2.0, promise: promise)
++          } else {
++            promise.resolve("FAIL:\(error.localizedDescription)|\(detail)")
+           }
++        } else {
++          let current = UIApplication.shared.alternateIconName ?? "DEFAULT"
++          promise.resolve("OK:\(current)")
++        }
++      }
+     }
+-}
+-
++  }
+ }

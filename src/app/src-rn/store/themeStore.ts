@@ -24,7 +24,7 @@ export const useThemeStore = create<ThemeState>()(
         if (Platform.OS !== 'web') {
           try {
             const { setAppIcon } = require('@g9k/expo-dynamic-app-icon');
-            setAppIcon(color === 'orange' ? null : color);
+            setAppIcon(color === 'orange' ? null : color, false);
           } catch {
             // Icon switching unavailable (web/desktop or library not linked)
           }

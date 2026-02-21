@@ -40,14 +40,14 @@ describe('themeStore', () => {
     useThemeStore.getState().setAccentColor('emerald');
     mockSetAppIcon.mockClear();
     useThemeStore.getState().setAccentColor('orange');
-    expect(mockSetAppIcon).toHaveBeenCalledWith(null);
+    expect(mockSetAppIcon).toHaveBeenCalledWith(null, false);
   });
 
   it('calls setAppIcon with accent name for non-orange themes', () => {
     useThemeStore.getState().setAccentColor('emerald');
-    expect(mockSetAppIcon).toHaveBeenCalledWith('emerald');
+    expect(mockSetAppIcon).toHaveBeenCalledWith('emerald', false);
 
     useThemeStore.getState().setAccentColor('berry');
-    expect(mockSetAppIcon).toHaveBeenCalledWith('berry');
+    expect(mockSetAppIcon).toHaveBeenCalledWith('berry', false);
   });
 });
