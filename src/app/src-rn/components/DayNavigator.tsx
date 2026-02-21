@@ -1,6 +1,6 @@
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { AdaptiveBlurView } from './AdaptiveBlurView';
-import { formatDisplayDate } from '../utils/dateUtils';
+import { formatDisplayDate, findNearestDate } from '../utils/dateUtils';
 import { useTheme } from '../theme/useTheme';
 import { Colors } from '../theme/colors';
 import { circleButton } from '../theme/platformStyles';
@@ -30,6 +30,13 @@ export function DayNavigator({ dates, selectedDate, onSelectDate }: DayNavigator
     }
   };
 
+  const goToToday = () => {
+    const nearest = findNearestDate(dates, new Date());
+    if (nearest) {
+      onSelectDate(nearest);
+    }
+  };
+
   const content = (
     <View style={styles.container}>
       <Pressable
@@ -40,14 +47,14 @@ export function DayNavigator({ dates, selectedDate, onSelectDate }: DayNavigator
         <Text style={styles.arrowText}>&#x276E;</Text>
       </Pressable>
 
-      <View style={styles.dateContainer}>
+      <Pressable style={styles.dateContainer} onPress={goToToday}>
         <Text style={styles.dateText}>
           {formatDisplayDate(selectedDate)}
         </Text>
         <Text style={styles.pageText}>
           {currentIndex + 1} / {dates.length}
         </Text>
-      </View>
+      </Pressable>
 
       <Pressable
         onPress={goForward}

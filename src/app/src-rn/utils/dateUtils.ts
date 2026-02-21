@@ -80,3 +80,39 @@ export function isOrderingCutoff(menuDate: Date): boolean {
   const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
   return hour * 60 + minute >= 12 * 60 + 30;
 }
+
+/**
+ * Find the nearest future date (>= target day) in a list.
+ * Falls back to the latest past date if no future dates exist.
+ * Returns null if list is empty.
+ */
+export function findNearestDate(dates: Date[], target: Date): Date | null {
+  if (dates.length === 0) return null;
+
+  const targetStart = new Date(target.getFullYear(), target.getMonth(), target.getDate());
+
+  let nearestFuture: Date | null = null;
+  let futureDiff = Infinity;
+  let latestPast: Date | null = null;
+  let pastDiff = Infinity;
+
+  for (const date of dates) {
+    const dateStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const diff = dateStart.getTime() - targetStart.getTime();
+
+    if (diff >= 0) {
+      if (diff < futureDiff) {
+        futureDiff = diff;
+        nearestFuture = date;
+      }
+    } else {
+      const absDiff = -diff;
+      if (absDiff < pastDiff) {
+        pastDiff = absDiff;
+        latestPast = date;
+      }
+    }
+  }
+
+  return nearestFuture ?? latestPast;
+}

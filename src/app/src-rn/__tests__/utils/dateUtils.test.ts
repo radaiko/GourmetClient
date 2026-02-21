@@ -5,6 +5,7 @@ describe('dateUtils', () => {
   let localDateKey: typeof import('../../utils/dateUtils').localDateKey;
   let isSameDay: typeof import('../../utils/dateUtils').isSameDay;
   let isOrderingCutoff: typeof import('../../utils/dateUtils').isOrderingCutoff;
+  let findNearestDate: typeof import('../../utils/dateUtils').findNearestDate;
 
   beforeEach(() => {
     jest.resetModules();
@@ -15,6 +16,7 @@ describe('dateUtils', () => {
     localDateKey = mod.localDateKey;
     isSameDay = mod.isSameDay;
     isOrderingCutoff = mod.isOrderingCutoff;
+    findNearestDate = mod.findNearestDate;
   });
 
   describe('formatGourmetDate', () => {
@@ -130,6 +132,54 @@ describe('dateUtils', () => {
       jest.setSystemTime(new Date('2026-02-10T13:00:00Z'));
       const futureDate = new Date(2026, 1, 11); // Feb 11
       expect(isOrderingCutoff(futureDate)).toBe(false);
+    });
+  });
+
+  describe('findNearestDate', () => {
+    it('returns null for empty dates array', () => {
+      expect(findNearestDate([], new Date(2026, 1, 10))).toBeNull();
+    });
+
+    it('returns exact match when target date exists', () => {
+      const dates = [
+        new Date(2026, 1, 9),
+        new Date(2026, 1, 10),
+        new Date(2026, 1, 11),
+      ];
+      const result = findNearestDate(dates, new Date(2026, 1, 10));
+      expect(result!.getDate()).toBe(10);
+    });
+
+    it('returns nearest future date over closer past date', () => {
+      const dates = [
+        new Date(2026, 1, 9),
+        new Date(2026, 1, 12),
+      ];
+      // Target is Feb 10: Feb 9 is closer (1 day) but Feb 12 is future
+      const result = findNearestDate(dates, new Date(2026, 1, 10));
+      expect(result!.getDate()).toBe(12);
+    });
+
+    it('falls back to latest past date when no future dates exist', () => {
+      const dates = [
+        new Date(2026, 1, 5),
+        new Date(2026, 1, 8),
+      ];
+      // Target is Feb 10, no future dates — fall back to nearest past (Feb 8)
+      const result = findNearestDate(dates, new Date(2026, 1, 10));
+      expect(result!.getDate()).toBe(8);
+    });
+
+    it('works with single future date in list', () => {
+      const dates = [new Date(2026, 1, 15)];
+      const result = findNearestDate(dates, new Date(2026, 1, 10));
+      expect(result!.getDate()).toBe(15);
+    });
+
+    it('works with single past date in list', () => {
+      const dates = [new Date(2026, 1, 5)];
+      const result = findNearestDate(dates, new Date(2026, 1, 10));
+      expect(result!.getDate()).toBe(5);
     });
   });
 });
