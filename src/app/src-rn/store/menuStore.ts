@@ -151,42 +151,84 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   clearPendingOrders: () => set({ pendingOrders: new Set(), pendingCancellations: new Set() }),
 
   submitOrders: async () => {
-    const { pendingOrders } = get();
-    if (pendingOrders.size === 0) return;
+    const { pendingOrders, pendingCancellations } = get();
+    if (pendingOrders.size === 0 && pendingCancellations.size === 0) return;
 
     const api = useAuthStore.getState().api;
-    const orderItems = Array.from(pendingOrders).map((key) => {
+    const orderStoreState = useOrderStore.getState();
+
+    // --- Resolve cancellations to positionIds ---
+    const cancellationPositionIds: string[] = [];
+    for (const key of pendingCancellations) {
+      const [menuId, dateStr] = key.split('|');
+      // Find the matching menu item to get its category
+      const menuItem = get().items.find(
+        (i) => i.id === menuId && localDateKey(i.day) === dateStr
+      );
+      if (!menuItem) continue;
+
+      // Find the matching order by category + date
+      const order = orderStoreState.orders.find(
+        (o) => o.title === menuItem.category && localDateKey(o.date) === dateStr
+      );
+      if (order) {
+        cancellationPositionIds.push(order.positionId);
+      }
+    }
+
+    // --- Resolve new orders ---
+    const newOrderItems = Array.from(pendingOrders).map((key) => {
       const [menuId, dateStr] = key.split('|');
       const [y, m, d] = dateStr.split('-').map(Number);
       return { menuId, date: new Date(y, m - 1, d) };
     });
 
     // Block today's orders after 12:30 Vienna time
-    const blocked = orderItems.filter((i) => isOrderingCutoff(i.date));
+    const blocked = newOrderItems.filter((i) => isOrderingCutoff(i.date));
     if (blocked.length > 0) {
       set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
       return;
     }
 
-    // Optimistically mark items as ordered and clear pending selection
-    const orderedKeys = new Set(pendingOrders);
+    // --- Optimistic UI update ---
+    const cancelKeys = new Set(pendingCancellations);
+    const orderKeys = new Set(pendingOrders);
     const optimisticItems = get().items.map((item) => {
       const key = makePendingKey(item.id, item.day);
-      if (orderedKeys.has(key)) {
+      if (cancelKeys.has(key)) {
+        return { ...item, ordered: false };
+      }
+      if (orderKeys.has(key)) {
         return { ...item, ordered: true };
       }
       return item;
     });
-    set({ items: optimisticItems, pendingOrders: new Set(), error: null, orderProgress: 'adding' });
+    set({
+      items: optimisticItems,
+      pendingOrders: new Set(),
+      pendingCancellations: new Set(),
+      error: null,
+    });
 
     try {
-      await api.addToCart(orderItems);
+      // Step 1: Cancel orders
+      if (cancellationPositionIds.length > 0) {
+        set({ orderProgress: 'cancelling' });
+        for (const positionId of cancellationPositionIds) {
+          await orderStoreState.cancelOrder(positionId);
+        }
+      }
 
-      set({ orderProgress: 'confirming' });
-      await api.confirmOrders();
+      // Step 2: Add new orders to cart
+      if (newOrderItems.length > 0) {
+        set({ orderProgress: 'adding' });
+        await api.addToCart(newOrderItems);
 
-      // Fetch orders first so the UI has authoritative order data
-      // even if the menu page hasn't updated the checkboxes yet
+        set({ orderProgress: 'confirming' });
+        await api.confirmOrders();
+      }
+
+      // Step 3: Refresh
       set({ orderProgress: 'refreshing' });
       await useOrderStore.getState().fetchOrders();
       await get().fetchMenus(true);
@@ -195,7 +237,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Bestellung konnte nicht aufgegeben werden';
       set({ error: message, orderProgress: null });
-      // Revert optimistic update on failure (silent, keep error visible)
+      // Revert optimistic update on failure
       try {
         const freshApi = useAuthStore.getState().api;
         const freshItems = await freshApi.getMenus();

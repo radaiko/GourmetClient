@@ -13,9 +13,15 @@ jest.mock('../../store/authStore', () => {
     },
   };
 });
+const mockCancelOrder = jest.fn().mockResolvedValue(undefined);
+const mockFetchOrders = jest.fn().mockResolvedValue(undefined);
 jest.mock('../../store/orderStore', () => ({
   useOrderStore: {
-    getState: () => ({ fetchOrders: jest.fn().mockResolvedValue(undefined) }),
+    getState: () => ({
+      fetchOrders: mockFetchOrders,
+      cancelOrder: mockCancelOrder,
+      orders: [],
+    }),
     setState: jest.fn(),
     subscribe: jest.fn(),
   },
@@ -283,6 +289,80 @@ describe('menuStore', () => {
       await useMenuStore.getState().submitOrders();
 
       expect(useMenuStore.getState().error).toBe('Cart error');
+    });
+
+    it('cancels orders from pendingCancellations before adding new ones', async () => {
+      const date = new Date(2026, 5, 10);
+      const items = [
+        makeItem({ id: 'menu-001', day: date, ordered: true, category: GourmetMenuCategory.Menu1 }),
+        makeItem({ id: 'menu-002', day: date, ordered: false, category: GourmetMenuCategory.Menu2 }),
+      ];
+      useMenuStore.setState({ items });
+
+      // Simulate: orderStore has the order we want to cancel
+      const mockOrders = [{ positionId: 'P1', eatingCycleId: 'E1', date, title: 'MENÜ I', subtitle: '', approved: true }];
+      (require('../../store/orderStore').useOrderStore as any).getState = () => ({
+        fetchOrders: mockFetchOrders,
+        cancelOrder: mockCancelOrder,
+        orders: mockOrders,
+      });
+
+      // Mark menu-001 for cancellation (it's ordered)
+      useMenuStore.getState().togglePendingOrder('menu-001', date);
+      // Select menu-002 as new order
+      useMenuStore.getState().togglePendingOrder('menu-002', date);
+
+      await useMenuStore.getState().submitOrders();
+
+      expect(mockCancelOrder).toHaveBeenCalledWith('P1');
+      expect(mockApi.addToCart).toHaveBeenCalled();
+      expect(mockApi.confirmOrders).toHaveBeenCalled();
+    });
+
+    it('handles cancellation-only submit (no new orders)', async () => {
+      const date = new Date(2026, 5, 10);
+      const items = [
+        makeItem({ id: 'menu-001', day: date, ordered: true, category: GourmetMenuCategory.Menu1 }),
+      ];
+      useMenuStore.setState({ items });
+
+      const mockOrders = [{ positionId: 'P1', eatingCycleId: 'E1', date, title: 'MENÜ I', subtitle: '', approved: true }];
+      (require('../../store/orderStore').useOrderStore as any).getState = () => ({
+        fetchOrders: mockFetchOrders,
+        cancelOrder: mockCancelOrder,
+        orders: mockOrders,
+      });
+
+      useMenuStore.getState().togglePendingOrder('menu-001', date);
+
+      await useMenuStore.getState().submitOrders();
+
+      expect(mockCancelOrder).toHaveBeenCalledWith('P1');
+      expect(mockApi.addToCart).not.toHaveBeenCalled();
+    });
+
+    it('clears both pendingOrders and pendingCancellations after submit', async () => {
+      const date = new Date(2026, 5, 10);
+      const items = [
+        makeItem({ id: 'menu-001', day: date, ordered: true, category: GourmetMenuCategory.Menu1 }),
+        makeItem({ id: 'menu-002', day: date, ordered: false, category: GourmetMenuCategory.Menu2 }),
+      ];
+      useMenuStore.setState({ items });
+
+      const mockOrders = [{ positionId: 'P1', eatingCycleId: 'E1', date, title: 'MENÜ I', subtitle: '', approved: true }];
+      (require('../../store/orderStore').useOrderStore as any).getState = () => ({
+        fetchOrders: mockFetchOrders,
+        cancelOrder: mockCancelOrder,
+        orders: mockOrders,
+      });
+
+      useMenuStore.getState().togglePendingOrder('menu-001', date);
+      useMenuStore.getState().togglePendingOrder('menu-002', date);
+
+      await useMenuStore.getState().submitOrders();
+
+      expect(useMenuStore.getState().pendingOrders.size).toBe(0);
+      expect(useMenuStore.getState().pendingCancellations.size).toBe(0);
     });
   });
 
