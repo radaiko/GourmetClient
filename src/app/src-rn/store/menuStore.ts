@@ -34,6 +34,7 @@ interface MenuState {
   error: string | null;
   selectedDate: Date;
   pendingOrders: Set<string>; // Set of "menuId|dateStr" keys for items to order
+  pendingCancellations: Set<string>; // Set of "menuId|dateStr" keys for ordered items to cancel
   orderProgress: OrderProgress; // Non-blocking background order step
 
   loadCachedMenus: () => Promise<void>;
@@ -41,12 +42,13 @@ interface MenuState {
   refreshAvailability: () => Promise<void>;
   setSelectedDate: (date: Date) => void;
   togglePendingOrder: (menuId: string, date: Date) => void;
-  clearPendingOrders: () => void;
+  clearPendingChanges: () => void;
   submitOrders: () => Promise<void>;
   getAvailableDates: () => Date[];
   getMenusForDate: (date: Date) => GourmetMenuItem[];
   getDayMenus: () => GourmetDayMenu[];
   getPendingCount: () => number;
+  getPendingCancellationCount: () => number;
 }
 
 function makePendingKey(menuId: string, date: Date): string {
@@ -61,6 +63,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
   error: null,
   selectedDate: new Date(),
   pendingOrders: new Set(),
+  pendingCancellations: new Set(),
   orderProgress: null,
 
   loadCachedMenus: async () => {
@@ -154,63 +157,129 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   togglePendingOrder: (menuId: string, date: Date) => {
     const key = makePendingKey(menuId, date);
-    const pending = new Set(get().pendingOrders);
-    if (pending.has(key)) {
-      pending.delete(key);
+    const item = get().items.find(
+      (i) => i.id === menuId && localDateKey(i.day) === localDateKey(date)
+    );
+    const isOrdered = item?.ordered ?? false;
+
+    if (isOrdered) {
+      const cancellations = new Set(get().pendingCancellations);
+      if (cancellations.has(key)) {
+        cancellations.delete(key);
+      } else {
+        cancellations.add(key);
+      }
+      set({ pendingCancellations: cancellations });
     } else {
-      pending.add(key);
+      const pending = new Set(get().pendingOrders);
+      if (pending.has(key)) {
+        pending.delete(key);
+      } else {
+        pending.add(key);
+      }
+      set({ pendingOrders: pending });
     }
-    set({ pendingOrders: pending });
   },
 
-  clearPendingOrders: () => set({ pendingOrders: new Set() }),
+  clearPendingChanges: () => set({ pendingOrders: new Set(), pendingCancellations: new Set() }),
 
   submitOrders: async () => {
-    const { pendingOrders } = get();
-    if (pendingOrders.size === 0) return;
+    const { pendingOrders, pendingCancellations } = get();
+    if (pendingOrders.size === 0 && pendingCancellations.size === 0) return;
 
     const api = useAuthStore.getState().api;
-    const orderItems = Array.from(pendingOrders).map((key) => {
+    const orderStoreState = useOrderStore.getState();
+
+    // --- Resolve cancellations to positionIds ---
+    const cancellationPositionIds: string[] = [];
+    for (const key of pendingCancellations) {
+      const [menuId, dateStr] = key.split('|');
+      // Find the matching menu item to get its category
+      const menuItem = get().items.find(
+        (i) => i.id === menuId && localDateKey(i.day) === dateStr
+      );
+      if (!menuItem) continue;
+
+      // Find the matching order by category + date
+      const order = orderStoreState.orders.find(
+        (o) => o.title === menuItem.category && localDateKey(o.date) === dateStr
+      );
+      if (order) {
+        cancellationPositionIds.push(order.positionId);
+      }
+    }
+
+    if (cancellationPositionIds.length < pendingCancellations.size) {
+      console.warn(
+        `Could not resolve all cancellations: ${cancellationPositionIds.length}/${pendingCancellations.size}`
+      );
+    }
+
+    // --- Resolve new orders ---
+    const newOrderItems = Array.from(pendingOrders).map((key) => {
       const [menuId, dateStr] = key.split('|');
       const [y, m, d] = dateStr.split('-').map(Number);
       return { menuId, date: new Date(y, m - 1, d) };
     });
 
-    // Block today's orders after 12:30 Vienna time
-    const blocked = orderItems.filter((i) => isOrderingCutoff(i.date));
-    if (blocked.length > 0) {
+    // Filter out cutoff-blocked new orders (cancellations are always allowed)
+    const allowedNewOrders = newOrderItems.filter((i) => !isOrderingCutoff(i.date));
+    const hasCutoffBlocked = allowedNewOrders.length < newOrderItems.length;
+    if (hasCutoffBlocked && allowedNewOrders.length === 0 && cancellationPositionIds.length === 0) {
       set({ error: 'Bestellung für heute geschlossen (Bestellschluss 12:30)' });
       return;
     }
 
-    // Optimistically mark items as ordered and clear pending selection
-    const orderedKeys = new Set(pendingOrders);
+    // --- Optimistic UI update ---
+    const cancelKeys = new Set(pendingCancellations);
+    const orderKeys = new Set(pendingOrders);
     const optimisticItems = get().items.map((item) => {
       const key = makePendingKey(item.id, item.day);
-      if (orderedKeys.has(key)) {
+      if (cancelKeys.has(key)) {
+        return { ...item, ordered: false };
+      }
+      if (orderKeys.has(key)) {
         return { ...item, ordered: true };
       }
       return item;
     });
-    set({ items: optimisticItems, pendingOrders: new Set(), error: null, orderProgress: 'adding' });
+    set({
+      items: optimisticItems,
+      pendingOrders: new Set(),
+      pendingCancellations: new Set(),
+      error: hasCutoffBlocked ? 'Bestellung für heute geschlossen (Bestellschluss 12:30)' : null,
+    });
 
     try {
-      await api.addToCart(orderItems);
+      // Step 1: Cancel orders (batched — single edit-mode toggle)
+      if (cancellationPositionIds.length > 0) {
+        set({ orderProgress: 'cancelling' });
+        await api.cancelOrders(cancellationPositionIds);
+      }
 
-      set({ orderProgress: 'confirming' });
-      await api.confirmOrders();
+      // Step 2: Add new orders to cart
+      if (allowedNewOrders.length > 0) {
+        set({ orderProgress: 'adding' });
+        await api.addToCart(allowedNewOrders);
 
-      // Fetch orders first so the UI has authoritative order data
-      // even if the menu page hasn't updated the checkboxes yet
+        set({ orderProgress: 'confirming' });
+        await api.confirmOrders();
+      }
+
+      // Step 3: Refresh
       set({ orderProgress: 'refreshing' });
       await useOrderStore.getState().fetchOrders();
       await get().fetchMenus(true);
 
-      set({ orderProgress: null });
+      set({
+        orderProgress: null,
+        // Restore cutoff warning (fetchMenus clears error)
+        error: hasCutoffBlocked ? 'Bestellung für heute geschlossen (Bestellschluss 12:30)' : null,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Bestellung konnte nicht aufgegeben werden';
       set({ error: message, orderProgress: null });
-      // Revert optimistic update on failure (silent, keep error visible)
+      // Revert optimistic update on failure
       try {
         const freshApi = useAuthStore.getState().api;
         const freshItems = await freshApi.getMenus();
@@ -246,5 +315,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     }));
   },
 
-  getPendingCount: () => get().pendingOrders.size,
+  getPendingCount: () => get().pendingOrders.size + get().pendingCancellations.size,
+
+  getPendingCancellationCount: () => get().pendingCancellations.size,
 }));
