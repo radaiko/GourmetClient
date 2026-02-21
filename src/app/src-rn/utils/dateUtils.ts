@@ -76,13 +76,22 @@ function viennaMinutes(): number {
   return hour * 60 + minute;
 }
 
+/** Get today's date in Vienna timezone. */
+function viennaToday(): Date {
+  const viennaDateStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Vienna',
+  }).format(new Date()); // yields "YYYY-MM-DD"
+  const [y, m, d] = viennaDateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 /**
  * Check if ordering is blocked for a given menu date.
  * Today's menu cannot be ordered after 12:30 Europe/Vienna time.
  * Future dates are never blocked.
  */
 export function isOrderingCutoff(menuDate: Date): boolean {
-  if (!isSameDay(menuDate, new Date())) return false;
+  if (!isSameDay(menuDate, viennaToday())) return false;
   return viennaMinutes() >= 12 * 60 + 30;
 }
 
@@ -92,7 +101,7 @@ export function isOrderingCutoff(menuDate: Date): boolean {
  * Future dates are never blocked.
  */
 export function isCancellationCutoff(orderDate: Date): boolean {
-  if (!isSameDay(orderDate, new Date())) return false;
+  if (!isSameDay(orderDate, viennaToday())) return false;
   return viennaMinutes() >= 9 * 60;
 }
 

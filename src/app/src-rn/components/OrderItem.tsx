@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GourmetOrderedMenu } from '../types/order';
 import { formatDisplayDate, isCancellationCutoff } from '../utils/dateUtils';
@@ -17,8 +18,18 @@ interface OrderItemProps {
 export function OrderItem({ order, menuDescription, isCancelling, onCancel, canCancel }: OrderItemProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
-  const cutoff = isCancellationCutoff(order.date);
-  const disabled = cutoff || isCancelling;
+  const [cutoff, setCutoff] = useState(() => isCancellationCutoff(order.date));
+
+  useEffect(() => {
+    if (cutoff) return; // already locked
+    const timer = setInterval(
+      () => setCutoff(isCancellationCutoff(order.date)),
+      30_000, // re-check every 30s
+    );
+    return () => clearInterval(timer);
+  }, [order.date, cutoff]);
+
+  const disabled = cutoff;
 
   return (
     <View style={[styles.container, isCancelling && styles.containerCancelling]}>

@@ -221,5 +221,19 @@ describe('dateUtils', () => {
       const futureDate = new Date(2026, 1, 11); // Feb 11
       expect(isCancellationCutoff(futureDate)).toBe(false);
     });
+
+    it('returns true for today at 09:00 Vienna time (CEST / summer)', () => {
+      // Aug 10 2026, 09:00 Vienna CEST (UTC+2) -> UTC 07:00
+      jest.setSystemTime(new Date('2026-08-10T07:00:00Z'));
+      const orderDate = new Date(2026, 7, 10); // Aug 10
+      expect(isCancellationCutoff(orderDate)).toBe(true);
+    });
+
+    it('returns false for today before 09:00 Vienna time (CEST / summer)', () => {
+      // Aug 10 2026, 08:59 Vienna CEST (UTC+2) -> UTC 06:59
+      jest.setSystemTime(new Date('2026-08-10T06:59:00Z'));
+      const orderDate = new Date(2026, 7, 10);
+      expect(isCancellationCutoff(orderDate)).toBe(false);
+    });
   });
 });
