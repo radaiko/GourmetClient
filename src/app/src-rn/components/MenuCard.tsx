@@ -9,18 +9,17 @@ import { cardSurface } from '../theme/platformStyles';
 interface MenuCardProps {
   item: GourmetMenuItem;
   isSelected: boolean;
-  blocked: boolean;
   ordered: boolean;
   onToggle: () => void;
   onCancel?: () => void;
   isCancelling?: boolean;
 }
 
-export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCancel, isCancelling }: MenuCardProps) {
+export function MenuCard({ item, isSelected, ordered, onToggle, onCancel, isCancelling }: MenuCardProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const cutoff = isOrderingCutoff(item.day);
-  const canOrder = item.available && !ordered && !blocked && !cutoff;
+  const canOrder = item.available && !ordered && !cutoff;
 
   return (
     <Pressable
@@ -28,7 +27,7 @@ export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCance
         styles.card,
         ordered && styles.cardOrdered,
         isSelected && styles.cardSelected,
-        (!item.available || cutoff || blocked) && !ordered && styles.cardDisabled,
+        (!item.available || cutoff) && !ordered && styles.cardDisabled,
       ]}
       onPress={canOrder ? onToggle : undefined}
       disabled={!canOrder}
@@ -44,12 +43,7 @@ export function MenuCard({ item, isSelected, blocked, ordered, onToggle, onCance
             <Text style={styles.stockBadgeText}>Ausverkauft</Text>
           </View>
         )}
-        {blocked && !ordered && item.available && (
-          <View style={styles.cutoffBadge}>
-            <Text style={styles.cutoffBadgeText}>Gesperrt</Text>
-          </View>
-        )}
-        {cutoff && !ordered && !blocked && item.available && (
+        {cutoff && !ordered && item.available && (
           <View style={styles.cutoffBadge}>
             <Text style={styles.cutoffBadgeText}>Geschlossen</Text>
           </View>

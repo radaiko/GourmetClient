@@ -162,18 +162,18 @@ describe('menuStore', () => {
       expect(useMenuStore.getState().pendingOrders.size).toBe(0);
     });
 
-    it('enforces one main menu per day', () => {
+    it('allows multiple main menus per day', () => {
       const date = new Date(2026, 1, 10);
       useMenuStore.getState().togglePendingOrder('menu-001', date);
       expect(useMenuStore.getState().pendingOrders.size).toBe(1);
 
-      // Adding MENÜ II for the same day should replace MENÜ I
+      // Adding MENÜ II for the same day should keep both
       useMenuStore.getState().togglePendingOrder('menu-002', date);
-      expect(useMenuStore.getState().pendingOrders.size).toBe(1);
+      expect(useMenuStore.getState().pendingOrders.size).toBe(2);
 
-      // Should have menu-002, not menu-001
       const keys = Array.from(useMenuStore.getState().pendingOrders);
-      expect(keys[0]).toContain('menu-002');
+      expect(keys.some((k) => k.includes('menu-001'))).toBe(true);
+      expect(keys.some((k) => k.includes('menu-002'))).toBe(true);
     });
   });
 
@@ -196,6 +196,25 @@ describe('menuStore', () => {
 
       expect(mockApi.addToCart).toHaveBeenCalled();
       expect(mockApi.confirmOrders).toHaveBeenCalled();
+    });
+
+    it('submits multiple menus for the same date', async () => {
+      const items = [
+        makeItem({ id: 'menu-001', day: new Date(2026, 5, 10), category: GourmetMenuCategory.Menu1 }),
+        makeItem({ id: 'menu-002', day: new Date(2026, 5, 10), category: GourmetMenuCategory.Menu2 }),
+      ];
+      useMenuStore.setState({ items });
+      const date = new Date(2026, 5, 10);
+      useMenuStore.getState().togglePendingOrder('menu-001', date);
+      useMenuStore.getState().togglePendingOrder('menu-002', date);
+
+      await useMenuStore.getState().submitOrders();
+
+      expect(mockApi.addToCart).toHaveBeenCalledTimes(1);
+      const callArg: { menuId: string; date: Date }[] = mockApi.addToCart.mock.calls[0][0];
+      expect(callArg).toHaveLength(2);
+      expect(callArg.some((i: { menuId: string }) => i.menuId === 'menu-001')).toBe(true);
+      expect(callArg.some((i: { menuId: string }) => i.menuId === 'menu-002')).toBe(true);
     });
 
     it('clears pendingOrders after submit', async () => {

@@ -100,36 +100,19 @@ export default function MenusScreen() {
   const menuItems = getMenusForDate(selectedDate);
   const pendingCount = getPendingCount();
 
-  // For the selected date, check if a main menu (I/II/III) is already ordered.
-  // If so, block all other main menus for that day (only 1 allowed).
-  // Uses both menu item flags AND order store as sources.
-  const { blockedMenuIds, orderedCategories } = useMemo(() => {
-    const blocked = new Set<string>();
+  // Collect ordered categories for the selected date (enables cancel buttons on ordered items)
+  const orderedCategories = useMemo(() => {
     const orderedCats = new Set<GourmetMenuCategory>();
-    const MAIN = new Set([GourmetMenuCategory.Menu1, GourmetMenuCategory.Menu2, GourmetMenuCategory.Menu3]);
-    const dayItems = menuItems.filter((i) => MAIN.has(i.category));
-
-    // Collect ordered categories from menu item flags
-    for (const item of dayItems) {
+    for (const item of menuItems) {
       if (item.ordered) orderedCats.add(item.category);
     }
-
-    // Collect ordered categories from order store (title matches category enum values)
     const selectedKey = selectedDate.toDateString();
     for (const o of orders) {
-      if (o.date.toDateString() === selectedKey && MAIN.has(o.title as GourmetMenuCategory)) {
+      if (o.date.toDateString() === selectedKey) {
         orderedCats.add(o.title as GourmetMenuCategory);
       }
     }
-
-    if (orderedCats.size > 0) {
-      for (const item of dayItems) {
-        if (!item.ordered && !orderedCats.has(item.category)) {
-          blocked.add(item.id);
-        }
-      }
-    }
-    return { blockedMenuIds: blocked, orderedCategories: orderedCats };
+    return orderedCats;
   }, [menuItems, orders, selectedDate]);
 
   // Map category -> positionId for orders on the selected date (for cancel action)
@@ -320,7 +303,6 @@ export default function MenusScreen() {
                   key={`${item.id}-${formatGourmetDate(item.day)}`}
                   item={item}
                   isSelected={isPending(item)}
-                  blocked={blockedMenuIds.has(item.id)}
                   ordered={isOrdered}
                   onToggle={() => togglePendingOrder(item.id, item.day)}
                   onCancel={canCancel ? () => handleCancelFromMenu(item.category) : undefined}
