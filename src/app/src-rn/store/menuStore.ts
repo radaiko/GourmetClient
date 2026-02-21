@@ -1,15 +1,9 @@
 import { create } from 'zustand';
-import { GourmetMenuItem, GourmetDayMenu, GourmetMenuCategory } from '../types/menu';
+import { GourmetMenuItem, GourmetDayMenu } from '../types/menu';
 import { useAuthStore } from './authStore';
 import { useOrderStore } from './orderStore';
 import { MENU_CACHE_VALIDITY_MS } from '../utils/constants';
 import { isSameDay, isOrderingCutoff, localDateKey } from '../utils/dateUtils';
-
-const MAIN_MENU_CATEGORIES = new Set([
-  GourmetMenuCategory.Menu1,
-  GourmetMenuCategory.Menu2,
-  GourmetMenuCategory.Menu3,
-]);
 
 export type OrderProgress = 'adding' | 'confirming' | 'cancelling' | 'refreshing' | null;
 
@@ -131,22 +125,6 @@ export const useMenuStore = create<MenuState>((set, get) => ({
     if (pending.has(key)) {
       pending.delete(key);
     } else {
-      // Enforce: only 1 main menu (I/II/III) per day
-      const item = get().items.find((i) => i.id === menuId && isSameDay(i.day, date));
-      if (item && MAIN_MENU_CATEGORIES.has(item.category)) {
-        const dateKey = localDateKey(date);
-        // Remove any other main menu pending for this date
-        for (const existingKey of pending) {
-          const [existingId, existingDateStr] = existingKey.split('|');
-          if (existingDateStr !== dateKey) continue;
-          const existingItem = get().items.find(
-            (i) => i.id === existingId && localDateKey(i.day) === dateKey
-          );
-          if (existingItem && MAIN_MENU_CATEGORIES.has(existingItem.category)) {
-            pending.delete(existingKey);
-          }
-        }
-      }
       pending.add(key);
     }
     set({ pendingOrders: pending });
