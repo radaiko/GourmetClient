@@ -15,7 +15,6 @@ import { useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src-rn/store/authStore';
 import { useMenuStore, OrderProgress } from '../../src-rn/store/menuStore';
-import { useDialog } from '../../src-rn/components/DialogProvider';
 import { useOrderStore } from '../../src-rn/store/orderStore';
 import { MenuCard } from '../../src-rn/components/MenuCard';
 import { DayNavigator } from '../../src-rn/components/DayNavigator';
@@ -46,7 +45,6 @@ const CATEGORY_ORDER = [
 
 export default function MenusScreen() {
   const { colors } = useTheme();
-  const { confirm } = useDialog();
   const insets = useSafeAreaInsets();
   const { isWideLayout, panelWidth } = useDesktopLayout();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -60,6 +58,7 @@ export default function MenusScreen() {
     error,
     selectedDate,
     pendingOrders,
+    pendingCancellations,
     orderProgress,
     fetchMenus,
     refreshAvailability,
@@ -69,9 +68,10 @@ export default function MenusScreen() {
     getAvailableDates,
     getMenusForDate,
     getPendingCount,
+    getPendingCancellationCount,
   } = useMenuStore();
 
-  const { orders, cancellingId, fetchOrders, cancelOrder } = useOrderStore();
+  const { orders, fetchOrders } = useOrderStore();
 
   const triggerRefresh = useCallback(() => {
     const auth = useAuthStore.getState().status;
@@ -99,6 +99,18 @@ export default function MenusScreen() {
   const dates = getAvailableDates();
   const menuItems = getMenusForDate(selectedDate);
   const pendingCount = getPendingCount();
+  const cancellationCount = getPendingCancellationCount();
+  const newOrderCount = pendingCount - cancellationCount;
+
+  const fabLabel = useMemo(() => {
+    if (cancellationCount > 0 && newOrderCount > 0) {
+      return `Änderungen bestätigen (${pendingCount})`;
+    }
+    if (cancellationCount > 0) {
+      return `Stornieren (${cancellationCount})`;
+    }
+    return `Bestellen (${newOrderCount})`;
+  }, [pendingCount, cancellationCount, newOrderCount]);
 
   // Collect ordered categories for the selected date (enables cancel buttons on ordered items)
   const orderedCategories = useMemo(() => {
@@ -115,45 +127,6 @@ export default function MenusScreen() {
     return orderedCats;
   }, [menuItems, orders, selectedDate]);
 
-  // Map category -> positionId for orders on the selected date (for cancel action)
-  const orderPositionByCategory = useMemo(() => {
-    const map = new Map<string, string>();
-    const selectedKey = selectedDate.toDateString();
-    for (const o of orders) {
-      if (o.date.toDateString() === selectedKey) {
-        map.set(o.title, o.positionId);
-      }
-    }
-    return map;
-  }, [orders, selectedDate]);
-
-  const handleCancelFromMenu = useCallback(
-    async (category: string) => {
-      const positionId = orderPositionByCategory.get(category);
-      if (!positionId) return;
-      const confirmed = await confirm(
-        'Bestellung stornieren',
-        `${category} Bestellung stornieren?`,
-        'Stornieren',
-        'Behalten'
-      );
-      if (!confirmed) return;
-      try {
-        useMenuStore.setState({ orderProgress: 'cancelling' });
-        await cancelOrder(positionId);
-
-        useMenuStore.setState({ orderProgress: 'refreshing' });
-        await fetchOrders();
-        await fetchMenus(true);
-
-        useMenuStore.setState({ orderProgress: null });
-      } catch {
-        useMenuStore.setState({ orderProgress: null });
-      }
-    },
-    [orderPositionByCategory, cancelOrder, fetchOrders, fetchMenus, confirm]
-  );
-
   const grouped = CATEGORY_ORDER.map((cat) => ({
     category: cat,
     items: menuItems.filter((item) => item.category === cat),
@@ -165,6 +138,14 @@ export default function MenusScreen() {
       return pendingOrders.has(key);
     },
     [pendingOrders]
+  );
+
+  const isPendingCancel = useCallback(
+    (item: GourmetMenuItem) => {
+      const key = `${item.id}|${localDateKey(item.day)}`;
+      return pendingCancellations.has(key);
+    },
+    [pendingCancellations]
   );
 
   // ── Swipe-between-days gesture ──
@@ -297,16 +278,14 @@ export default function MenusScreen() {
             )}
             {group.items.map((item) => {
               const isOrdered = item.ordered || orderedCategories.has(item.category);
-              const canCancel = isOrdered && orderPositionByCategory.has(item.category) && cancellingId === null;
               return (
                 <MenuCard
                   key={`${item.id}-${formatGourmetDate(item.day)}`}
                   item={item}
                   isSelected={isPending(item)}
                   ordered={isOrdered}
+                  isPendingCancel={isPendingCancel(item)}
                   onToggle={() => togglePendingOrder(item.id, item.day)}
-                  onCancel={canCancel ? () => handleCancelFromMenu(item.category) : undefined}
-                  isCancelling={cancellingId === orderPositionByCategory.get(item.category)}
                 />
               );
             })}
@@ -342,9 +321,7 @@ export default function MenusScreen() {
 
         {pendingCount > 0 && !orderProgress && (
           <Pressable style={styles.fabDesktop} onPress={submitOrders}>
-            <Text style={styles.fabText}>
-              Bestellen ({pendingCount})
-            </Text>
+            <Text style={styles.fabText}>{fabLabel}</Text>
           </Pressable>
         )}
       </View>
@@ -370,9 +347,7 @@ export default function MenusScreen() {
 
       {pendingCount > 0 && !orderProgress && (
         <Pressable style={styles.fab} onPress={submitOrders}>
-          <Text style={styles.fabText}>
-            Bestellen ({pendingCount})
-          </Text>
+          <Text style={styles.fabText}>{fabLabel}</Text>
         </Pressable>
       )}
     </View>
