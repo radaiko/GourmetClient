@@ -1,3 +1,16 @@
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const store: Record<string, string> = {};
+  return {
+    __esModule: true,
+    default: {
+      getItem: jest.fn((key: string) => Promise.resolve(store[key] ?? null)),
+      setItem: jest.fn((key: string, value: string) => { store[key] = value; return Promise.resolve(); }),
+      removeItem: jest.fn((key: string) => { delete store[key]; return Promise.resolve(); }),
+      clear: jest.fn(() => { Object.keys(store).forEach(k => delete store[k]); return Promise.resolve(); }),
+    },
+  };
+});
+
 jest.mock('../../api/gourmetApi');
 jest.mock('../../store/authStore', () => {
   const mockApi = {
@@ -291,6 +304,49 @@ describe('menuStore', () => {
       });
 
       expect(useMenuStore.getState().getPendingCount()).toBe(1);
+    });
+  });
+
+  describe('caching', () => {
+    it('fetchMenus writes items to AsyncStorage', async () => {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const items = [makeItem()];
+      mockApi.getMenus.mockResolvedValue(items);
+
+      await useMenuStore.getState().fetchMenus();
+
+      expect(AsyncStorage.setItem).toHaveBeenCalled();
+      const [key] = AsyncStorage.setItem.mock.calls[0];
+      expect(key).toBe('menus_items');
+    });
+
+    it('loadCachedMenus restores items from AsyncStorage', async () => {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const items = [makeItem({ day: new Date(2026, 1, 10) })];
+
+      // Simulate a previous fetchMenus that cached data
+      mockApi.getMenus.mockResolvedValue(items);
+      await useMenuStore.getState().fetchMenus();
+
+      // Reset state to simulate cold start
+      useMenuStore.setState({ items: [], lastFetched: null });
+
+      // Load from cache
+      await useMenuStore.getState().loadCachedMenus();
+
+      const restored = useMenuStore.getState().items;
+      expect(restored).toHaveLength(1);
+      expect(restored[0].day).toBeInstanceOf(Date);
+      expect(restored[0].day.getFullYear()).toBe(2026);
+      expect(restored[0].id).toBe('menu-001');
+    });
+
+    it('loadCachedMenus does nothing when cache is empty', async () => {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      await AsyncStorage.clear();
+
+      await useMenuStore.getState().loadCachedMenus();
+      expect(useMenuStore.getState().items).toEqual([]);
     });
   });
 });
