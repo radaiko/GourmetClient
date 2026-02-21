@@ -76,13 +76,20 @@ export default function MenusScreen() {
   const triggerRefresh = useCallback(() => {
     const auth = useAuthStore.getState().status;
     if (auth !== 'authenticated') return;
-    const cached = useMenuStore.getState().items.length > 0;
-    if (cached) {
-      refreshAvailability();
-    } else {
-      fetchMenus();
-    }
-    fetchOrders();
+
+    const { loadCachedMenus } = useMenuStore.getState();
+    const { loadCachedOrders } = useOrderStore.getState();
+
+    // Load cache first for instant display
+    Promise.all([loadCachedMenus(), loadCachedOrders()]).catch(() => {}).finally(() => {
+      const cached = useMenuStore.getState().items.length > 0;
+      if (cached) {
+        refreshAvailability();
+      } else {
+        fetchMenus();
+      }
+      fetchOrders();
+    });
   }, [fetchMenus, refreshAvailability, fetchOrders]);
 
   useEffect(() => {

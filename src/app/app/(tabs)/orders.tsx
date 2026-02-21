@@ -51,9 +51,11 @@ export default function OrdersScreen() {
   useFocusEffect(
     useCallback(() => {
       if (authStatus === 'authenticated') {
-        fetchOrders();
-        // Ensure menus are loaded so we can show full descriptions
-        fetchMenus();
+        const { loadCachedOrders } = useOrderStore.getState();
+        loadCachedOrders().catch(() => {}).finally(() => {
+          fetchOrders();
+          fetchMenus();
+        });
       }
     }, [authStatus, fetchOrders, fetchMenus])
   );
