@@ -1,3 +1,16 @@
+jest.mock('@react-native-async-storage/async-storage', () => {
+  const store: Record<string, string> = {};
+  return {
+    __esModule: true,
+    default: {
+      getItem: jest.fn((key: string) => Promise.resolve(store[key] ?? null)),
+      setItem: jest.fn((key: string, value: string) => { store[key] = value; return Promise.resolve(); }),
+      removeItem: jest.fn((key: string) => { delete store[key]; return Promise.resolve(); }),
+      clear: jest.fn(() => { Object.keys(store).forEach(k => delete store[k]); return Promise.resolve(); }),
+    },
+  };
+});
+
 jest.mock('../../api/gourmetApi');
 jest.mock('../../store/authStore', () => {
   const mockApi = {
@@ -32,7 +45,9 @@ function makeOrder(overrides: Partial<GourmetOrderedMenu> = {}): GourmetOrderedM
   };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  await AsyncStorage.clear();
   jest.clearAllMocks();
   useOrderStore.setState({
     orders: [],
@@ -146,6 +161,45 @@ describe('orderStore', () => {
 
     it('getUnconfirmedCount returns count of unapproved orders', () => {
       expect(useOrderStore.getState().getUnconfirmedCount()).toBe(1);
+    });
+  });
+
+  describe('caching', () => {
+    it('fetchOrders writes orders to AsyncStorage', async () => {
+      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+      const orders = [makeOrder()];
+      mockApi.getOrders.mockResolvedValue(orders);
+
+      await useOrderStore.getState().fetchOrders();
+
+      expect(AsyncStorage.setItem).toHaveBeenCalled();
+      const [key] = AsyncStorage.setItem.mock.calls[0];
+      expect(key).toBe('orders_list');
+    });
+
+    it('loadCachedOrders restores orders from AsyncStorage', async () => {
+      const orders = [makeOrder({ date: new Date(2026, 1, 10) })];
+
+      // Simulate a previous fetchOrders that cached data
+      mockApi.getOrders.mockResolvedValue(orders);
+      await useOrderStore.getState().fetchOrders();
+
+      // Reset state to simulate cold start
+      useOrderStore.setState({ orders: [], loading: false });
+
+      // Load from cache
+      await useOrderStore.getState().loadCachedOrders();
+
+      const restored = useOrderStore.getState().orders;
+      expect(restored).toHaveLength(1);
+      expect(restored[0].date).toBeInstanceOf(Date);
+      expect(restored[0].date.getFullYear()).toBe(2026);
+      expect(restored[0].positionId).toBe('P1');
+    });
+
+    it('loadCachedOrders does nothing when cache is empty', async () => {
+      await useOrderStore.getState().loadCachedOrders();
+      expect(useOrderStore.getState().orders).toEqual([]);
     });
   });
 });
