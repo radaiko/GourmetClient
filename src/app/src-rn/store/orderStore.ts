@@ -1,6 +1,25 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GourmetOrderedMenu } from '../types/order';
 import { useAuthStore } from './authStore';
+
+const ORDER_CACHE_KEY = 'orders_list';
+
+/** Serialize orders for AsyncStorage (Date -> ISO string). */
+function serializeOrders(orders: GourmetOrderedMenu[]): string {
+  return JSON.stringify(orders.map((o) => ({
+    ...o,
+    date: o.date.toISOString(),
+  })));
+}
+
+/** Deserialize orders from AsyncStorage (ISO string -> Date). */
+function deserializeOrders(json: string): GourmetOrderedMenu[] {
+  return JSON.parse(json).map((o: any) => ({
+    ...o,
+    date: new Date(o.date),
+  }));
+}
 
 interface OrderState {
   orders: GourmetOrderedMenu[];
@@ -8,6 +27,7 @@ interface OrderState {
   cancellingId: string | null; // positionId currently being cancelled
   error: string | null;
 
+  loadCachedOrders: () => Promise<void>;
   fetchOrders: () => Promise<void>;
   confirmOrders: () => Promise<void>;
   cancelOrder: (positionId: string) => Promise<void>;
@@ -22,6 +42,17 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   cancellingId: null,
   error: null,
 
+  loadCachedOrders: async () => {
+    const cached = await AsyncStorage.getItem(ORDER_CACHE_KEY);
+    if (!cached) return;
+    try {
+      const orders = deserializeOrders(cached);
+      set({ orders });
+    } catch {
+      await AsyncStorage.removeItem(ORDER_CACHE_KEY);
+    }
+  },
+
   fetchOrders: async () => {
     if (get().loading) return;
 
@@ -30,6 +61,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       const api = useAuthStore.getState().api;
       const orders = await api.getOrders();
       set({ orders, loading: false });
+      await AsyncStorage.setItem(ORDER_CACHE_KEY, serializeOrders(orders));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Bestellungen konnten nicht geladen werden';
       set({ error: message, loading: false });
