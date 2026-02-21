@@ -61,24 +61,39 @@ export function isSameDay(a: Date, b: Date): boolean {
 }
 
 /**
- * Check if ordering is blocked for a given menu date.
- * Today's menu cannot be ordered after 12:30 Europe/Vienna time.
- * Future dates are never blocked.
+ * Get current Vienna time as total minutes since midnight.
  */
-export function isOrderingCutoff(menuDate: Date): boolean {
-  const now = new Date();
-  if (!isSameDay(menuDate, now)) return false;
-
+function viennaMinutes(): number {
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Vienna',
     hour: 'numeric',
     minute: 'numeric',
     hour12: false,
   });
-  const parts = fmt.formatToParts(now);
+  const parts = fmt.formatToParts(new Date());
   const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
   const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
-  return hour * 60 + minute >= 12 * 60 + 30;
+  return hour * 60 + minute;
+}
+
+/**
+ * Check if ordering is blocked for a given menu date.
+ * Today's menu cannot be ordered after 12:30 Europe/Vienna time.
+ * Future dates are never blocked.
+ */
+export function isOrderingCutoff(menuDate: Date): boolean {
+  if (!isSameDay(menuDate, new Date())) return false;
+  return viennaMinutes() >= 12 * 60 + 30;
+}
+
+/**
+ * Check if cancellation is blocked for a given order date.
+ * Today's order cannot be cancelled after 09:00 Europe/Vienna time.
+ * Future dates are never blocked.
+ */
+export function isCancellationCutoff(orderDate: Date): boolean {
+  if (!isSameDay(orderDate, new Date())) return false;
+  return viennaMinutes() >= 9 * 60;
 }
 
 /**

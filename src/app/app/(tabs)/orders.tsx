@@ -128,7 +128,7 @@ export default function OrdersScreen() {
                   menuDescription={menuDescriptions.get(`${item.date.toDateString()}|${item.title}`)}
                   isCancelling={cancellingId === item.positionId}
                   onCancel={() => handleCancel(item.positionId, item.title)}
-                  canCancel={activeTab === 'upcoming' && cancellingId === null}
+                  canCancel={activeTab === 'upcoming'}
                 />
               )}
               ListEmptyComponent={
@@ -202,7 +202,7 @@ export default function OrdersScreen() {
               menuDescription={menuDescriptions.get(`${item.date.toDateString()}|${item.title}`)}
               isCancelling={cancellingId === item.positionId}
               onCancel={() => handleCancel(item.positionId, item.title)}
-              canCancel={activeTab === 'upcoming' && cancellingId === null}
+              canCancel={activeTab === 'upcoming'}
             />
           )}
           ListEmptyComponent={

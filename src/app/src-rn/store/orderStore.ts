@@ -51,6 +51,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   },
 
   cancelOrder: async (positionId: string) => {
+    if (get().cancellingId !== null) return;
     set({ cancellingId: positionId, error: null });
     try {
       const api = useAuthStore.getState().api;
