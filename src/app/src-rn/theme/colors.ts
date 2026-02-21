@@ -158,3 +158,108 @@ export const DarkColors: Colors = {
   blurIntensityStrong: 90,
   blurIntensitySubtle: 30,
 };
+
+export type AccentColorId = 'orange' | 'emerald' | 'berry' | 'golden' | 'ocean';
+
+interface AccentVariant {
+  primary: string;
+  primaryDark: string;
+  primarySurface: string;
+  glassPrimary: string;
+}
+
+interface AccentConfig {
+  light: AccentVariant;
+  dark: AccentVariant;
+  label: string;
+}
+
+export const ACCENT_COLORS: Record<AccentColorId, AccentConfig> = {
+  orange: {
+    light: {
+      primary: '#D4501A',
+      primaryDark: '#B84415',
+      primarySurface: '#FFF1EB',
+      glassPrimary: useFlatStyle ? '#FFF1EB' : 'rgba(212,80,26,0.08)',
+    },
+    dark: {
+      primary: '#FF6B35',
+      primaryDark: '#D4501A',
+      primarySurface: '#2A1A10',
+      glassPrimary: useFlatStyle ? '#2A1A10' : 'rgba(255,107,53,0.14)',
+    },
+    label: 'Orange',
+  },
+  emerald: {
+    light: {
+      primary: '#2E7D4F',
+      primaryDark: '#236B3F',
+      primarySurface: '#E8F5ED',
+      glassPrimary: useFlatStyle ? '#E8F5ED' : 'rgba(46,125,79,0.08)',
+    },
+    dark: {
+      primary: '#4CAF7D',
+      primaryDark: '#2E7D4F',
+      primarySurface: '#102A1A',
+      glassPrimary: useFlatStyle ? '#102A1A' : 'rgba(76,175,125,0.14)',
+    },
+    label: 'Smaragd',
+  },
+  berry: {
+    light: {
+      primary: '#A62547',
+      primaryDark: '#8C1E3B',
+      primarySurface: '#FCEEF2',
+      glassPrimary: useFlatStyle ? '#FCEEF2' : 'rgba(166,37,71,0.08)',
+    },
+    dark: {
+      primary: '#E04868',
+      primaryDark: '#A62547',
+      primarySurface: '#2A1018',
+      glassPrimary: useFlatStyle ? '#2A1018' : 'rgba(224,72,104,0.14)',
+    },
+    label: 'Beere',
+  },
+  golden: {
+    light: {
+      primary: '#C08B1A',
+      primaryDark: '#A07415',
+      primarySurface: '#FDF5E3',
+      glassPrimary: useFlatStyle ? '#FDF5E3' : 'rgba(192,139,26,0.08)',
+    },
+    dark: {
+      primary: '#E8B03E',
+      primaryDark: '#C08B1A',
+      primarySurface: '#2A2210',
+      glassPrimary: useFlatStyle ? '#2A2210' : 'rgba(232,176,62,0.14)',
+    },
+    label: 'Gold',
+  },
+  ocean: {
+    light: {
+      primary: '#2563A8',
+      primaryDark: '#1E528C',
+      primarySurface: '#EBF2FC',
+      glassPrimary: useFlatStyle ? '#EBF2FC' : 'rgba(37,99,168,0.08)',
+    },
+    dark: {
+      primary: '#4A90D9',
+      primaryDark: '#2563A8',
+      primarySurface: '#101A2A',
+      glassPrimary: useFlatStyle ? '#101A2A' : 'rgba(74,144,217,0.14)',
+    },
+    label: 'Ozean',
+  },
+};
+
+export function getColorsForAccent(accent: AccentColorId, isDark: boolean): Colors {
+  const base = isDark ? DarkColors : LightColors;
+  const variant = ACCENT_COLORS[accent][isDark ? 'dark' : 'light'];
+  return {
+    ...base,
+    primary: variant.primary,
+    primaryDark: variant.primaryDark,
+    primarySurface: variant.primarySurface,
+    glassPrimary: variant.glassPrimary,
+  };
+}

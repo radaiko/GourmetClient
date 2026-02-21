@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="accent-a-orange" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#D4501A"/>
-      <stop offset="100%" style="stop-color:#B84415"/>
+    <linearGradient id="accent-a-ocean" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563A8"/>
+      <stop offset="100%" style="stop-color:#1E528C"/>
     </linearGradient>
   </defs>
 
   <!-- Crossed Fork and Knife -->
   <g transform="translate(512, 512) rotate(-30) translate(-512, -512)">
-    <g transform="translate(400, 220)" fill="url(#accent-a-orange)">
+    <g transform="translate(400, 220)" fill="url(#accent-a-ocean)">
       <rect x="10" y="0" width="14" height="130" rx="7"/>
       <rect x="38" y="0" width="14" height="130" rx="7"/>
       <rect x="66" y="0" width="14" height="130" rx="7"/>
@@ -19,7 +19,7 @@
   </g>
 
   <g transform="translate(512, 512) rotate(30) translate(-512, -512)">
-    <g transform="translate(510, 220)" fill="url(#accent-a-orange)">
+    <g transform="translate(510, 220)" fill="url(#accent-a-ocean)">
       <path d="M 20 0 C 20 0, 90 12, 90 70 L 90 155 L 20 155 Z"/>
       <rect x="20" y="145" width="70" height="34" rx="6"/>
       <rect x="36" y="169" width="38" height="420" rx="19"/>
