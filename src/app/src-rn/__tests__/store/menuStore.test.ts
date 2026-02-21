@@ -56,7 +56,9 @@ function makeItem(overrides: Partial<import('../../types/menu').GourmetMenuItem>
   };
 }
 
-beforeEach(() => {
+beforeEach(async () => {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  await AsyncStorage.clear();
   jest.clearAllMocks();
   useMenuStore.setState({
     items: [],
@@ -342,9 +344,6 @@ describe('menuStore', () => {
     });
 
     it('loadCachedMenus does nothing when cache is empty', async () => {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.clear();
-
       await useMenuStore.getState().loadCachedMenus();
       expect(useMenuStore.getState().items).toEqual([]);
     });

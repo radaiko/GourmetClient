@@ -65,9 +65,12 @@ export const useMenuStore = create<MenuState>((set, get) => ({
 
   loadCachedMenus: async () => {
     const cached = await AsyncStorage.getItem(MENU_CACHE_KEY);
-    if (cached) {
+    if (!cached) return;
+    try {
       const items = deserializeMenuItems(cached);
       set({ items });
+    } catch {
+      await AsyncStorage.removeItem(MENU_CACHE_KEY);
     }
   },
 
@@ -212,6 +215,7 @@ export const useMenuStore = create<MenuState>((set, get) => ({
         const freshApi = useAuthStore.getState().api;
         const freshItems = await freshApi.getMenus();
         set({ items: freshItems, lastFetched: Date.now() });
+        await AsyncStorage.setItem(MENU_CACHE_KEY, serializeMenuItems(freshItems));
       } catch {
         // Silent — keep optimistic state if revert also fails
       }
